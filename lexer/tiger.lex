@@ -1,3 +1,18 @@
+(*
+  TODO: String literal parsing (different states? how the hell?)
+
+  TODO: State handling in EOF function (trailing comment/string literal)
+
+  TODO: Test/Validate existing lex capabilty, ensure lexer actually being
+        generated and ran against STDIN
+
+  TODO: Potentially convert state into %arg variables, depending on if valid as-is
+
+  TODO: Validate we're covering all keywords, punctiation, and operators
+
+  TODO: Data structure (map?) to make this parsing a little more abstracted
+*)
+
 (* user declarations *)
 
 type pos = int
@@ -12,12 +27,11 @@ fun err(p1,p2) = ErrorMsg.error p1
 fun eof() = let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end
 
 
-%%
-(* ML-Lex declarations *)
+%% (* ML-Lex declarations *)
+
 %s COMMENT ;
 
-%%
-(* Rules *)
+%% (* Rules *)
 
 \n	=> (lineNum := !lineNum+1; linePos := yypos :: !linePos; continue());
 
@@ -41,6 +55,12 @@ val STRING: (string) *  linenum * linenum -> token
 <COMMENT> .    => (continue());
 (* TODO: Consider special error for */ when in INITIAL state? *)
 
+(*
+  Keywords:
+    array, break, do, else, end, for,
+    function, if, in, let, nil, of, then, to, type, var,
+    while.
+*)
 <INITIAL> "type" => (Tokens.TYPE(yypos, yypos+4));
 <INITIAL> "var" => (Tokens.VAR(yypos, yypos+3));
 <INITIAL> "function" => (Tokens.FUNCTION(yypos, yypos+8));
@@ -59,6 +79,11 @@ val STRING: (string) *  linenum * linenum -> token
 <INITIAL> "if" => (Tokens.IF(yypos, yypos+2));
 <INITIAL> "array" => (Tokens.ARRAY(yypos, yypos+5));
 
+(*
+  Punctuation and operators:
+    (, ), [, ], {, }, :, :=,
+    ., ,, ;, *, /, +, -, =, <>, >, <, >=, <=, &, |.
+*)
 <INITIAL> ":=" => (Tokens.ASSIGN(yypos, yypos+2));
 <INITIAL> "|" => (Tokens.OR(yypos, yypos+1));
 <INITIAL> "&" => (Tokens.AND(yypos, yypos+1));
@@ -85,8 +110,14 @@ val STRING: (string) *  linenum * linenum -> token
 <INITIAL> ":" => (Tokens.COLON(yypos, yypos+1));
 <INITIAL> ","	=> (Tokens.COMMA(yypos,yypos+1));
 
+(*
+  An identifier starts with a letter, followed by zero or more letters, underscores, or digits.
+  Keywords cannot be used as identifiers.
+  Identifiers are case-sensitive.
+*)
 <INITIAL> [A-Za-z][A-Za-z0-9_]* => (Tokens.ID(yytext, yypos, yypos + String.size(yytext)));
+
+(* An integer literal is a sequence of one or more digits from 0-9. *)
 <INITIAL> [0-9]+ => (Tokens.INT(Int.fromString(yytext), yypos, yypos + String.size(yytext)));
 
-"123"	=> (Tokens.INT(123,yypos,yypos+3));
 .       => (ErrorMsg.error yypos ("illegal character " ^ yytext); continue());
