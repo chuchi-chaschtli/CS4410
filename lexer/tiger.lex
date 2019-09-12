@@ -22,9 +22,7 @@ fun eof() = let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end
 \n	=> (lineNum := !lineNum+1; linePos := yypos :: !linePos; continue());
 
 val STRING: (string) *  linenum * linenum -> token
-val INT: (int) *  linenum * linenum -> token
-val ID: (string) *  linenum * linenum -> token
-val EOF:  linenum * linenum -> token
+(* TODO: make sure we handle ===> val EOF:  linenum * linenum -> token *)
 
 <INITIAL> "/*" => (
                     YYBEGIN COMMENT;
@@ -86,6 +84,8 @@ val EOF:  linenum * linenum -> token
 <INITIAL> ":" => (Tokens.COLON(yypos, yypos+1));
 <INITIAL> ","	=> (Tokens.COMMA(yypos,yypos+1));
 
-var  	=> (Tokens.VAR(yypos,yypos+3));
+<INITIAL> [A-Za-z][A-Za-z0-9_]+ => (Tokens.ID(yypos, yypos + String.size(yytext)));
+<INITIAL> [0-9]+ => (Tokens.INT(yypos, yypos + String.size(yytext)));
+
 "123"	=> (Tokens.INT(123,yypos,yypos+3));
 .       => (ErrorMsg.error yypos ("illegal character " ^ yytext); continue());
