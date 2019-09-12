@@ -3,15 +3,18 @@
 type pos = int
 type lexresult = Tokens.token
 
+val commentDepth = ref 0
 val lineNum = ErrorMsg.lineNum
 val linePos = ErrorMsg.linePos
 fun err(p1,p2) = ErrorMsg.error p1
 
+(* If we hit EOF, we only care about current state, not code validation *)
 fun eof() = let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end
 
 
 %%
 (* ML-Lex declarations *)
+%s COMMENT ;
 
 %%
 (* Rules *)
@@ -22,6 +25,22 @@ val STRING: (string) *  linenum * linenum -> token
 val INT: (int) *  linenum * linenum -> token
 val ID: (string) *  linenum * linenum -> token
 val EOF:  linenum * linenum -> token
+
+<INITIAL> "/*" => (
+                    YYBEGIN COMMENT;
+                    lex();
+                  );
+<COMMENT> "/*" => (
+                    commentDepth := !commentDepth + 1;
+                    lex();
+                  );
+<COMMENT> "*/" => (
+                    (if commentDepth = 0
+                     then YYBEGIN INITIAL
+                     else commentDepth := !commentDepth - 1);
+                    lex();
+                  );
+(* TODO: Consider special error for */ when in INITIAL state? *)
 
 <INITIAL> "type" => (Tokens.TYPE(yypos, yypos+4));
 <INITIAL> "var" => (Tokens.VAR(yypos, yypos+3));
