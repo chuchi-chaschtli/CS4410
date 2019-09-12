@@ -25,19 +25,20 @@ val STRING: (string) *  linenum * linenum -> token
 (* TODO: make sure we handle ===> val EOF:  linenum * linenum -> token *)
 
 <INITIAL> "/*" => (
-                    YYBEGIN COMMENT;
-                    lex();
+                    YYBEGIN(COMMENT);
+                    continue();
                   );
 <COMMENT> "/*" => (
                     commentDepth := !commentDepth + 1;
-                    lex();
+                    continue();
                   );
 <COMMENT> "*/" => (
                     (if commentDepth = 0
-                     then YYBEGIN INITIAL
+                     then YYBEGIN(INITIAL)
                      else commentDepth := !commentDepth - 1);
-                    lex();
+                    continue();
                   );
+<COMMENT> .    => (continue());
 (* TODO: Consider special error for */ when in INITIAL state? *)
 
 <INITIAL> "type" => (Tokens.TYPE(yypos, yypos+4));
