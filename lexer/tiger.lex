@@ -84,7 +84,7 @@ val STRING: (string) *  linenum * linenum -> token
 <INITIAL> ":" => (Tokens.COLON(yypos, yypos+1));
 <INITIAL> ","	=> (Tokens.COMMA(yypos,yypos+1));
 
-<INITIAL> [A-Za-z][A-Za-z0-9_]+ => (Tokens.ID(yypos, yypos + String.size(yytext)));
+<INITIAL> [A-Za-z][A-Za-z0-9_]* => (Tokens.ID(yypos, yypos + String.size(yytext)));
 <INITIAL> [0-9]+ => (Tokens.INT(yypos, yypos + String.size(yytext)));
 
 "123"	=> (Tokens.INT(123,yypos,yypos+3));
