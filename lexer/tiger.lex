@@ -18,7 +18,7 @@
 type pos = int
 type lexresult = Tokens.token
 
-val commentDepth = 0
+val commentDepth = ref 0
 val lineNum = ErrorMsg.lineNum
 val linePos = ErrorMsg.linePos
 fun err(p1,p2) = ErrorMsg.error p1
@@ -28,7 +28,7 @@ fun eof() = let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end
 
 %%
 
-%s COMMENT ;
+%s COMMENT;
 
 %%
 
@@ -46,10 +46,11 @@ fun eof() = let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end
                       commentDepth := !commentDepth - 1);
                     continue());
 <COMMENT> .    => (continue());
+
 "type" => (Tokens.TYPE(yypos, yypos+4));
 "var" => (Tokens.VAR(yypos, yypos+3));
 "function" => (Tokens.FUNCTION(yypos, yypos+8));
-"break" => (Tokens.BREAK(yypos, yypos+5);
+"break" => (Tokens.BREAK(yypos, yypos+5));
 "of" => (Tokens.OF(yypos, yypos+2));
 "end" => (Tokens.END(yypos, yypos+3));
 "in" => (Tokens.IN(yypos, yypos+2));
@@ -57,7 +58,7 @@ fun eof() = let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end
 "let" => (Tokens.LET(yypos, yypos+3));
 "do" => (Tokens.DO(yypos, yypos+2));
 "to" => (Tokens.TO(yypos, yypos+2));
-"for" => (Tokens.FOR(yypos, yypos+3);
+"for" => (Tokens.FOR(yypos, yypos+3));
 "while" => (Tokens.WHILE(yypos, yypos+5));
 "else" => (Tokens.ELSE(yypos, yypos+4));
 "then" => (Tokens.THEN(yypos, yypos+4));
