@@ -20,6 +20,7 @@ type lexresult = Tokens.token
 
 val commentDepth = ref 0
 
+val isEscaping = ref false
 val escapeBuffer = ref ""
 val escapeStartPos = ref 0
 
@@ -28,7 +29,16 @@ val linePos = ErrorMsg.linePos
 fun err(p1,p2) = ErrorMsg.error p1
 
 (* If we hit end of file, we only care about current state, not code validation *)
-fun eof() = let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end
+fun eof() = (
+  if (!commentDepth > 0) then
+    err (hd(!linePos))
+        ("EOF in comment detected at line number = " ^ Int.toString(!lineNum) ^
+         " at line position " ^ Int.toString(hd(!linePos)))
+  else if (isEscaping) then
+    err (hd(!linePos))
+        ("EOF in string detected at line number = " ^ Int.toString(!lineNum) ^
+        "at line position " ^ Int.toString(hd(!linePos)))
+  let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end)
 
 %%
 
@@ -36,22 +46,25 @@ fun eof() = let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end
 
 %%
 
-<COMMENT, INITIAL> \n	=> (lineNum := !lineNum+1;
-                          linePos := yypos :: !linePos;
-                          continue());
-<COMMENT, INITIAL> [\ \t]+ => (continue());
+<INITIAL>\n	=> (lineNum := !lineNum+1;
+                linePos := yypos :: !linePos;
+                continue());
+<COMMENT>\n	=> (lineNum := !lineNum+1;
+                linePos := yypos :: !linePos;
+                continue());
 
-"/*"           => (YYBEGIN(COMMENT);
+<INITIAL>[\ \t]+ => (continue());
+<COMMENT>[\ \t]+ => (continue());
+
+<INITIAL>"/*"  => (YYBEGIN(COMMENT);
+                   commentDepth := 1;
                    continue());
 <COMMENT> "/*" => (commentDepth := !commentDepth + 1;
                    continue());
-<COMMENT> "*/" => ((if
-                      (commentDepth = 0)
-                    then
-                      YYBEGIN(INITIAL)
-                    else
-                      commentDepth := !commentDepth - 1);
-                    continue());
+<COMMENT> "*/" => (commentDepth := !commentDepth - 1;
+                   (if (commentDepth = 0)
+                    then YYBEGIN(INITIAL));
+                   continue());
 <COMMENT> .    => (continue());
 
 "type"      => (Tokens.TYPE(yypos, yypos+4));
@@ -102,13 +115,15 @@ fun eof() = let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end
 [0-9]+ => (Tokens.INT(Int.fromString(yytext), yypos, yypos + String.size(yytext)));
 
 \" => (YYBEGIN(ESCAPE);
+       isEscaping := true;
        escapeStartPos := yypos;
        escapeBuffer := "";
        continue());
 
 <ESCAPE> \" => (YYBEGIN(INITIAL);
+                isEscaping := false
                 Tokens.String(!escapeBuffer, escapeStartPos, yypos);
                 continue());
 
-<ESCAPE, INITIAL> . => (ErrorMsg.error yypos ("illegal character " ^ yytext);
-                        continue());
+<INITIAL>. => (ErrorMsg.error yypos ("illegal character " ^ yytext); continue());
+<ESCAPE>.  => (ErrorMsg.error yypos ("illegal character " ^ yytext); continue());
