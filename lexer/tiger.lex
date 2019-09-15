@@ -30,15 +30,16 @@ fun err(p1,p2) = ErrorMsg.error p1
 
 (* If we hit end of file, we only care about current state, not code validation *)
 fun eof() = (
+  let val pos = hd(!linePos) in
   if (!commentDepth > 0) then
-    err (hd(!linePos))
+    err (pos)
         ("EOF in comment detected at line number = " ^ Int.toString(!lineNum) ^
-         " at line position " ^ Int.toString(hd(!linePos)))
+         " at line position " ^ Int.toString(pos))
   else if (isEscaping) then
-    err (hd(!linePos))
+    err (pos)
         ("EOF in string detected at line number = " ^ Int.toString(!lineNum) ^
-        "at line position " ^ Int.toString(hd(!linePos)))
-  let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end)
+        "at line position " ^ Int.toString(pos))
+  Tokens.EOF(pos,pos) end)
 
 %%
 
