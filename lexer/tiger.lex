@@ -143,8 +143,12 @@ fun appendBuffer(str) =
 <ESCAPE> \\ => (appendBuffer("\\\\"); YYBEGIN(STRING); continue());
 <ESCAPE> [\000-\031|\127] => (appendBuffer("\\" ^ yytext); YYBEGIN(STRING); continue());
 
-<ESCAPE> [\ \t\n\f\r] => (YYBEGIN(WHITESPACE); continue());
-<WHITESPACE> [\ \t\n\f\r]* => (continue());
+<ESCAPE> [\ \t\f\r] => (YYBEGIN(WHITESPACE); continue());
+<ESCAPE> \n       => (lineNum := !lineNum+1;
+                      linePos := yypos :: !linePos;
+                      YYBEGIN(WHITESPACE);
+                      continue());
+<WHITESPACE> [\ \t\f\r]* => (continue());
 <WHITESPACE> \\ => (YYBEGIN(STRING); continue());
 <WHITESPACE> \n => (lineNum := !lineNum+1;
                     linePos := yypos :: !linePos;
