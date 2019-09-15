@@ -20,9 +20,9 @@ type lexresult = Tokens.token
 
 val commentDepth = ref 0
 
-val isEscaping = ref false
-val escapeBuffer = ref ""
-val escapeStartPos = ref 0
+val isString = ref false
+val strBuffer = ref ""
+val strStartPos = ref 0
 
 val lineNum = ErrorMsg.lineNum
 val linePos = ErrorMsg.linePos
@@ -32,18 +32,22 @@ fun err(p1,p2) = ErrorMsg.error p1
 fun eof() = (
   let val pos = hd(!linePos) in
   if (!commentDepth > 0) then
-    err (pos)
+    ErrorMsg.error pos
         ("EOF in comment detected at line number = " ^ Int.toString(!lineNum) ^
          " at line position " ^ Int.toString(pos))
-  else if (isEscaping) then
-    err (pos)
+  else if (!isString) then
+    ErrorMsg.error pos
         ("EOF in string detected at line number = " ^ Int.toString(!lineNum) ^
         "at line position " ^ Int.toString(pos))
+  else();
   Tokens.EOF(pos,pos) end)
+
+fun appendBuffer(str) =
+  strBuffer := !strBuffer ^ str;
 
 %%
 
-%s COMMENT ESCAPE;
+%s COMMENT STRING ESCAPE WHITESPACE;
 
 %%
 
@@ -63,8 +67,9 @@ fun eof() = (
 <COMMENT> "/*" => (commentDepth := !commentDepth + 1;
                    continue());
 <COMMENT> "*/" => (commentDepth := !commentDepth - 1;
-                   (if (commentDepth = 0)
-                    then YYBEGIN(INITIAL));
+                   (if (!commentDepth = 0)
+                    then YYBEGIN(INITIAL)
+                    else ());
                    continue());
 <COMMENT> .    => (continue());
 
@@ -113,18 +118,38 @@ fun eof() = (
 ","	=> (Tokens.COMMA(yypos, yypos+1));
 
 [A-Za-z][A-Za-z0-9_]* => (Tokens.ID(yytext, yypos, yypos + String.size(yytext)));
-[0-9]+ => (Tokens.INT(Int.fromString(yytext), yypos, yypos + String.size(yytext)));
+[0-9]+ => (Tokens.INT(valOf(Int.fromString(yytext)), yypos, yypos + String.size(yytext)));
 
-\" => (YYBEGIN(ESCAPE);
-       isEscaping := true;
-       escapeStartPos := yypos;
-       escapeBuffer := "";
-       continue());
+"\"" => (YYBEGIN(STRING);
+         isString := true;
+         strStartPos := yypos;
+         strBuffer := "";
+         continue());
 
-<ESCAPE> \" => (YYBEGIN(INITIAL);
-                isEscaping := false
-                Tokens.String(!escapeBuffer, escapeStartPos, yypos);
+<STRING> \" => (YYBEGIN(INITIAL);
+                isString := false;
+                Tokens.STRING(!strBuffer, !strStartPos, yypos);
                 continue());
+<STRING> \\ => (YYBEGIN(ESCAPE);
+                continue());
+<STRING> [\032-\126] => (appendBuffer(yytext);
+                         continue());
+<STRING> . => (ErrorMsg.error yypos ("illegal string " ^ yytext); continue());
 
+
+<ESCAPE> n  => (appendBuffer("\\n"); YYBEGIN(STRING); continue());
+<ESCAPE> t  => (appendBuffer("\\t"); YYBEGIN(STRING); continue());
+<ESCAPE> \" => (appendBuffer("\\\""); YYBEGIN(STRING); continue());
+<ESCAPE> \\ => (appendBuffer("\\\\"); YYBEGIN(STRING); continue());
+<ESCAPE> [\000-\031|\127] => (appendBuffer("\\" ^ yytext); YYBEGIN(STRING); continue());
+
+<ESCAPE> [\ \t\n\f\r] => (YYBEGIN(WHITESPACE); continue());
+<WHITESPACE> [\ \t\n\f\r]* => (continue());
+<WHITESPACE> \\ => (YYBEGIN(STRING); continue());
+<WHITESPACE> \n => (lineNum := !lineNum+1;
+                    linePos := yypos :: !linePos;
+                    continue());
+<WHITESPACE> . => (ErrorMsg.error yypos ("illegal escape " ^ yytext); continue());
+
+<ESCAPE> . => (ErrorMsg.error yypos ("illegal escape " ^ yytext); continue());
 <INITIAL>. => (ErrorMsg.error yypos ("illegal character " ^ yytext); continue());
-<ESCAPE>.  => (ErrorMsg.error yypos ("illegal character " ^ yytext); continue());
