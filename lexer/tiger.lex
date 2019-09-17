@@ -97,6 +97,7 @@ fun appendBuffer(str) =
 <INITIAL> ";" => (Tokens.SEMICOLON(yypos, yypos+1));
 <INITIAL> ":" => (Tokens.COLON(yypos, yypos+1));
 <INITIAL> ","	=> (Tokens.COMMA(yypos, yypos+1));
+<INITIAL> "."	=> (Tokens.DOT(yypos, yypos+1));
 
 <INITIAL> [A-Za-z][A-Za-z0-9_]* => (Tokens.ID(yytext, yypos, yypos + String.size(yytext)));
 <INITIAL> [0-9]+ => (Tokens.INT(valOf(Int.fromString(yytext)), yypos, yypos + String.size(yytext)));
