@@ -1,18 +1,3 @@
-(*
-  TODO: String literal parsing (different states? how the hell?)
-
-  TODO: State handling in EOF function (trailing comment/string literal)
-
-  TODO: Test/Validate existing lex capability, ensure lexer actually being
-        generated and ran against STDIN
-
-  TODO: Potentially convert state into %arg variables, depending on if valid as-is
-
-  TODO: Validate we're covering all keywords, punctuation, and operators
-
-  TODO: Data structure (map?) to make this parsing a little more abstracted
-*)
-
 (* user declarations *)
 
 type pos = int
@@ -153,7 +138,7 @@ fun appendBuffer(str) =
 <WHITESPACE> \n => (lineNum := !lineNum+1;
                     linePos := yypos :: !linePos;
                     continue());
-<WHITESPACE> . => (ErrorMsg.error yypos ("illegal escape " ^ yytext); continue());
+<WHITESPACE> . => (ErrorMsg.error yypos ("illegal escape during whitespace " ^ yytext); continue());
 
-<ESCAPE> . => (ErrorMsg.error yypos ("illegal escape " ^ yytext); continue());
+<ESCAPE> . => (ErrorMsg.error yypos ("illegal escape \\" ^ yytext); continue());
 <INITIAL>. => (ErrorMsg.error yypos ("illegal character " ^ yytext); continue());
