@@ -1,5 +1,14 @@
 ## CS 4410 Lexer
-### Team: Anand Kumar + David Reed
+### Team: Anand Kumar (akumar) + David Reed (reedda)
+
+---
+
+### References
+
+We found these documents helpful in our implementation of the lexer.
+* https://www.cs.princeton.edu/~appel/modern/ml/ml-lex/manual.html
+* http://www.cs.columbia.edu/~sedwards/classes/2002/w4115/tiger.pdf
+* http://www.asciitable.com/
 
 ---
 
@@ -20,8 +29,26 @@ When we are in a comment, we don't actually care what the program text is and ca
 just process trivially.
 
 ### String Literals
+There are a lot of subcases in string literal lexing, which makes it more difficult
+to handle correctly than comments.
+
+* When we see a quote while in the initial state, we transition to the string state (or vice versa on a closing quote). When we
+enter the string state, we reset the string buffer, which contains the temporary string as we lex the input until we close the string.
+* When we see an escaped backslash while in the string state, we are in a particular escape sequence, depending on the proceeding character(s). We maintain an escape state, but this is more out of organization than necessity.
+  * If the next character is `n`, `t`, or `\"`, we add that character to the current string buffer and transition back to the string state.
+  * If the next character is `\\`, we are done escaping and can transition back to string state.
+  * If we see a control character (aka, a non-printable ascii code), append that to the buffer and transition to string state.
+  * If we see a whitespace character, transition to the whitespace state to process arbitrarily large amount of whitespace (including newlines).
+* If we see a printable character (ascii code [32, 126]), append that to the buffer directly.
 
 ### Errors
+We handled errors in the following scenarios:
+
+* EOF seen while in comment or string: error description with line number and position
+* If we see a control character while not being escaped, error specifying illegal string with position
+* If we see a non whitespace character while in a f___f string, error specifying illegal whitespace processing with position
+* If we see a printable character while we are in an escape sequence, error specifying illegal escape sequence with position
+* If we see an invalid character token while in the initial state, error appropriately and specify the position
 
 ### End-of-file (EOF)
 There are two interesting cases that have to be handled when we see an EOF. If
