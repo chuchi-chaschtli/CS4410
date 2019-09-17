@@ -11,6 +11,12 @@ We found these documents helpful in our implementation of the lexer.
 * http://www.asciitable.com/
 
 ---
+### Testing
+
+We tested directly against the sample test files (see `tests` directory) using
+the provided `driver.sml`
+
+---
 
 ### Comments
 Because comments nest in Tiger, we cannot use regular expressions to capture
