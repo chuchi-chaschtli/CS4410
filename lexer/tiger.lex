@@ -113,7 +113,7 @@ fun appendBuffer(str) =
                 continue());
 <STRING> [\032-\126] => (appendBuffer(yytext);
                          continue());
-<STRING> . => (ErrorMsg.error yypos ("illegal string " ^ yytext); continue());
+<STRING> [.\n] => (ErrorMsg.error yypos ("illegal string " ^ yytext); continue());
 
 
 <ESCAPE> n  => (appendBuffer("\\n"); YYBEGIN(STRING); continue());
