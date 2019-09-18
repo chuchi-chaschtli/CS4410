@@ -18,12 +18,10 @@ fun eof() = (
   let val pos = hd(!linePos) in
   if (!commentDepth > 0) then
     ErrorMsg.error pos
-        ("EOF in comment detected at line number = " ^ Int.toString(!lineNum) ^
-         " at line position " ^ Int.toString(pos))
+        (" EOF within unclosed comment")
   else if (!isString) then
     ErrorMsg.error pos
-        ("EOF in string detected at line number = " ^ Int.toString(!lineNum) ^
-        "at line position " ^ Int.toString(pos))
+        (" EOF in String literal")
   else();
   Tokens.EOF(pos,pos) end)
 
