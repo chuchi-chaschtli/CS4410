@@ -14,7 +14,9 @@ We found these documents helpful in our implementation of the lexer.
 ### Testing
 
 We tested directly against the sample test files (see `tests` directory) using
-the provided `driver.sml`
+the provided `driver.sml`, as well as wrote some of our own test cases:
+* `bad_comment.tig` (a tig file that shouldn't lex because of an unclosed comment)
+* `bad_string.tig` (a tig file that shouldn't lex because of an unclosed string)
 
 ---
 
