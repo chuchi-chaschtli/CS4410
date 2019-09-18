@@ -17,10 +17,10 @@ fun err(p1,p2) = ErrorMsg.error p1
 fun eof() = (
   let val pos = hd(!linePos) in
   if (!commentDepth > 0) then
-    ErrorMsg.error pos
+    ErrorMsg.error (pos + 1)
         (" EOF within unclosed comment")
   else if (!isString) then
-    ErrorMsg.error pos
+    ErrorMsg.error (pos + 1)
         (" EOF in String literal")
   else();
   Tokens.EOF(pos,pos) end)

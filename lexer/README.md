@@ -14,9 +14,8 @@ We found these documents helpful in our implementation of the lexer.
 ### Testing
 
 We tested directly against the sample test files (see `tests` directory) using
-the provided `driver.sml`, as well as wrote some of our own test cases:
-* `bad_comment.tig` (a tig file that shouldn't lex because of an unclosed comment)
-* `bad_string.tig` (a tig file that shouldn't lex because of an unclosed string)
+the provided `driver.sml`, as well as wrote some of our own test cases in the
+`sample_tests` directory.
 
 ---
 
@@ -64,3 +63,8 @@ we are in a comment or inside a string literal and see an EOF, we decided to use
 the provided error reporting module to terminate the lexer. The lexer reports
 the line number and line position of the comment or string that caused the error.
 If we aren't in a comment or string literal, the EOF is allowed.
+
+The built-in error reporting machinery acts on the lineNum and linePos ref vars. We increment the lineNum
+and append to linePos in our rules, but the EOF processing happens in the built-in eof() function, and
+does not modify those two ref vars first. As such, we increment the given pos (corresponding to yypos) first,
+so that we can report the error on the line and position at which the error occurred.
