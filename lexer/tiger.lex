@@ -1,9 +1,11 @@
 (* user declarations *)
 
 (* TODO fix invalid ASCII code parsing in string literals, i.e. "\999" *)
-(* <ESCAPE> [\032-\126] => (appendBuffer("\\" ^ yytext);
+(*
+<ESCAPE> [\032-\126] => (appendBuffer("\\" ^ yytext);
                          YYBEGIN(STRING);
-                         continue()); *)
+                         continue());
+*)
 
 type pos = int
 type lexresult = Tokens.token

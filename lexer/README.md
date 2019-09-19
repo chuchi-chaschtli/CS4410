@@ -11,15 +11,34 @@ We found these documents helpful in our implementation of the lexer.
 * http://www.asciitable.com/
 
 ---
+
+### Formatting
+
+Our code formatting is a bit inconsistent due to not establishing a unified code
+style at the outset.
+
+Besides this, in the Tiger's lexer definition `tiger.lex`, we separated our 
+regex state blocks by three newlines to make it easier visually.
+
+When logging errors, they are output in the format:
+`../relative/path/to/file:line.pos: error message`
+
+---
 ### Testing
 
-We tested directly against the sample test files (see `tests` directory) using
-the provided `driver.sml`, as well as wrote some of our own test cases in the
-`sample_tests` directory.
+We tested our generated lexer directly against the sample test files provided
+(see `tests` directory) using `driver.sml`, as well as wrote some of our own
+test cases in the `sample_tests` directory for some of the more interesting
+edge-cases relating to ASCII, string literals, and comments.
+
+Likewise we discovered a feature in our Lexer wherein `123abc` gets lexed as
+`INT(123)` and `ID(abc)`. This feature was left in, as we intend to delegate
+handling of that edge-case to the Parser.
 
 ---
 
 ### Comments
+
 Because comments nest in Tiger, we cannot use regular expressions to capture
 comments, because regex cannot count and therefore cannot handle an arbitrarily
 large number of nested comments.
@@ -35,7 +54,10 @@ code.
 When we are in a comment, we don't actually care what the program text is and can
 just process trivially.
 
+---
+
 ### String Literals
+
 There are a lot of sub-cases in string literal lexing, which makes it more difficult
 to handle correctly than comments.
 
@@ -49,18 +71,24 @@ enter the string state, we reset the string buffer, which contains the temporary
   * If we see a whitespace character, transition to the whitespace state to process arbitrarily large amount of whitespace (including newlines). We will process whitespace until we hit a matching `\`, indicating that we are back in the string.
 
 * If we see a printable character (ascii code [032, 126]), append that to the buffer directly. Unless...
-* If the next characters are literally `ddd` where `ddd` is a valid ASCII code, we append that code to the buffer.
+* If the next characters are literally `ddd` (a valid ASCII code), we append that code to the buffer.
+
+---
 
 ### Errors
+
 We handled errors in the following scenarios:
 
 * EOF seen while in comment or string: error description with line number and position
 * If we see a control character while not being escaped, error specifying illegal string with position
-* If we see a non whitespace character while in a f___f string, error specifying illegal whitespace processing with position
+* If we see a non whitespace character while in a `\f___f\` string, error specifying illegal whitespace processing with position
 * If we see a printable character while we are in an escape sequence, error specifying illegal escape sequence with position
 * If we see an invalid character token while in the initial state, error appropriately and specify the position
 
+---
+
 ### End-of-file (EOF)
+
 There are two interesting cases that have to be handled when we see an EOF. If
 we are in a comment or inside a string literal and see an EOF, we decided to use
 the provided error reporting module to terminate the lexer. The lexer reports
