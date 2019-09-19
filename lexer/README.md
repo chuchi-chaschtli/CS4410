@@ -17,7 +17,7 @@ We found these documents helpful in our implementation of the lexer.
 Our code formatting is a bit inconsistent due to not establishing a unified code
 style at the outset.
 
-Besides this, in the Tiger's lexer definition `tiger.lex`, we separated our 
+Besides this, in the Tiger's lexer definition `tiger.lex`, we separated our
 regex state blocks by three newlines to make it easier visually.
 
 When logging errors, they are output in the format:
@@ -67,11 +67,11 @@ enter the string state, we reset the string buffer, which contains the temporary
 * When we see an escaped backslash while in the string state, we are in a particular escape sequence, depending on the proceeding character(s). We maintain an escape state, but this is more out of organization than necessity.
   * If the next character is `n`, `t`, or `\"`, we add that character to the current string buffer and transition back to the string state.
   * If the next character is `\\`, we are done escaping and can transition back to string state.
-  * If we see a control character (aka, a non-printable ascii code), append that to the buffer and transition to string state.
+  * If we see a control character (aka, `\^c`), append that ASCII control char to the buffer and transition to string state.
   * If we see a whitespace character, transition to the whitespace state to process arbitrarily large amount of whitespace (including newlines). We will process whitespace until we hit a matching `\`, indicating that we are back in the string.
+  * If we see a decimal ASCII code (`\ddd`), append that ASCII char to the buffer and transition to string state.
 
 * If we see a printable character (ascii code [032, 126]), append that to the buffer directly. Unless...
-* If the next characters are literally `ddd` (a valid ASCII code), we append that code to the buffer.
 
 ---
 
