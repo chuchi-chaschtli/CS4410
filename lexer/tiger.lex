@@ -134,7 +134,6 @@ ws = [\ \t\f];
 <STRING> \\ => (YYBEGIN(ESCAPE);
                 continue());
 <STRING> [\032-\126] => (appendBuffer(yytext);
-                         print("MATCHED: " ^ yytext ^ "\n");
                          continue());
 <STRING> {eol} => (initNewline(yypos);
                    err yypos (" illegal string: " ^ yytext);
