@@ -11,7 +11,7 @@ val strStartPos = ref 0
 
 val lineNum = ErrorMsg.lineNum
 val linePos = ErrorMsg.linePos
-fun err(p1,p2) = ErrorMsg.error p1
+val err = ErrorMsg.error
 
 val lineCursor = ref 0
 fun setCursorPast(yypos, yytext) = (lineCursor := (yypos + String.size(yytext)) - hd(!linePos))
@@ -26,13 +26,13 @@ fun eof() = (
   val charPos = hd(!linePos) + !lineCursor
   in
   if (!commentDepth > 0) then
-    ErrorMsg.error charPos
-        (" EOF within unclosed comment")
+    err charPos
+      ("EOF within unclosed comment")
   else if (!isString) then
-    ErrorMsg.error charPos
-        (" EOF in String literal")
+    err charPos
+      ("EOF in String literal")
   else();
-  Tokens.EOF(charPos, charPos)
+    Tokens.EOF(charPos, charPos)
   end
 )
 
@@ -48,9 +48,8 @@ ws = [\ \t\f];
 
 %%
 
-<INITIAL, COMMENT> {eol}	=> (initNewline(yypos); continue());
-
-<INITIAL, COMMENT> {ws}+ => (continue());
+<INITIAL, COMMENT, WHITESPACE> {ws}* => (continue());
+<INITIAL, COMMENT, WHITESPACE> {eol} => (initNewline(yypos); continue());
 
 <INITIAL> "/*"  => (YYBEGIN(COMMENT);
                    commentDepth := 1;
@@ -129,22 +128,37 @@ ws = [\ \t\f];
 <STRING> [\032-\126] => (appendBuffer(yytext);
                          continue());
 <STRING> {eol} => (initNewline(yypos);
-                   ErrorMsg.error yypos (" illegal string: " ^ yytext); continue());
-<STRING> . => (ErrorMsg.error yypos (" illegal string: " ^ yytext); continue());
+                   err yypos (" illegal string: " ^ yytext);
+                   continue());
+<STRING> . => (err yypos (" illegal string: " ^ yytext);
+               continue());
 
+<ESCAPE> n  => (appendBuffer("\\n");
+                YYBEGIN(STRING);
+                continue());
+<ESCAPE> t  => (appendBuffer("\\t");
+                YYBEGIN(STRING);
+                continue());
+<ESCAPE> \" => (appendBuffer("\\\"");
+                YYBEGIN(STRING);
+                continue());
+<ESCAPE> \\ => (appendBuffer("\\\\");
+                YYBEGIN(STRING);
+                continue());
+<ESCAPE> [\000-\009|\011|\012|\014-\031|\127] => (appendBuffer("\\" ^ yytext);
+                                                  YYBEGIN(STRING);
+                                                  continue());
+<ESCAPE> {ws}* => (YYBEGIN(WHITESPACE);
+                   continue());
+<ESCAPE> {eol} => (initNewline(yypos);
+                   YYBEGIN(WHITESPACE);
+                   continue());
 
-<ESCAPE> n  => (appendBuffer("\\n"); YYBEGIN(STRING); continue());
-<ESCAPE> t  => (appendBuffer("\\t"); YYBEGIN(STRING); continue());
-<ESCAPE> \" => (appendBuffer("\\\""); YYBEGIN(STRING); continue());
-<ESCAPE> \\ => (appendBuffer("\\\\"); YYBEGIN(STRING); continue());
-<ESCAPE> [\000-\009|\011|\012|\014-\031|\127] => (appendBuffer("\\" ^ yytext); YYBEGIN(STRING); continue());
-<ESCAPE> {ws}* => (YYBEGIN(WHITESPACE); continue());
-<ESCAPE> {eol} => (initNewline(yypos); YYBEGIN(WHITESPACE); continue());
-
-<WHITESPACE> {ws}* => (continue());
-<WHITESPACE> {eol} => (initNewline(yypos); continue());
 <WHITESPACE> \\ => (YYBEGIN(STRING); continue());
-<WHITESPACE> . => (ErrorMsg.error yypos (" illegal escape during whitespace: " ^ yytext); continue());
+<WHITESPACE> . => (err yypos (" illegal escape during whitespace: " ^ yytext);
+                   continue());
 
-<ESCAPE> . => (ErrorMsg.error yypos (" illegal escape: \\" ^ yytext); continue());
-<INITIAL>. => (ErrorMsg.error yypos (" illegal character: " ^ yytext); continue());
+<ESCAPE> . => (err yypos (" illegal escape: \\" ^ yytext);
+               continue());
+<INITIAL>. => (err yypos (" illegal character: " ^ yytext);
+               continue());

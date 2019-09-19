@@ -37,11 +37,9 @@ struct
 		       else look(rest,n-1)
 	    | look _ = print "0.0"
        in anyErrors := true;
-	  print (!fileName);
+	  print(!fileName ^ ":");
 	  look(!linePos,!lineNum);
-	  print ":";
-	  print msg;
-	  print "\n"
+	  print (": " ^ msg ^ "\n")
       end
 
   fun impossible msg =
