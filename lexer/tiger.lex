@@ -1,12 +1,5 @@
 (* user declarations *)
 
-(* TODO fix invalid ASCII code parsing in string literals, i.e. "\999" *)
-(*
-<ESCAPE> [\032-\126] => (appendBuffer("\\" ^ yytext);
-                         YYBEGIN(STRING);
-                         continue());
-*)
-
 type pos = int
 type lexresult = Tokens.token
 
@@ -27,9 +20,14 @@ fun initNewline(yypos) = (lineNum := !lineNum + 1;
                           lineCursor := 1);
 fun makeToken(tokenizer, yypos, yytext) = (tokenizer(yypos, yypos + String.size(yytext)));
 
+fun convertAsciiToString(str) =
+    let val octalValue = String.substring(str, 1, 3)
+        val charValue = chr(valOf(Int.fromString(octalValue)))
+    in Char.toString(charValue) end
+
 (* If we hit end of file, we only care about current state, not code validation *)
 fun eof() = (
-  let 
+  let
   val charPos = hd(!linePos) + !lineCursor
   in
   if (!commentDepth > 0) then
@@ -52,6 +50,8 @@ fun appendBuffer(str) =
 
 eol = ("\013\010"|"\010"|"\013");
 ws = [\ \t\f];
+asciiCodes = (0[0-9]{2})|(1[0-1][0-9])|(12[0-7]);
+legalStringAsciiCode = [\032-\033\035-\091\093-\126];
 
 %%
 
@@ -133,13 +133,12 @@ ws = [\ \t\f];
                 isString := false;
                 setCursorPast(yypos, yytext);
                 Tokens.STRING(!strBuffer, !strStartPos, yypos));
-<STRING> \\ => (YYBEGIN(ESCAPE);
-                continue());
-<STRING> [\032-\126] => (appendBuffer(yytext);
-                         continue());
+<STRING> {legalStringAsciiCode}* => (appendBuffer(yytext); continue());
 <STRING> {eol} => (initNewline(yypos);
                    err yypos (" illegal string: " ^ yytext);
                    continue());
+<STRING> \\ => (YYBEGIN(ESCAPE);
+                continue());
 <STRING> . => (err yypos (" illegal string: " ^ yytext);
                continue());
 
@@ -151,15 +150,15 @@ ws = [\ \t\f];
 <ESCAPE> t  => (appendBuffer("\\t");
                 YYBEGIN(STRING);
                 continue());
-<ESCAPE> [\^][@|A-Z|\[|\\|\]|\^|\-] => (appendBuffer("\\" ^ yytext);
-                                        YYBEGIN(STRING);
-                                        continue());
 <ESCAPE> \" => (appendBuffer("\\\"");
                 YYBEGIN(STRING);
                 continue());
 <ESCAPE> \\ => (appendBuffer("\\\\");
                 YYBEGIN(STRING);
                 continue());
+<ESCAPE> {asciiCodes} => (appendBuffer(convertAsciiToString("\\" ^ yytext));
+                          YYBEGIN(STRING);
+                          continue());
 <ESCAPE> {ws}* => (YYBEGIN(WHITESPACE);
                    continue());
 <ESCAPE> {eol} => (initNewline(yypos);
