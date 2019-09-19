@@ -1,21 +1,6 @@
 (* user declarations *)
 
-(* TODO fix invalid ASCII code parsing in string literals, i.e. "\999" *)
-(*
-<ESCAPE> [\032-\126] => (appendBuffer("\\" ^ yytext);
-                         YYBEGIN(STRING);
-                         continue());
-*)
-(*
-let 
-val SOME decimalAscii = Int.fromString(yytext)
-in
-if ((decimalAscii >= 0) andalso (decimalAscii <= 127)) then
-appendBuffer(Char.toString(chr(decimalAscii)))
-else 
-err yypos (" illegal ASCII code: " ^ yytext)
-end;
-*)
+(* TODO fix missing control char lexing, i.e. "\^C" *)
 
 type pos = int
 type lexresult = Tokens.token
