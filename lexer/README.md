@@ -36,17 +36,20 @@ When we are in a comment, we don't actually care what the program text is and ca
 just process trivially.
 
 ### String Literals
-There are a lot of subcases in string literal lexing, which makes it more difficult
+There are a lot of sub-cases in string literal lexing, which makes it more difficult
 to handle correctly than comments.
 
 * When we see a quote while in the initial state, we transition to the string state (or vice versa on a closing quote). When we
 enter the string state, we reset the string buffer, which contains the temporary string as we lex the input until we close the string.
+
 * When we see an escaped backslash while in the string state, we are in a particular escape sequence, depending on the proceeding character(s). We maintain an escape state, but this is more out of organization than necessity.
   * If the next character is `n`, `t`, or `\"`, we add that character to the current string buffer and transition back to the string state.
   * If the next character is `\\`, we are done escaping and can transition back to string state.
   * If we see a control character (aka, a non-printable ascii code), append that to the buffer and transition to string state.
-  * If we see a whitespace character, transition to the whitespace state to process arbitrarily large amount of whitespace (including newlines).
-* If we see a printable character (ascii code [32, 126]), append that to the buffer directly.
+  * If we see a whitespace character, transition to the whitespace state to process arbitrarily large amount of whitespace (including newlines). We will process whitespace until we hit a matching `\`, indicating that we are back in the string.
+
+* If we see a printable character (ascii code [032, 126]), append that to the buffer directly. Unless...
+* If the next characters are literally `ddd` where `ddd` is a valid ASCII code, we append that code to the buffer.
 
 ### Errors
 We handled errors in the following scenarios:
