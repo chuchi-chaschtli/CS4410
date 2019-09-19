@@ -14,11 +14,15 @@ val linePos = ErrorMsg.linePos
 val err = ErrorMsg.error
 
 val lineCursor = ref 0
-fun setCursorPast(yypos, yytext) = (lineCursor := (yypos + String.size(yytext)) - hd(!linePos))
 fun initNewline(yypos) = (lineNum := !lineNum + 1;
                           linePos := yypos :: !linePos;
                           lineCursor := 1);
+fun setCursorPast(yypos, yytext) = (lineCursor := (yypos + String.size(yytext)) - hd(!linePos))
 fun makeToken(tokenizer, yypos, yytext) = (tokenizer(yypos, yypos + String.size(yytext)));
+
+fun setCursorPastThenMakeToken(tokenizer, yypos, yytext) = (
+  setCursorPast(yypos, yytext);
+  makeToken(tokenizer, yypos, yytext))
 
 fun convertAsciiToString(str) =
     let val octalValue = String.substring(str, 1, 3)
@@ -58,14 +62,11 @@ legalStringAsciiCode = [\032-\033\035-\091\093-\126];
 <INITIAL, COMMENT, WHITESPACE> {ws}* => (continue());
 <INITIAL, COMMENT, WHITESPACE> {eol} => (initNewline(yypos); continue());
 
-<INITIAL> "/*"  => (YYBEGIN(COMMENT);
-                   commentDepth := 1;
-                   continue());
+<INITIAL> "/*"  => (YYBEGIN(COMMENT); commentDepth := 1; continue());
 
 
 
-<COMMENT> "/*" => (commentDepth := !commentDepth + 1;
-                   continue());
+<COMMENT> "/*" => (commentDepth := !commentDepth + 1; continue());
 <COMMENT> "*/" => (commentDepth := !commentDepth - 1;
                    (if (!commentDepth = 0)
                     then YYBEGIN(INITIAL)
@@ -75,46 +76,47 @@ legalStringAsciiCode = [\032-\033\035-\091\093-\126];
 
 
 
-<INITIAL> "type"      => (setCursorPast(yypos, yytext); makeToken(Tokens.TYPE, yypos, yytext));
-<INITIAL> "var"       => (setCursorPast(yypos, yytext); makeToken(Tokens.VAR, yypos, yytext));
-<INITIAL> "function"  => (setCursorPast(yypos, yytext); makeToken(Tokens.FUNCTION, yypos, yytext));
-<INITIAL> "break"     => (setCursorPast(yypos, yytext); makeToken(Tokens.BREAK, yypos, yytext));
-<INITIAL> "of"        => (setCursorPast(yypos, yytext); makeToken(Tokens.OF, yypos, yytext));
-<INITIAL> "end"       => (setCursorPast(yypos, yytext); makeToken(Tokens.END, yypos, yytext));
-<INITIAL> "in"        => (setCursorPast(yypos, yytext); makeToken(Tokens.IN, yypos, yytext));
-<INITIAL> "nil"       => (setCursorPast(yypos, yytext); makeToken(Tokens.NIL, yypos, yytext));
-<INITIAL> "let"       => (setCursorPast(yypos, yytext); makeToken(Tokens.LET, yypos, yytext));
-<INITIAL> "do"        => (setCursorPast(yypos, yytext); makeToken(Tokens.DO, yypos, yytext));
-<INITIAL> "to"        => (setCursorPast(yypos, yytext); makeToken(Tokens.TO, yypos, yytext));
-<INITIAL> "for"       => (setCursorPast(yypos, yytext); makeToken(Tokens.FOR, yypos, yytext));
-<INITIAL> "while"     => (setCursorPast(yypos, yytext); makeToken(Tokens.WHILE, yypos, yytext));
-<INITIAL> "else"      => (setCursorPast(yypos, yytext); makeToken(Tokens.ELSE, yypos, yytext));
-<INITIAL> "then"      => (setCursorPast(yypos, yytext); makeToken(Tokens.THEN, yypos, yytext));
-<INITIAL> "if"        => (setCursorPast(yypos, yytext); makeToken(Tokens.IF, yypos, yytext));
-<INITIAL> "array"     => (setCursorPast(yypos, yytext); makeToken(Tokens.ARRAY, yypos, yytext));
-<INITIAL> ":="        => (setCursorPast(yypos, yytext); makeToken(Tokens.ASSIGN, yypos, yytext));
-<INITIAL> "|"         => (setCursorPast(yypos, yytext); makeToken(Tokens.OR, yypos, yytext));
-<INITIAL> "&"         => (setCursorPast(yypos, yytext); makeToken(Tokens.AND, yypos, yytext));
-<INITIAL> ">="        => (setCursorPast(yypos, yytext); makeToken(Tokens.GE, yypos, yytext));
-<INITIAL> ">"         => (setCursorPast(yypos, yytext); makeToken(Tokens.GT, yypos, yytext));
-<INITIAL> "<="        => (setCursorPast(yypos, yytext); makeToken(Tokens.LE, yypos, yytext));
-<INITIAL> "<"         => (setCursorPast(yypos, yytext); makeToken(Tokens.LT, yypos, yytext));
-<INITIAL> "<>"        => (setCursorPast(yypos, yytext); makeToken(Tokens.NEQ, yypos, yytext));
-<INITIAL> "="         => (setCursorPast(yypos, yytext); makeToken(Tokens.EQ, yypos, yytext));
-<INITIAL> "/"         => (setCursorPast(yypos, yytext); makeToken(Tokens.DIVIDE, yypos, yytext));
-<INITIAL> "*"         => (setCursorPast(yypos, yytext); makeToken(Tokens.TIMES, yypos, yytext));
-<INITIAL> "-"         => (setCursorPast(yypos, yytext); makeToken(Tokens.MINUS, yypos, yytext));
-<INITIAL> "+"         => (setCursorPast(yypos, yytext); makeToken(Tokens.PLUS, yypos, yytext));
-<INITIAL> "{"         => (setCursorPast(yypos, yytext); makeToken(Tokens.LBRACE, yypos, yytext));
-<INITIAL> "}"         => (setCursorPast(yypos, yytext); makeToken(Tokens.RBRACE, yypos, yytext));
-<INITIAL> "["         => (setCursorPast(yypos, yytext); makeToken(Tokens.LBRACK, yypos, yytext));
-<INITIAL> "]"         => (setCursorPast(yypos, yytext); makeToken(Tokens.RBRACK, yypos, yytext));
-<INITIAL> "("         => (setCursorPast(yypos, yytext); makeToken(Tokens.LPAREN, yypos, yytext));
-<INITIAL> ")"         => (setCursorPast(yypos, yytext); makeToken(Tokens.RPAREN, yypos, yytext));
-<INITIAL> ";"         => (setCursorPast(yypos, yytext); makeToken(Tokens.SEMICOLON, yypos, yytext));
-<INITIAL> ":"         => (setCursorPast(yypos, yytext); makeToken(Tokens.COLON, yypos, yytext));
-<INITIAL> ","	        => (setCursorPast(yypos, yytext); makeToken(Tokens.COMMA, yypos, yytext));
-<INITIAL> "."	        => (setCursorPast(yypos, yytext); makeToken(Tokens.DOT, yypos, yytext));
+<INITIAL> "type"      => (setCursorPastThenMakeToken(Tokens.TYPE, yypos, yytext));
+<INITIAL> "var"       => (setCursorPastThenMakeToken(Tokens.VAR, yypos, yytext));
+<INITIAL> "function"  => (setCursorPastThenMakeToken(Tokens.FUNCTION, yypos, yytext));
+<INITIAL> "break"     => (setCursorPastThenMakeToken(Tokens.BREAK, yypos, yytext));
+<INITIAL> "of"        => (setCursorPastThenMakeToken(Tokens.OF, yypos, yytext));
+<INITIAL> "end"       => (setCursorPastThenMakeToken(Tokens.END, yypos, yytext));
+<INITIAL> "in"        => (setCursorPastThenMakeToken(Tokens.IN, yypos, yytext));
+<INITIAL> "nil"       => (setCursorPastThenMakeToken(Tokens.NIL, yypos, yytext));
+<INITIAL> "let"       => (setCursorPastThenMakeToken(Tokens.LET, yypos, yytext));
+<INITIAL> "do"        => (setCursorPastThenMakeToken(Tokens.DO, yypos, yytext));
+<INITIAL> "to"        => (setCursorPastThenMakeToken(Tokens.TO, yypos, yytext));
+<INITIAL> "for"       => (setCursorPastThenMakeToken(Tokens.FOR, yypos, yytext));
+<INITIAL> "while"     => (setCursorPastThenMakeToken(Tokens.WHILE, yypos, yytext));
+<INITIAL> "else"      => (setCursorPastThenMakeToken(Tokens.ELSE, yypos, yytext));
+<INITIAL> "then"      => (setCursorPastThenMakeToken(Tokens.THEN, yypos, yytext));
+<INITIAL> "if"        => (setCursorPastThenMakeToken(Tokens.IF, yypos, yytext));
+<INITIAL> "array"     => (setCursorPastThenMakeToken(Tokens.ARRAY, yypos, yytext));
+<INITIAL> ":="        => (setCursorPastThenMakeToken(Tokens.ASSIGN, yypos, yytext));
+<INITIAL> "|"         => (setCursorPastThenMakeToken(Tokens.OR, yypos, yytext));
+<INITIAL> "&"         => (setCursorPastThenMakeToken(Tokens.AND, yypos, yytext));
+<INITIAL> ">="        => (setCursorPastThenMakeToken(Tokens.GE, yypos, yytext));
+<INITIAL> ">"         => (setCursorPastThenMakeToken(Tokens.GT, yypos, yytext));
+<INITIAL> "<="        => (setCursorPastThenMakeToken(Tokens.LE, yypos, yytext));
+<INITIAL> "<"         => (setCursorPastThenMakeToken(Tokens.LT, yypos, yytext));
+<INITIAL> "<>"        => (setCursorPastThenMakeToken(Tokens.NEQ, yypos, yytext));
+<INITIAL> "="         => (setCursorPastThenMakeToken(Tokens.EQ, yypos, yytext));
+<INITIAL> "/"         => (setCursorPastThenMakeToken(Tokens.DIVIDE, yypos, yytext));
+<INITIAL> "*"         => (setCursorPastThenMakeToken(Tokens.TIMES, yypos, yytext));
+<INITIAL> "-"         => (setCursorPastThenMakeToken(Tokens.MINUS, yypos, yytext));
+<INITIAL> "+"         => (setCursorPastThenMakeToken(Tokens.PLUS, yypos, yytext));
+<INITIAL> "{"         => (setCursorPastThenMakeToken(Tokens.LBRACE, yypos, yytext));
+<INITIAL> "}"         => (setCursorPastThenMakeToken(Tokens.RBRACE, yypos, yytext));
+<INITIAL> "["         => (setCursorPastThenMakeToken(Tokens.LBRACK, yypos, yytext));
+<INITIAL> "]"         => (setCursorPastThenMakeToken(Tokens.RBRACK, yypos, yytext));
+<INITIAL> "("         => (setCursorPastThenMakeToken(Tokens.LPAREN, yypos, yytext));
+<INITIAL> ")"         => (setCursorPastThenMakeToken(Tokens.RPAREN, yypos, yytext));
+<INITIAL> ";"         => (setCursorPastThenMakeToken(Tokens.SEMICOLON, yypos, yytext));
+<INITIAL> ":"         => (setCursorPastThenMakeToken(Tokens.COLON, yypos, yytext));
+<INITIAL> ","	      => (setCursorPastThenMakeToken(Tokens.COMMA, yypos, yytext));
+<INITIAL> "."	      => (setCursorPastThenMakeToken(Tokens.DOT, yypos, yytext));
+
 <INITIAL> [A-Za-z][A-Za-z0-9_]* => (setCursorPast(yypos, yytext);
                                     Tokens.ID(yytext, yypos, yypos + String.size(yytext)));
 <INITIAL> [0-9]+                => (setCursorPast(yypos, yytext);
@@ -124,8 +126,7 @@ legalStringAsciiCode = [\032-\033\035-\091\093-\126];
                  strStartPos := yypos;
                  strBuffer := "";
                  continue());
-<INITIAL>. => (err yypos (" illegal character: " ^ yytext);
-              continue());
+<INITIAL> .  => (err yypos (" illegal character: " ^ yytext); continue());
 
 
 
@@ -137,35 +138,21 @@ legalStringAsciiCode = [\032-\033\035-\091\093-\126];
 <STRING> {eol} => (initNewline(yypos);
                    err yypos (" illegal string: " ^ yytext);
                    continue());
-<STRING> \\ => (YYBEGIN(ESCAPE);
-                continue());
-<STRING> . => (err yypos (" illegal string: " ^ yytext);
-               continue());
+<STRING> \\ => (YYBEGIN(ESCAPE); continue());
+<STRING> .  => (err yypos (" illegal string: " ^ yytext); continue());
 
 
 
-<ESCAPE> n  => (appendBuffer("\\n");
-                YYBEGIN(STRING);
-                continue());
-<ESCAPE> t  => (appendBuffer("\\t");
-                YYBEGIN(STRING);
-                continue());
-<ESCAPE> \" => (appendBuffer("\\\"");
-                YYBEGIN(STRING);
-                continue());
-<ESCAPE> \\ => (appendBuffer("\\\\");
-                YYBEGIN(STRING);
-                continue());
+<ESCAPE> n   => (appendBuffer("\\n"); YYBEGIN(STRING); continue());
+<ESCAPE> t   => (appendBuffer("\\t"); YYBEGIN(STRING); continue());
+<ESCAPE> \"  => (appendBuffer("\\\""); YYBEGIN(STRING); continue());
+<ESCAPE> \\  => (appendBuffer("\\\\"); YYBEGIN(STRING); continue());
 <ESCAPE> {asciiCodes} => (appendBuffer(convertAsciiToString("\\" ^ yytext));
                           YYBEGIN(STRING);
                           continue());
-<ESCAPE> {ws}* => (YYBEGIN(WHITESPACE);
-                   continue());
-<ESCAPE> {eol} => (initNewline(yypos);
-                   YYBEGIN(WHITESPACE);
-                   continue());
-<ESCAPE> . => (err yypos (" illegal escape: \\" ^ yytext);
-              continue());
+<ESCAPE> {ws}* => (YYBEGIN(WHITESPACE); continue());
+<ESCAPE> {eol} => (initNewline(yypos); YYBEGIN(WHITESPACE); continue());
+<ESCAPE> . => (err yypos (" illegal escape: \\" ^ yytext); continue());
 
 
 
