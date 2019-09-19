@@ -24,7 +24,7 @@ fun makeToken(tokenizer, yypos, yytext) = (tokenizer(yypos, yypos + String.size(
 
 (* If we hit end of file, we only care about current state, not code validation *)
 fun eof() = (
-  let 
+  let
   val charPos = hd(!linePos) + !lineCursor
   in
   if (!commentDepth > 0) then
@@ -152,16 +152,19 @@ ws = [\ \t\f];
 <ESCAPE> \\ => (appendBuffer("\\");
                 YYBEGIN(STRING);
                 continue());
-<ESCAPE> [0-9][0-9][0-9] => (let 
-                               val SOME decimalAscii = Int.fromString(yytext)
-                             in
-                               if ((decimalAscii >= 0) andalso (decimalAscii <= 127)) then
-                                 appendBuffer(Char.toString(chr(decimalAscii)))
-                               else 
-                                 err yypos (" illegal ASCII code: " ^ yytext)
-                             end;
-                             YYBEGIN(STRING);
-                             continue());
+<ESCAPE> \^[A-Z@\[\]\\\^_\?] => (appendBuffer("\\" ^ yytext);
+                                 YYBEGIN(STRING);
+			                           continue());
+<ESCAPE> [0-9]{3} => (let
+                        val SOME decimalAscii = Int.fromString(yytext)
+                      in
+                        if ((decimalAscii >= 0) andalso (decimalAscii <= 127)) then
+                           appendBuffer(Char.toString(chr(decimalAscii)))
+                        else
+                          err yypos (" illegal ASCII code: " ^ yytext)
+                      end;
+                      YYBEGIN(STRING);
+                      continue());
 <ESCAPE> {ws}* => (YYBEGIN(WHITESPACE);
                    continue());
 <ESCAPE> {eol} => (initNewline(yypos);
