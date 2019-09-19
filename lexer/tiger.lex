@@ -6,6 +6,16 @@
                          YYBEGIN(STRING);
                          continue());
 *)
+(*
+let 
+val SOME decimalAscii = Int.fromString(yytext)
+in
+if ((decimalAscii >= 0) andalso (decimalAscii <= 127)) then
+appendBuffer(Char.toString(chr(decimalAscii)))
+else 
+err yypos (" illegal ASCII code: " ^ yytext)
+end;
+*)
 
 type pos = int
 type lexresult = Tokens.token
@@ -145,21 +155,28 @@ ws = [\ \t\f];
 
 
 
-<ESCAPE> n  => (appendBuffer("\\n");
+<ESCAPE> n  => (appendBuffer("\n");
                 YYBEGIN(STRING);
                 continue());
-<ESCAPE> t  => (appendBuffer("\\t");
+<ESCAPE> t  => (appendBuffer("\t");
                 YYBEGIN(STRING);
                 continue());
-<ESCAPE> [\^][@|A-Z|\[|\\|\]|\^|\-] => (appendBuffer("\\" ^ yytext);
-                                        YYBEGIN(STRING);
-                                        continue());
-<ESCAPE> \" => (appendBuffer("\\\"");
+<ESCAPE> \" => (appendBuffer("\"");
                 YYBEGIN(STRING);
                 continue());
-<ESCAPE> \\ => (appendBuffer("\\\\");
+<ESCAPE> \\ => (appendBuffer("\\");
                 YYBEGIN(STRING);
                 continue());
+<ESCAPE> [0-9][0-9][0-9] => (let 
+                               val SOME decimalAscii = Int.fromString(yytext)
+                             in
+                               if ((decimalAscii >= 0) andalso (decimalAscii <= 127)) then
+                                 appendBuffer(Char.toString(chr(decimalAscii)))
+                               else 
+                                 err yypos (" illegal ASCII code: " ^ yytext)
+                             end;
+                             YYBEGIN(STRING);
+                             continue());
 <ESCAPE> {ws}* => (YYBEGIN(WHITESPACE);
                    continue());
 <ESCAPE> {eol} => (initNewline(yypos);
