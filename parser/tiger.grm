@@ -20,9 +20,8 @@ structure A = Absyn
        | binary_expr of A.exp
        | call_expr of A.exp
        | let_expr of A.exp
-       | let_expr_seq of (A.exp * pos) list
+       | expr_seq of (A.exp * pos) list
        | function_args of A.exp list
-       | function_arg_tail of A.exp list
        | decl_seq of A.dec list
        | dec of A.dec
 
@@ -57,14 +56,14 @@ structure A = Absyn
 program	: exp				(exp)
 
 
-exp: NIL                    (A.NilExp)
-   | INT                    (A.IntExp(INT))
-   | STRING                 (A.StringExp(STRING, STRINGleft))
-   | control_flow_expr      (control_flow_expr)
-   | binary_expr            (binary_expr)
-   | MINUS exp %prec UMINUS (A.OpExp{left = A.IntExp(0), oper = A.MinusOp, right = exp, pos = MINUSleft})
-   | call_expr              (call_expr)
-   | let_expr               (let_expr)
+exp: NIL                                 (A.NilExp)
+   | INT                                 (A.IntExp(INT))
+   | STRING                              (A.StringExp(STRING, STRINGleft))
+   | control_flow_expr                   (control_flow_expr)
+   | binary_expr                         (binary_expr)
+   | MINUS exp %prec UMINUS              (A.OpExp{left = A.IntExp(0), oper = A.MinusOp, right = exp, pos = MINUSleft})
+   | ID LPAREN function_args RPAREN      (A.CallExp{func = Symbol.Symbol(ID), args = rev(function_args), pos = IDleft})
+   | LET decl_seq IN expr_seq END        (A.LetExp{decs = rev(decl_seq), body = A.SeqExp(rev(expr_seq)), pos = LETleft})
    | (* TODO: records, arrays, assignments, l-values, *)
 
 
@@ -86,24 +85,18 @@ control_flow_expr: IF exp THEN exp ELSE exp         (A.IfExp({test=exp1, then'=e
                  | WHILE exp DO exp                 (A.WhileExp{test = exp1, body = exp2, pos = WHILEleft})
                  | FOR ID ASSIGN exp TO exp DO exp  (A.ForExp{var = Symbol.symbol(ID), escape = ref true, lo = exp1, high = exp2, body = exp3, pos = FORleft})
 
-let_expr: LET decl_seq IN let_expr_seq END (A.LetExp{decs = decl_seq, body = A.SeqExp(let_expr_seq), pos = LETleft})
+expr_seq: expr_seq SEMICOLON exp  ((exp, expleft)::expr_seq)
+        | exp                     ((exp, expleft)::nil)
+        |                         (nil)
 
-let_expr_seq: exp expr_tail ((exp, expleft)::expr_tail)
-            | exp           ((exp, expleft)::nil)
-            |               (nil)
+explist:  exp           (exp::nil)
+		| explist COMMA exp (exp::explist)
 
-expr_tail: SEMICOLON exp expr_tail  ((exp, expleft)::expr_tail)
-        |                           ([])
-
-decl_seq: decl          (decl::nil)
-        | decl decl_seq (decl::decl_seq)
+decl_seq: decl_seq decl  (decl::decl_seq)
+        | decl           (decl::nil)
 
 decl: (* TODO: Have to handle declarations for variables, function identifiers, type identifiers here *)
 
-call_expr: ID LPAREN function_args RPAREN      (A.CallExp{func = Symbol.Symbol(ID), args = function_args, pos = IDleft})
-
-function_args: exp function_arg_tail           (exp::function_arg_tail)
-             |                                 ([])
-
-function_arg_tail: COMMA exp function_arg_tail (exp::function_arg_tail)
-                 |                             ([])
+function_args: function_arg                     (function_arg::nil)
+             | function_args COMMA function_arg (function_arg::function_args)
+             |                                  (nil)
