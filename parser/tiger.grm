@@ -16,20 +16,20 @@ structure A = Absyn
 (* TODO fix nonterm list *)
 %nonterm program of A.exp
        | expr of A.exp
-       | binary_op of ()
-       | expr_seq of (A.expr * pos) list
-       | expr_list of A.expr list
-       | field_list of ()
-       | lvalue of ()
-       | type_id of ()
+       | binary_op
+       | expr_seq of A.exp list
+       | expr_list of A.exp list
+       | field_list
+       | lvalue
+       | type_id
        | decl_seq of A.dec list
        | decl of A.dec
-       | type_decl of ()
-       | type_val of ()
-       | type_fields of ()
-       | type_field of ()
-       | var_decl of ()
-       | func_decl of ()
+       | type_decl of A.TypeDec
+       | type_val
+       | type_fields
+       | type_field
+       | var_decl of A.VarDec
+       | func_decl of A.FunctionDec
 
 %pos int
 %verbose
@@ -96,8 +96,8 @@ expr_seq: expr_seq SEMICOLON expr  ((*(expr, expleft)::expr_seq*))
         | expr                     ((*(expr, expleft)::nil*))
         |                          ()
 
-expr_list: expr_list COMMA expr    ()
-         | expr                    ()
+expr_list: expr_list COMMA expr    ((*(expr, expleft)::expr_seq*))
+         | expr                    ((*(expr, expleft)::nil*))
          |                         ()
 
 field_list: field_list COMMA ID EQ expr     ()
