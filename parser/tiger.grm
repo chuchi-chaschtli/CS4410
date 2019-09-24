@@ -56,13 +56,14 @@ structure A = Absyn
 program	: exp				(exp)
 
 
-exp: NIL                (A.NilExp)
-   | INT                (A.IntExp(INT))
-   | STRING             (A.StringExp(STRING, STRINGleft))
-   | control_flow_expr  (control_flow_expr)
-   | binary_expr        (binary_expr)
-   | call_expr          (call_expr)
-   | let_expr           (let_expr)
+exp: NIL                    (A.NilExp)
+   | INT                    (A.IntExp(INT))
+   | STRING                 (A.StringExp(STRING, STRINGleft))
+   | control_flow_expr      (control_flow_expr)
+   | binary_expr            (binary_expr)
+   | MINUS exp %prec UMINUS (A.OpExp{left = A.IntExp(0), oper = A.MinusOp, right = exp, pos = MINUSleft})
+   | call_expr              (call_expr)
+   | let_expr               (let_expr)
    | (* TODO: records, arrays, assignments, l-values, unary minus, *)
 
 
