@@ -18,8 +18,6 @@ structure A = Absyn
        | expr_tail of (A.exp * pos) list
        | control_flow_expr of A.exp
        | binary_expr of A.exp
-       | call_expr of A.exp
-       | let_expr of A.exp
        | expr_seq of (A.exp * pos) list
        | function_args of A.exp list
        | decl_seq of A.dec list
