@@ -89,9 +89,6 @@ expr_seq: expr_seq SEMICOLON exp  ((exp, expleft)::expr_seq)
         | exp                     ((exp, expleft)::nil)
         |                         (nil)
 
-explist:  exp           (exp::nil)
-		| explist COMMA exp (exp::explist)
-
 decl_seq: decl_seq decl  (decl::decl_seq)
         | decl           (decl::nil)
 
