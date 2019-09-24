@@ -7,7 +7,7 @@ structure A = Absyn
   | INT of int | STRING of string
   | COMMA | COLON | SEMICOLON | LPAREN | RPAREN | LBRACK | RBRACK
   | LBRACE | RBRACE | DOT
-  | PLUS | MINUS | TIMES | DIVIDE | EQ | NEQ | LT | LE | GT | GE
+  | PLUS | MINUS | TIMES | DIVIDE | EQ | NEQ | LT | LE | GT | GE | UMINUS
   | AND | OR | ASSIGN
   | ARRAY | IF | THEN | ELSE | WHILE | FOR | TO | DO | LET | IN | END | OF
   | BREAK | NIL
@@ -60,21 +60,23 @@ exp: NIL                                 (A.NilExp)
    | control_flow_expr                   (control_flow_expr)
    | binary_expr                         (binary_expr)
    | MINUS exp %prec UMINUS              (A.OpExp{left = A.IntExp(0), oper = A.MinusOp, right = exp, pos = MINUSleft})
-   | ID LPAREN function_args RPAREN      (A.CallExp{func = Symbol.Symbol(ID), args = rev(function_args), pos = IDleft})
+   | LPAREN expr_seq RPAREN              (A.SeqExp(rev(expr_seq)))
+   | ID LPAREN function_args RPAREN      (A.CallExp{func = Symbol.symbol(ID), args = rev(function_args), pos = IDleft})
+   | ID LBRACK exp RBRACK OF exp         (A.ArrayExp{typ = Symbol.symbol(ID), size = exp1, init = exp2, pos = IDleft})
    | LET decl_seq IN expr_seq END        (A.LetExp{decs = rev(decl_seq), body = A.SeqExp(rev(expr_seq)), pos = LETleft})
-   | (* TODO: records, arrays, assignments, l-values, *)
+   | (* TODO: records, assignments, lvalues, *)
 
 
 binary_expr: exp PLUS exp     (A.OpExp{left = exp1, oper = A.PlusOp, right = exp2, pos = exp1left})
            | exp MINUS exp    (A.OpExp{left = exp1, oper = A.MinusOp, right = exp2, pos = exp1left})
            | exp TIMES exp    (A.OpExp{left = exp1, oper = A.TimesOp, right = exp2, pos = exp1left})
            | exp DIVIDE exp   (A.OpExp{left = exp1, oper = A.DivideOp, right = exp2, pos = exp1left})
-           | exp EQ exp       (A.OpExp{left = exp1, oper = A.EqOp, right =exp2 , pos = exp1left})
+           | exp EQ exp       (A.OpExp{left = exp1, oper = A.EqOp, right = exp2, pos = exp1left})
            | exp NEQ exp1     (A.OpExp{left = exp1, oper = A.NeqOp, right = exp2, pos = exp1left})
-           | exp LT exp       (A.OpExp{left = exp1, oper = A.LtOp, right =exp2 , pos = exp1left})
-           | exp GT exp       (A.OpExp{left = exp1, oper = A.GtOp, right =exp2 , pos = exp1left})
-           | exp GE exp       (A.OpExp{left = exp1, oper = A.GeOp, right =exp2 , pos = exp1left})
-           | exp LE exp       (A.OpExp{left = exp1, oper = A.LeOp, right =exp2 , pos = exp1left})
+           | exp LT exp       (A.OpExp{left = exp1, oper = A.LtOp, right = exp2, pos = exp1left})
+           | exp GT exp       (A.OpExp{left = exp1, oper = A.GtOp, right = exp2, pos = exp1left})
+           | exp GE exp       (A.OpExp{left = exp1, oper = A.GeOp, right = exp2, pos = exp1left})
+           | exp LE exp       (A.OpExp{left = exp1, oper = A.LeOp, right = exp2, pos = exp1left})
            | exp AND exp      (A.IfExp{test = exp1, then='exp2, else' = SOME(A.IntExp(0)), pos = exp1left})
            | exp OR exp       (A.IfExp{test=exp1, then'=A.IntExp(1), else'=SOME exp2, pos=exp1left})
 
@@ -82,6 +84,7 @@ control_flow_expr: IF exp THEN exp ELSE exp         (A.IfExp({test=exp1, then'=e
                  | IF exp THEN exp                  (A.IfExp({test=exp1, then'=exp2, else'=NONE, pos=IFleft}))
                  | WHILE exp DO exp                 (A.WhileExp{test = exp1, body = exp2, pos = WHILEleft})
                  | FOR ID ASSIGN exp TO exp DO exp  (A.ForExp{var = Symbol.symbol(ID), escape = ref true, lo = exp1, high = exp2, body = exp3, pos = FORleft})
+                 | BREAK                            (A.BreakExp(BREAKleft))
 
 expr_seq: expr_seq SEMICOLON exp  ((exp, expleft)::expr_seq)
         | exp                     ((exp, expleft)::nil)
