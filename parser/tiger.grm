@@ -2,18 +2,29 @@ structure A = Absyn
 
 %%
 %term
-    EOF 
+    EOF
   | ID of string
-  | INT of int | STRING of string 
-  | COMMA | COLON | SEMICOLON | LPAREN | RPAREN | LBRACK | RBRACK 
-  | LBRACE | RBRACE | DOT 
+  | INT of int | STRING of string
+  | COMMA | COLON | SEMICOLON | LPAREN | RPAREN | LBRACK | RBRACK
+  | LBRACE | RBRACE | DOT
   | PLUS | MINUS | TIMES | DIVIDE | EQ | NEQ | LT | LE | GT | GE
   | AND | OR | ASSIGN
-  | ARRAY | IF | THEN | ELSE | WHILE | FOR | TO | DO | LET | IN | END | OF 
+  | ARRAY | IF | THEN | ELSE | WHILE | FOR | TO | DO | LET | IN | END | OF
   | BREAK | NIL
-  | FUNCTION | VAR | TYPE 
+  | FUNCTION | VAR | TYPE
 
-%nonterm  exp | program of A.exp
+%nonterm program of A.exp
+       | exp of A.exp
+       | expr_tail of (A.exp * pos) list
+       | control_flow_expr of A.exp
+       | binary_expr of A.exp
+       | call_expr of A.exp
+       | let_expr of A.exp
+       | let_expr_seq of (A.exp * pos) list
+       | function_args of A.exp list
+       | function_arg_tail of A.exp list
+       | decl_seq of A.dec list
+       | dec of A.dec
 
 %pos int
 %verbose
@@ -21,9 +32,17 @@ structure A = Absyn
 %eop EOF
 %noshift EOF
 
+%nonassoc ASSIGN
+%left OR
+%left AND
+%nonassoc EQ NEQ GT LT GE LE
+%left PLUS MINUS
+%left TIMES DIVIDE
+%left UMINUS
+
 %name Tiger
 
-%keyword WHILE FOR TO BREAK LET IN END FUNCTION VAR TYPE ARRAY IF THEN ELSE 
+%keyword WHILE FOR TO BREAK LET IN END FUNCTION VAR TYPE ARRAY IF THEN ELSE
 	DO OF NIL
 
 %prefer THEN ELSE LPAREN
@@ -36,5 +55,54 @@ structure A = Absyn
 
 program	: exp				(exp)
 
-	
-exp: NIL		(A.NilExp)
+
+exp: NIL		            (A.NilExp)
+   | INT                (A.IntExp(INT))
+   | STRING             (A.StringExp(STRING, STRINGleft))
+   | control_flow_expr  (control_flow_expr)
+   | binary_expr        (binary_expr)
+   | call_expr          (call_expr)
+   | let_expr           (let_expr)
+   | (* TODO: records, arrays, assignments, l-values, unary minus, *)
+
+
+binary_expr: exp PLUS exp     (A.OpExp{left = exp1, oper = A.PlusOp, right = exp2, pos = exp1left})
+           | exp MINUS exp    (A.OpExp{left = exp1, oper = A.MinusOp, right = exp2, pos = exp1left})
+           | exp TIMES exp    (A.OpExp{left = exp1, oper = A.TimesOp, right = exp2, pos = exp1left})
+           | exp DIVIDE exp   (A.OpExp{left = exp1, oper = A.DivideOp, right = exp2, pos = exp1left})
+           | exp EQ exp		    (A.OpExp{left = exp1, oper = A.EqOp, right =exp2 , pos = exp1left})
+           | exp NEQ exp		  (A.OpExp{left = exp1, oper = A.NeqOp, right = exp2, pos = exp1left})
+           | exp LT exp		    (A.OpExp{left = exp1, oper = A.LtOp, right =exp2 , pos = exp1left})
+           | exp GT exp		    (A.OpExp{left = exp1, oper = A.GtOp, right =exp2 , pos = exp1left})
+           | exp GE exp		    (A.OpExp{left = exp1, oper = A.GeOp, right =exp2 , pos = exp1left})
+           | exp LE exp		    (A.OpExp{left = exp1, oper = A.LeOp, right =exp2 , pos = exp1left})
+           | exp AND exp      (A.IfExp{test = exp1, then='exp2, else' = SOME(A.IntExp(0)), pos = exp1left})
+           | exp OR exp		    (A.IfExp{test=exp1, then'=A.IntExp(1), else'=SOME exp2, pos=exp1left})
+
+control_flow_expr: cond_expr                        (cond_expr)
+                 | WHILE exp DO exp                 (A.WhileExp{test = exp1, body = exp2, pos = WHILEleft})
+                 | FOR ID ASSIGN exp TO exp DO exp  (A.ForExp{var = Symbol.symbol(ID), escape = ref true, lo = exp1, high = exp2, body = exp3, pos = FORleft})
+
+cond_expr: (* TODO: Dangling else?? *)
+
+let_expr: LET decl_seq IN let_expr_seq END (A.LetExp{decs = decl_seq, body = A.SeqExp(let_expr_seq), pos = LETleft})
+
+let_expr_seq: exp expr_tail ((exp, expleft)::expr_tail)
+            | exp           ((exp, expleft)::nil)
+            |               (nil)
+
+expr_tail: SEMICOLON exp expr_tail  ((exp, expleft)::expr_tail)
+        |                           ([])
+
+decl_seq: decl          (decl::nil)
+        | decl decl_seq (decl::decl_seq)
+
+decl: (* TODO: Have to handle declarations for variables, function identifiers, type identifiers here *)
+
+call_expr: ID LPAREN function_args RPAREN   (A.CallExp{func = Symbol.Symbol(ID), args = function_args, pos = IDleft})
+
+function_args: exp function_arg_tail           (exp::function_arg_tail)
+             |                                 ([])
+
+function_arg_tail: COMMA exp function_arg_tail (exp::function_arg_tail)
+                 |                             ([])
