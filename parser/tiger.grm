@@ -56,7 +56,7 @@ structure A = Absyn
 program	: exp				(exp)
 
 
-exp: NIL		            (A.NilExp)
+exp: NIL                (A.NilExp)
    | INT                (A.IntExp(INT))
    | STRING             (A.StringExp(STRING, STRINGleft))
    | control_flow_expr  (control_flow_expr)
@@ -70,14 +70,14 @@ binary_expr: exp PLUS exp     (A.OpExp{left = exp1, oper = A.PlusOp, right = exp
            | exp MINUS exp    (A.OpExp{left = exp1, oper = A.MinusOp, right = exp2, pos = exp1left})
            | exp TIMES exp    (A.OpExp{left = exp1, oper = A.TimesOp, right = exp2, pos = exp1left})
            | exp DIVIDE exp   (A.OpExp{left = exp1, oper = A.DivideOp, right = exp2, pos = exp1left})
-           | exp EQ exp		    (A.OpExp{left = exp1, oper = A.EqOp, right =exp2 , pos = exp1left})
-           | exp NEQ exp		  (A.OpExp{left = exp1, oper = A.NeqOp, right = exp2, pos = exp1left})
-           | exp LT exp		    (A.OpExp{left = exp1, oper = A.LtOp, right =exp2 , pos = exp1left})
-           | exp GT exp		    (A.OpExp{left = exp1, oper = A.GtOp, right =exp2 , pos = exp1left})
-           | exp GE exp		    (A.OpExp{left = exp1, oper = A.GeOp, right =exp2 , pos = exp1left})
-           | exp LE exp		    (A.OpExp{left = exp1, oper = A.LeOp, right =exp2 , pos = exp1left})
+           | exp EQ exp       (A.OpExp{left = exp1, oper = A.EqOp, right =exp2 , pos = exp1left})
+           | exp NEQ exp1     (A.OpExp{left = exp1, oper = A.NeqOp, right = exp2, pos = exp1left})
+           | exp LT exp       (A.OpExp{left = exp1, oper = A.LtOp, right =exp2 , pos = exp1left})
+           | exp GT exp       (A.OpExp{left = exp1, oper = A.GtOp, right =exp2 , pos = exp1left})
+           | exp GE exp       (A.OpExp{left = exp1, oper = A.GeOp, right =exp2 , pos = exp1left})
+           | exp LE exp       (A.OpExp{left = exp1, oper = A.LeOp, right =exp2 , pos = exp1left})
            | exp AND exp      (A.IfExp{test = exp1, then='exp2, else' = SOME(A.IntExp(0)), pos = exp1left})
-           | exp OR exp		    (A.IfExp{test=exp1, then'=A.IntExp(1), else'=SOME exp2, pos=exp1left})
+           | exp OR exp       (A.IfExp{test=exp1, then'=A.IntExp(1), else'=SOME exp2, pos=exp1left})
 
 control_flow_expr: cond_expr                        (cond_expr)
                  | WHILE exp DO exp                 (A.WhileExp{test = exp1, body = exp2, pos = WHILEleft})
@@ -99,7 +99,7 @@ decl_seq: decl          (decl::nil)
 
 decl: (* TODO: Have to handle declarations for variables, function identifiers, type identifiers here *)
 
-call_expr: ID LPAREN function_args RPAREN   (A.CallExp{func = Symbol.Symbol(ID), args = function_args, pos = IDleft})
+call_expr: ID LPAREN function_args RPAREN      (A.CallExp{func = Symbol.Symbol(ID), args = function_args, pos = IDleft})
 
 function_args: exp function_arg_tail           (exp::function_arg_tail)
              |                                 ([])
