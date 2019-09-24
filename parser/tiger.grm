@@ -32,7 +32,8 @@ structure A = Absyn
 %eop EOF
 %noshift EOF
 
-%nonassoc ASSIGN
+%nonassoc ASSIGN THEN
+%nonassoc ELSE
 %left OR
 %left AND
 %nonassoc EQ NEQ GT LT GE LE
@@ -64,7 +65,7 @@ exp: NIL                    (A.NilExp)
    | MINUS exp %prec UMINUS (A.OpExp{left = A.IntExp(0), oper = A.MinusOp, right = exp, pos = MINUSleft})
    | call_expr              (call_expr)
    | let_expr               (let_expr)
-   | (* TODO: records, arrays, assignments, l-values, unary minus, *)
+   | (* TODO: records, arrays, assignments, l-values, *)
 
 
 binary_expr: exp PLUS exp     (A.OpExp{left = exp1, oper = A.PlusOp, right = exp2, pos = exp1left})
@@ -80,11 +81,10 @@ binary_expr: exp PLUS exp     (A.OpExp{left = exp1, oper = A.PlusOp, right = exp
            | exp AND exp      (A.IfExp{test = exp1, then='exp2, else' = SOME(A.IntExp(0)), pos = exp1left})
            | exp OR exp       (A.IfExp{test=exp1, then'=A.IntExp(1), else'=SOME exp2, pos=exp1left})
 
-control_flow_expr: cond_expr                        (cond_expr)
+control_flow_expr: IF exp THEN exp ELSE exp         (A.IfExp({test=exp1, then'=exp2, else'=SOME exp3, pos=IFleft}))
+                 | IF exp THEN exp                  (A.IfExp({test=exp1, then'=exp2, else'=NONE, pos=IFleft}))
                  | WHILE exp DO exp                 (A.WhileExp{test = exp1, body = exp2, pos = WHILEleft})
                  | FOR ID ASSIGN exp TO exp DO exp  (A.ForExp{var = Symbol.symbol(ID), escape = ref true, lo = exp1, high = exp2, body = exp3, pos = FORleft})
-
-cond_expr: (* TODO: Dangling else?? *)
 
 let_expr: LET decl_seq IN let_expr_seq END (A.LetExp{decs = decl_seq, body = A.SeqExp(let_expr_seq), pos = LETleft})
 
