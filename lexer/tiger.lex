@@ -2,8 +2,10 @@
 
 (* TODO fix missing control char lexing, i.e. "\^C" *)
 
+type svalue = Tokens.svalue
 type pos = int
-type lexresult = Tokens.token
+type ('a, 'b) token = ('a, 'b) Tokens.token
+type lexresult = (svalue, pos) token
 
 val commentDepth = ref 0
 
@@ -42,6 +44,8 @@ fun appendBuffer(str) =
   strBuffer := !strBuffer ^ str;
 
 %%
+
+%header (functor TigerLexFun(structure Tokens: Tiger_TOKENS));
 
 %s COMMENT STRING ESCAPE WHITESPACE;
 

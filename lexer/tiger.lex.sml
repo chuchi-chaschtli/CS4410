@@ -1,4 +1,4 @@
-functor TigerLexFun(structure Tokens: Tiger_TOKENS)  = struct
+structure Mlex  = struct
 
     structure yyInput : sig
 
@@ -106,10 +106,8 @@ STRING | WHITESPACE | COMMENT | ESCAPE | INITIAL
 
 (* TODO fix missing control char lexing, i.e. "\^C" *)
 
-type svalue = Tokens.svalue
 type pos = int
-type ('a, 'b) token = ('a, 'b) Tokens.token
-type lexresult = (svalue, pos) token
+type lexresult = Tokens.token
 
 val commentDepth = ref 0
 
