@@ -130,7 +130,7 @@ type_fields: type_field                       ()
 type_field: ID COMMA type_id     ()
 
 var_decl: VAR ID ASSIGN expr                  ()
-        | VAR ID COLOR type_id ASSIGN expr    ()
+        | VAR ID COLON type_id ASSIGN expr    ()
 
 func_decl: FUNCTION ID LPAREN type_fields RPAREN EQ expr                 ()
          | FUNCTION ID LPAREN type_fields RPAREN COLON type_id EQ expr   ()

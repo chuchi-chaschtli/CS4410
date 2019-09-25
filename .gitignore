@@ -1,0 +1,6 @@
+.cm
+lexer/tiger.lex.sml
+
+parser/tiger.grm.sig
+parser/tiger.grm.sml
+parser/tiger.grm.desc
