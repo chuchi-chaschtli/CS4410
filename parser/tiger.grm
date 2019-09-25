@@ -37,11 +37,13 @@ structure A = Absyn
 %noshift EOF
 
 %nonassoc ASSIGN THEN
+%nonassoc ELSE
 %nonassoc EQ NEQ GT LT GE LE
-%left PLUS MINUS OR
-%left TIMES DIVIDE AND
+%left OR
+%left AND
+%left PLUS MINUS
+%left TIMES DIVIDE
 %left UMINUS
-%right ELSE
 
 %name Tiger
 
