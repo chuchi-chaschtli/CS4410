@@ -21,7 +21,6 @@ structure A = Absyn
        | expr_list of A.exp list
        | field_list
        | lvalue
-       | type_id
        | decl_seq of A.dec list
        | decl of A.dec
        | type_decl of A.TypeDec
@@ -68,8 +67,8 @@ expr: STRING                                 ((*A.Stringexpr(STRING, STRINGleft)
     | lvalue ASSIGN expr                     ()
     | ID LPAREN expr_list RPAREN             ()
     | LPAREN expr_seq RPAREN                 ((*A.Seqexpr(rev(expr_seq))*))
-    | type_id LBRACE field_list RBRACE       ()
-    | type_id LBRACK expr RBRACK OF expr     ()
+    | ID LBRACE field_list RBRACE       ()
+    | ID LBRACK expr RBRACK OF expr     ()
     | IF expr THEN expr                      ((*A.Ifexpr({test=exp1, then'=exp2, else'=NONE, pos=IFleft})*))
     | IF expr THEN expr ELSE expr %prec ELSE ((*A.Ifexpr({test=exp1, then'=exp2, else'=SOME exp3, pos=IFleft})*))
     | WHILE expr DO expr                     ((*A.Whileexpr{test = exp1, body = exp2, pos = WHILEleft}*)) 
@@ -106,8 +105,6 @@ lvalue: ID                                  ()
       | lvalue DOT ID                       ()
       | lvalue LBRACK expr RBRACK           ()
 
-type_id: ID                                 ()
-
 decl_seq: decl_seq decl  ((*decl::decl_seq*))
         | decl           ((*decl::nil*))
 
@@ -115,20 +112,20 @@ decl: type_decl     ()
     | var_decl      ()
     | func_decl     ()
 
-type_decl: TYPE type_id EQ type_val ()
+type_decl: TYPE ID EQ type_val ()
 
-type_val: type_id                       ()
+type_val: ID                       ()
         | LBRACE type_fields RBRACE     ()
-        | ARRAY OF type_id              ()
+        | ARRAY OF ID              ()
 
 type_fields: type_field                       ()
            | type_fields COMMA type_field     ()
            |                                  ()
 
-type_field: ID COMMA type_id     ()
+type_field: ID COMMA ID     ()
 
 var_decl: VAR ID ASSIGN expr                  ()
-        | VAR ID COLON type_id ASSIGN expr    ()
+        | VAR ID COLON ID ASSIGN expr    ()
 
 func_decl: FUNCTION ID LPAREN type_fields RPAREN EQ expr                 ()
-         | FUNCTION ID LPAREN type_fields RPAREN COLON type_id EQ expr   ()
+         | FUNCTION ID LPAREN type_fields RPAREN COLON ID EQ expr   ()
