@@ -1604,6 +1604,18 @@ state 104:
 	expr : expr . binary_op expr 
 	expr : IF expr THEN expr ELSE expr .  (reduce by rule 13)
 
+	PLUS	shift 29
+	MINUS	shift 28
+	TIMES	shift 27
+	DIVIDE	shift 26
+	EQ	shift 25
+	NEQ	shift 24
+	LT	shift 23
+	LE	shift 22
+	GT	shift 21
+	GE	shift 20
+	AND	shift 19
+	OR	shift 18
 
 	binary_op	goto 17
 
@@ -1920,10 +1932,9 @@ state 121:
 
 
 	EOF	accept
-	SEMICOLON	accept
 
 
 	.	error
 
-348 of 713 action table entries left after compaction
+359 of 724 action table entries left after compaction
 94 goto table entries
