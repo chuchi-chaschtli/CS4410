@@ -5,8 +5,10 @@ errormsg.sml
 table.sig
 table.sml
 symbol.sml
-parse.sml
+parsetest.sml
 tiger.lex
 tiger.grm
-smlnj-lib.cm
-ml-yacc-lib.cm
+
+$/smlnj-lib.cm
+$/ml-yacc-lib.cm
+$/basis.cm
