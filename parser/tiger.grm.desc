@@ -1,7 +1,6 @@
 49 shift/reduce conflicts
 
 error:  state 13: shift/reduce conflict (shift LBRACK, reduce by rule 39)
-
 error:  state 49: shift/reduce conflict (shift OR, reduce by rule 6)
 error:  state 49: shift/reduce conflict (shift AND, reduce by rule 6)
 error:  state 49: shift/reduce conflict (shift GE, reduce by rule 6)
@@ -14,7 +13,6 @@ error:  state 49: shift/reduce conflict (shift DIVIDE, reduce by rule 6)
 error:  state 49: shift/reduce conflict (shift TIMES, reduce by rule 6)
 error:  state 49: shift/reduce conflict (shift MINUS, reduce by rule 6)
 error:  state 49: shift/reduce conflict (shift PLUS, reduce by rule 6)
-
 error:  state 72: shift/reduce conflict (shift OR, reduce by rule 14)
 error:  state 72: shift/reduce conflict (shift AND, reduce by rule 14)
 error:  state 72: shift/reduce conflict (shift GE, reduce by rule 14)
@@ -27,7 +25,6 @@ error:  state 72: shift/reduce conflict (shift DIVIDE, reduce by rule 14)
 error:  state 72: shift/reduce conflict (shift TIMES, reduce by rule 14)
 error:  state 72: shift/reduce conflict (shift MINUS, reduce by rule 14)
 error:  state 72: shift/reduce conflict (shift PLUS, reduce by rule 14)
-
 error:  state 106: shift/reduce conflict (shift OR, reduce by rule 11)
 error:  state 106: shift/reduce conflict (shift AND, reduce by rule 11)
 error:  state 106: shift/reduce conflict (shift GE, reduce by rule 11)
@@ -40,7 +37,6 @@ error:  state 106: shift/reduce conflict (shift DIVIDE, reduce by rule 11)
 error:  state 106: shift/reduce conflict (shift TIMES, reduce by rule 11)
 error:  state 106: shift/reduce conflict (shift MINUS, reduce by rule 11)
 error:  state 106: shift/reduce conflict (shift PLUS, reduce by rule 11)
-
 error:  state 118: shift/reduce conflict (shift OR, reduce by rule 15)
 error:  state 118: shift/reduce conflict (shift AND, reduce by rule 15)
 error:  state 118: shift/reduce conflict (shift GE, reduce by rule 15)
@@ -457,38 +453,38 @@ state 29:
 
 state 30:
 
-	decl : func_decl .  (reduce by rule 46)
-
-
-
-	.	reduce by rule 46
-
-
-state 31:
-
-	decl : var_decl .  (reduce by rule 45)
-
-
-
-	.	reduce by rule 45
-
-
-state 32:
-
-	decl : type_decl .  (reduce by rule 44)
+	decl : func_decl .  (reduce by rule 44)
 
 
 
 	.	reduce by rule 44
 
 
-state 33:
+state 31:
 
-	decl_seq : decl .  (reduce by rule 43)
+	decl : var_decl .  (reduce by rule 43)
 
 
 
 	.	reduce by rule 43
+
+
+state 32:
+
+	decl : type_decl .  (reduce by rule 42)
+
+
+
+	.	reduce by rule 42
+
+
+state 33:
+
+	decl_seq : decl .  (reduce by rule 46)
+
+
+
+	.	reduce by rule 46
 
 
 state 34:
@@ -784,11 +780,11 @@ state 49:
 
 state 50:
 
-	decl_seq : decl_seq decl .  (reduce by rule 42)
+	decl_seq : decl_seq decl .  (reduce by rule 45)
 
 
 
-	.	reduce by rule 42
+	.	reduce by rule 45
 
 
 state 51:
