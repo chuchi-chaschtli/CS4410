@@ -103,9 +103,9 @@ field_list: field_list COMMA ID EQ expr     ()
           | ID EQ expr                      ()
           |                                 ()
 
-lvalue: ID                                  ()
-      | lvalue DOT ID                       ()
-      | lvalue LBRACK expr RBRACK           ()
+lvalue: ID                                  ((* A.SimpleVar(Symbol.symbol(ID), IDleft) *))
+      | lvalue DOT ID                       ((* A.FieldVar(lvalue, Symbol.symbol(ID), lvalueleft) *))
+      | lvalue LBRACK expr RBRACK           ((* A.SubscriptVar(lvalue, expr, lvalueleft) *))
 
 decl: type_decl     ()
     | var_decl      ()
@@ -126,8 +126,8 @@ type_fields: type_field                   ()
 
 type_field: ID COMMA ID ()
 
-var_decl: VAR ID ASSIGN expr          ()
-        | VAR ID COLON ID ASSIGN expr ()
+var_decl: VAR ID ASSIGN expr          ((*(A.VarDec{name=Symbol.symbol(ID), escape=(ref true), typ=NONE, init=expr, pos=VARleft}*))
+        | VAR ID COLON ID ASSIGN expr ((*(A.VarDec{name=Symbol.symbol(ID1), escape=(ref true), typ=SOME (Symbol.symbol(ID2), ID2left), init=exp, pos=VARleft})*))
 
 func_decl: FUNCTION ID LPAREN type_fields RPAREN EQ expr          ()
          | FUNCTION ID LPAREN type_fields RPAREN COLON ID EQ expr ()
