@@ -599,7 +599,9 @@ state 40:
 state 41:
 
 	expr : LPAREN expr_seq . RPAREN 
+	expr_seq : expr_seq . SEMICOLON expr 
 
+	SEMICOLON	shift 59
 	RPAREN	shift 58
 
 
@@ -609,10 +611,8 @@ state 41:
 state 42:
 
 	expr : expr . binary_op expr 
-	expr_seq : expr . SEMICOLON expr_seq 
 	expr_seq : expr .  (reduce by rule 31)
 
-	SEMICOLON	shift 59
 	PLUS	shift 29
 	MINUS	shift 28
 	TIMES	shift 27
@@ -921,7 +921,7 @@ state 58:
 
 state 59:
 
-	expr_seq : expr SEMICOLON . expr_seq 
+	expr_seq : expr_seq SEMICOLON . expr 
 
 	ID	shift 13
 	INT	shift 12
@@ -935,11 +935,10 @@ state 59:
 	BREAK	shift 4
 	NIL	shift 3
 
-	expr	goto 42
-	expr_seq	goto 74
+	expr	goto 74
 	lvalue	goto 1
 
-	.	reduce by rule 32
+	.	error
 
 
 state 60:
@@ -991,7 +990,9 @@ state 62:
 state 63:
 
 	expr : ID LPAREN expr_list . RPAREN 
+	expr_list : expr_list . COMMA expr 
 
+	COMMA	shift 80
 	RPAREN	shift 79
 
 
@@ -1001,10 +1002,8 @@ state 63:
 state 64:
 
 	expr : expr . binary_op expr 
-	expr_list : expr . COMMA expr_list 
 	expr_list : expr .  (reduce by rule 34)
 
-	COMMA	shift 80
 	PLUS	shift 29
 	MINUS	shift 28
 	TIMES	shift 27
@@ -1035,7 +1034,9 @@ state 65:
 state 66:
 
 	expr : LET decl_seq IN expr_seq . END 
+	expr_seq : expr_seq . SEMICOLON expr 
 
+	SEMICOLON	shift 59
 	END	shift 81
 
 
@@ -1186,9 +1187,23 @@ state 73:
 
 state 74:
 
-	expr_seq : expr SEMICOLON expr_seq .  (reduce by rule 30)
+	expr : expr . binary_op expr 
+	expr_seq : expr_seq SEMICOLON expr .  (reduce by rule 30)
 
+	PLUS	shift 29
+	MINUS	shift 28
+	TIMES	shift 27
+	DIVIDE	shift 26
+	EQ	shift 25
+	NEQ	shift 24
+	LT	shift 23
+	LE	shift 22
+	GT	shift 21
+	GE	shift 20
+	AND	shift 19
+	OR	shift 18
 
+	binary_op	goto 17
 
 	.	reduce by rule 30
 
@@ -1255,7 +1270,7 @@ state 79:
 
 state 80:
 
-	expr_list : expr COMMA . expr_list 
+	expr_list : expr_list COMMA . expr 
 
 	ID	shift 13
 	INT	shift 12
@@ -1269,11 +1284,10 @@ state 80:
 	BREAK	shift 4
 	NIL	shift 3
 
-	expr	goto 64
-	expr_list	goto 96
+	expr	goto 96
 	lvalue	goto 1
 
-	.	reduce by rule 35
+	.	error
 
 
 state 81:
@@ -1491,9 +1505,23 @@ state 95:
 
 state 96:
 
-	expr_list : expr COMMA expr_list .  (reduce by rule 33)
+	expr : expr . binary_op expr 
+	expr_list : expr_list COMMA expr .  (reduce by rule 33)
 
+	PLUS	shift 29
+	MINUS	shift 28
+	TIMES	shift 27
+	DIVIDE	shift 26
+	EQ	shift 25
+	NEQ	shift 24
+	LT	shift 23
+	LE	shift 22
+	GT	shift 21
+	GE	shift 20
+	AND	shift 19
+	OR	shift 18
 
+	binary_op	goto 17
 
 	.	reduce by rule 33
 
@@ -1936,5 +1964,5 @@ state 121:
 
 	.	error
 
-359 of 724 action table entries left after compaction
+384 of 749 action table entries left after compaction
 94 goto table entries
