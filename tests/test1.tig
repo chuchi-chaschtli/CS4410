@@ -5,11 +5,3 @@ let
 in
 	arr1
 end
-
-"\n"
-"\\n"
-"\\\n"
-"\\\\n"
-100
-
-"abcdef"
