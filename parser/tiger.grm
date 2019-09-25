@@ -1,10 +1,10 @@
 structure A = Absyn
 
 %%
-%term
-    EOF
+%term EOF
   | ID of string
-  | INT of int | STRING of string
+  | INT of int
+  | STRING of string
   | COMMA | COLON | SEMICOLON | LPAREN | RPAREN | LBRACK | RBRACK
   | LBRACE | RBRACE | DOT
   | PLUS | MINUS | TIMES | DIVIDE | EQ | NEQ | LT | LE | GT | GE | UMINUS
@@ -13,7 +13,7 @@ structure A = Absyn
   | BREAK | NIL
   | FUNCTION | VAR | TYPE
 
-(* TODO fix nonterm list *)
+(* TODO fix nonterm list types *)
 %nonterm program of A.exp
        | expr of A.exp
        | binary_op
@@ -34,17 +34,15 @@ structure A = Absyn
 %pos int
 %verbose
 %start program
-%eop EOF
+%eop EOF SEMICOLON
 %noshift EOF
 
 %nonassoc ASSIGN THEN
-%nonassoc ELSE
-%left OR
-%left AND
 %nonassoc EQ NEQ GT LT GE LE
-%left PLUS MINUS
-%left TIMES DIVIDE
+%left PLUS MINUS OR
+%left TIMES DIVIDE AND
 %left UMINUS
+%right ELSE
 
 %name Tiger
 
@@ -79,18 +77,18 @@ expr: STRING                              ((*A.Stringexpr(STRING, STRINGleft)*))
     | BREAK                               ((*A.Breakexpr(BREAKleft)*))
     | LET decl_seq IN expr_seq END        ((*A.Letexpr{decs = rev(decl_seq), body = A.Seqexpr(rev(expr_seq)), pos = LETleft}*))
 
-binary_op: PLUS     ((*A.Opexpr{left = exp1, oper = A.PlusOp, right = exp2, pos = exp1left}*))
-         | MINUS    ((*A.Opexpr{left = exp1, oper = A.MinusOp, right = exp2, pos = exp1left}*))
-         | TIMES    ((*A.Opexpr{left = exp1, oper = A.TimesOp, right = exp2, pos = exp1left}*))
-         | DIVIDE   ((*A.Opexpr{left = exp1, oper = A.DivideOp, right = exp2, pos = exp1left}*))
-         | EQ       ((*A.Opexpr{left = exp1, oper = A.EqOp, right = exp2, pos = exp1left}*))
-         | NEQ      ((*A.Opexpr{left = exp1, oper = A.NeqOp, right = exp2, pos = exp1left}*))
-         | LT       ((*A.Opexpr{left = exp1, oper = A.LtOp, right = exp2, pos = exp1left}*))
-         | GT       ((*A.Opexpr{left = exp1, oper = A.GtOp, right = exp2, pos = exp1left}*))
-         | GE       ((*A.Opexpr{left = exp1, oper = A.GeOp, right = exp2, pos = exp1left}*))
-         | LE       ((*A.Opexpr{left = exp1, oper = A.LeOp, right = exp2, pos = exp1left}*))
-         | AND      ((*A.Ifexpr{test = exp1, then='exp2, else' = SOME(A.Intexpr(0)), pos = exp1left}*))
-         | OR       ((*A.Ifexpr{test = exp1, then'=A.Intexpr(1), else'=SOME exp2, pos=exp1left}*))
+binary_op: PLUS   %prec PLUS     ((*A.Opexpr{left = exp1, oper = A.PlusOp, right = exp2, pos = exp1left}*))
+         | MINUS  %prec MINUS    ((*A.Opexpr{left = exp1, oper = A.MinusOp, right = exp2, pos = exp1left}*))
+         | TIMES  %prec TIMES    ((*A.Opexpr{left = exp1, oper = A.TimesOp, right = exp2, pos = exp1left}*))
+         | DIVIDE %prec DIVIDE   ((*A.Opexpr{left = exp1, oper = A.DivideOp, right = exp2, pos = exp1left}*))
+         | EQ     %prec EQ       ((*A.Opexpr{left = exp1, oper = A.EqOp, right = exp2, pos = exp1left}*))
+         | NEQ    %prec NEQ      ((*A.Opexpr{left = exp1, oper = A.NeqOp, right = exp2, pos = exp1left}*))
+         | LT     %prec LT       ((*A.Opexpr{left = exp1, oper = A.LtOp, right = exp2, pos = exp1left}*))
+         | GT     %prec GT       ((*A.Opexpr{left = exp1, oper = A.GtOp, right = exp2, pos = exp1left}*))
+         | GE     %prec GE       ((*A.Opexpr{left = exp1, oper = A.GeOp, right = exp2, pos = exp1left}*))
+         | LE     %prec LE       ((*A.Opexpr{left = exp1, oper = A.LeOp, right = exp2, pos = exp1left}*))
+         | AND    %prec AND      ((*A.Ifexpr{test = exp1, then='exp2, else' = SOME(A.Intexpr(0)), pos = exp1left}*))
+         | OR     %prec OR       ((*A.Ifexpr{test = exp1, then'=A.Intexpr(1), else'=SOME exp2, pos=exp1left}*))
 
 expr_seq: expr_seq SEMICOLON expr  ((*(expr, expleft)::expr_seq*))
         | expr                     ((*(expr, expleft)::nil*))
