@@ -41,7 +41,7 @@ structure A = Absyn
 %nonassoc EQ NEQ GT LT GE LE
 %left PLUS MINUS OR
 %left TIMES DIVIDE AND
-%left NEGATION
+%left UMINUS
 %right ELSE
 
 %name Tiger
@@ -59,23 +59,23 @@ structure A = Absyn
 
 program: expr    ((*expr*))
 
-expr: STRING                              ((*A.Stringexpr(STRING, STRINGleft)*))
-    | INT                                 ((*A.Intexpr(INT)*))
-    | NIL                                 ((*A.Nilexpr*))
-    | lvalue                              ()
-    | MINUS                %prec NEGATION ((*A.Opexpr{left = A.Intexpr(0), oper = A.MinusOp, right =, pos = MINUSleft}*))
-    | expr binary_op expr                 ((*binary_expr*))
-    | lvalue ASSIGN expr                  ()
-    | ID LPAREN expr_list RPAREN          ()
-    | LPAREN expr_seq RPAREN              ((*A.Seqexpr(rev(expr_seq))*))
-    | type_id LBRACE field_list RBRACE    ()
-    | type_id LBRACK expr RBRACK OF expr  ()
-    | IF expr THEN expr                   ((*A.Ifexpr({test=exp1, then'=exp2, else'=NONE, pos=IFleft})*))
-    | IF expr THEN expr ELSE expr         ((*A.Ifexpr({test=exp1, then'=exp2, else'=SOME exp3, pos=IFleft})*))
-    | WHILE expr DO expr                  ((*A.Whileexpr{test = exp1, body = exp2, pos = WHILEleft}*)) 
-    | FOR ID ASSIGN expr TO expr DO expr  ((*A.Forexpr{var = Symbol.symbol(ID), escape = ref true, lo = exp1, high = exp2, body = exp3, pos = FORleft}*))
-    | BREAK                               ((*A.Breakexpr(BREAKleft)*))
-    | LET decl_seq IN expr_seq END        ((*A.Letexpr{decs = rev(decl_seq), body = A.Seqexpr(rev(expr_seq)), pos = LETleft}*))
+expr: STRING                                 ((*A.Stringexpr(STRING, STRINGleft)*))
+    | INT                                    ((*A.Intexpr(INT)*))
+    | NIL                                    ((*A.Nilexpr*))
+    | lvalue                                 ()
+    | MINUS                     %prec UMINUS ((*A.Opexpr{left = A.Intexpr(0), oper = A.MinusOp, right =, pos = MINUSleft}*))
+    | expr binary_op expr                    ((*binary_expr*))
+    | lvalue ASSIGN expr                     ()
+    | ID LPAREN expr_list RPAREN             ()
+    | LPAREN expr_seq RPAREN                 ((*A.Seqexpr(rev(expr_seq))*))
+    | type_id LBRACE field_list RBRACE       ()
+    | type_id LBRACK expr RBRACK OF expr     ()
+    | IF expr THEN expr                      ((*A.Ifexpr({test=exp1, then'=exp2, else'=NONE, pos=IFleft})*))
+    | IF expr THEN expr ELSE expr %prec ELSE ((*A.Ifexpr({test=exp1, then'=exp2, else'=SOME exp3, pos=IFleft})*))
+    | WHILE expr DO expr                     ((*A.Whileexpr{test = exp1, body = exp2, pos = WHILEleft}*)) 
+    | FOR ID ASSIGN expr TO expr DO expr     ((*A.Forexpr{var = Symbol.symbol(ID), escape = ref true, lo = exp1, high = exp2, body = exp3, pos = FORleft}*))
+    | BREAK                                  ((*A.Breakexpr(BREAKleft)*))
+    | LET decl_seq IN expr_seq END           ((*A.Letexpr{decs = rev(decl_seq), body = A.Seqexpr(rev(expr_seq)), pos = LETleft}*))
 
 binary_op: PLUS       %prec PLUS ((*A.Opexpr{left = exp1, oper = A.PlusOp, right = exp2, pos = exp1left}*))
          | MINUS     %prec MINUS ((*A.Opexpr{left = exp1, oper = A.MinusOp, right = exp2, pos = exp1left}*))
@@ -90,11 +90,11 @@ binary_op: PLUS       %prec PLUS ((*A.Opexpr{left = exp1, oper = A.PlusOp, right
          | AND         %prec AND ((*A.Ifexpr{test = exp1, then='exp2, else' = SOME(A.Intexpr(0)), pos = exp1left}*))
          | OR           %prec OR ((*A.Ifexpr{test = exp1, then'=A.Intexpr(1), else'=SOME exp2, pos=exp1left}*))
 
-expr_seq: expr_seq SEMICOLON expr  ((*(expr, expleft)::expr_seq*))
+expr_seq: expr SEMICOLON expr_seq  ((*(expr, expleft)::expr_seq*))
         | expr                     ((*(expr, expleft)::nil*))
         |                          ()
 
-expr_list: expr_list COMMA expr    ((*(expr, expleft)::expr_seq*))
+expr_list: expr COMMA expr_list    ((*(expr, expleft)::expr_seq*))
          | expr                    ((*(expr, expleft)::nil*))
          |                         ()
 
