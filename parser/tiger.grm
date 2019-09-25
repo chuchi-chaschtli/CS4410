@@ -33,7 +33,7 @@ structure A = Absyn
 %pos int
 %verbose
 %start program
-%eop EOF SEMICOLON
+%eop EOF
 %noshift EOF
 
 %nonassoc ASSIGN THEN
