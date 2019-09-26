@@ -20,7 +20,8 @@ structure A = Absyn
        | binary_expr  of A.exp
        | expr_seq     of (A.exp * pos) list
        | expr_list    of A.exp list
-       | field_list   (* of (A.symbol * A.exp * pos) list *)
+       | field_list   of (A.symbol * A.exp * pos) list
+       | field        of (A.symbol * A.exp * pos)
        | lvalue       of A.var
        | decl_seq     of (* A.dec *) list
        | decl         (* of A.dec *)
@@ -71,8 +72,8 @@ expr: STRING                                 (A.StringExp(STRING, STRINGleft))
     | binary_expr                            (binary_expr)
     | lvalue ASSIGN expr                     (A.AssignExp({var = lvalue, exp = expr, pos = lvalueleft}))
     | ID LPAREN expr_list RPAREN             (A.CallExp{func = Symbol.symbol(ID), args = rev(expr_list), pos = IDleft})
-    | LPAREN expr_seq RPAREN                 (A.NilExp (*A.SeqExp(rev(expr_seq))*))
-    | ID LBRACE field_list RBRACE            (A.NilExp (* RecordExp *))
+    | LPAREN expr_seq RPAREN                 (A.SeqExp(rev(expr_seq)))
+    | ID LBRACE field_list RBRACE            (A.RecordExp{fields = rev(field_list), typ = Symbol.symbol(ID), pos = IDleft})
     (* TODO: Validate this parses correctly in AST compared to lvalue *)
     | ID LBRACK expr RBRACK OF expr          () (*** Shift-reduce conflict with lvalue: favor shifting OF ***)
     | IF expr THEN expr                      (A.IfExp{test=expr1, then'=expr2, else'=NONE, pos=IFleft})
@@ -105,9 +106,11 @@ expr_list: expr_list COMMA expr    (expr::expr_list)
          | expr                    (expr::nil)
          |                         (nil)
 
-field_list: field_list COMMA ID EQ expr     ()
-          | ID EQ expr                      ()
-          |                                 ()
+field_list: field_list COMMA field     (field::field_list)
+          | field                      (field::nil)
+          |                            (nil)
+
+field: ID EQ expr                      ((Symbol.symbol(ID), expr, IDleft))
 
 lvalue: ID                                  (A.SimpleVar(Symbol.symbol(ID), IDleft))
       | lvalue DOT ID                       (A.FieldVar(lvalue, Symbol.symbol(ID), lvalueleft))
