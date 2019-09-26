@@ -14,25 +14,25 @@ structure A = Absyn
   | BREAK | NIL
   | FUNCTION | VAR | TYPE
 
-%nonterm program      of A.exp
-       | expr         of A.exp
-       | binary_expr  of A.exp
-       | expr_seq     of (A.exp * pos) list
-       | expr_list    of A.exp list
-       | field_list   of (A.symbol * A.exp * pos) list
-       | field        of (A.symbol * A.exp * pos)
-       | lvalue       of A.var
-       | decl_seq     of A.dec list
-       | decl         of A.dec list
-       | type_decls   of {name: A.symbol, pos: pos, ty: A.ty} list
-       | type_decl    of {name: A.symbol, pos: pos, ty: A.ty}
+%nonterm program        of A.exp
+       | expr           of A.exp
+       | binary_expr    of A.exp
+       | expr_seq       of (A.exp * pos) list
+       | expr_list      of A.exp list
+       | field_list     of (A.symbol * A.exp * pos) list
+       | field          of (A.symbol * A.exp * pos)
+       | lvalue         of A.var
+       | decl_seq       of A.dec list
+       | decl           of A.dec list
+       | type_decls     of {name: A.symbol, pos: pos, ty: A.ty} list
+       | type_decl      of {name: A.symbol, pos: pos, ty: A.ty}
        | not_type_decls of A.dec list
-       | type_val     of A.ty
-       | type_fields  of A.field list
-       | type_field   of A.field
-       | var_decl     of A.dec
-       | func_decls   of A.fundec list
-       | func_decl    of A.fundec
+       | type_val       of A.ty
+       | type_fields    of A.field list
+       | type_field     of A.field
+       | var_decl       of A.dec
+       | func_decls     of A.fundec list
+       | func_decl      of A.fundec
        | not_func_decls of A.dec list
 
 %pos int
@@ -110,50 +110,50 @@ expr_list: expr_list COMMA expr    (expr::expr_list)
          | expr                    (expr::nil)
          |                         (nil)
 
-field_list: field_list COMMA field     (field::field_list)
-          | field                      (field::nil)
-          |                            (nil)
+field_list: field_list COMMA field (field::field_list)
+          | field                  (field::nil)
+          |                        (nil)
 
-field: ID EQ expr                      ((Symbol.symbol(ID), expr, IDleft))
+field: ID EQ expr                  ((Symbol.symbol(ID), expr, IDleft))
 
-lvalue: ID                                  (A.SimpleVar(Symbol.symbol(ID), IDleft))
-      | lvalue DOT ID                       (A.FieldVar(lvalue, Symbol.symbol(ID), lvalueleft))
-      | lvalue LBRACK expr RBRACK           (A.SubscriptVar(lvalue, expr, lvalueleft))
-      | ID LBRACK expr RBRACK               (A.SubscriptVar(A.SimpleVar(Symbol.symbol(ID), IDleft), expr, IDleft))
+lvalue: ID                         (A.SimpleVar(Symbol.symbol(ID), IDleft))
+      | lvalue DOT ID              (A.FieldVar(lvalue, Symbol.symbol(ID), lvalueleft))
+      | lvalue LBRACK expr RBRACK  (A.SubscriptVar(lvalue, expr, lvalueleft))
+      | ID LBRACK expr RBRACK      (A.SubscriptVar(A.SimpleVar(Symbol.symbol(ID), IDleft), expr, IDleft))
 
-decl_seq: type_decls not_type_decls  (A.TypeDec(rev(type_decls))::not_type_decls)
-        | func_decls not_func_decls  (A.FunctionDec(rev(func_decls))::not_func_decls)
-        | var_decl decl_seq          (var_decl::decl_seq)
-        |                            (nil)
+decl_seq: type_decls not_type_decls   (A.TypeDec(rev(type_decls))::not_type_decls)
+        | func_decls not_func_decls   (A.FunctionDec(rev(func_decls))::not_func_decls)
+        | var_decl decl_seq           (var_decl::decl_seq)
+        |                             (nil)
 
-type_decls: type_decls type_decl (type_decl::type_decls)
-          | type_decl            (type_decl::nil)
+type_decls: type_decls type_decl            (type_decl::type_decls)
+          | type_decl                       (type_decl::nil)
 
-type_decl: TYPE ID EQ type_val ({name = Symbol.symbol(ID), ty = type_val, pos = TYPEleft})
+type_decl: TYPE ID EQ type_val              ({name = Symbol.symbol(ID), ty = type_val, pos = TYPEleft})
 
-type_val: ID                        (A.NameTy(Symbol.symbol(ID), IDleft))
-        | LBRACE type_fields RBRACE (A.RecordTy(rev(type_fields)))
-        | ARRAY OF ID               (A.ArrayTy(Symbol.symbol(ID), ARRAYleft))
+type_val: ID                                (A.NameTy(Symbol.symbol(ID), IDleft))
+        | LBRACE type_fields RBRACE         (A.RecordTy(rev(type_fields)))
+        | ARRAY OF ID                       (A.ArrayTy(Symbol.symbol(ID), ARRAYleft))
 
-type_fields: type_field                   (type_field::nil)
-           | type_fields COMMA type_field (type_field::type_fields)
-           |                              (nil)
+type_fields: type_field                     (type_field::nil)
+           | type_fields COMMA type_field   (type_field::type_fields)
+           |                                (nil)
 
-type_field: ID COLON ID ({name = Symbol.symbol(ID1), escape = (ref true), typ = Symbol.symbol(ID2), pos = IDleft})
+type_field: ID COLON ID                     ({name = Symbol.symbol(ID1), escape = (ref true), typ = Symbol.symbol(ID2), pos = IDleft})
 
-not_type_decls: func_decls not_func_decls  (A.FunctionDec(rev(func_decls)) :: not_func_decls)
-              | var_decl decl_seq          (var_decl :: decl_seq)
-              |                            (nil)
+not_type_decls: func_decls not_func_decls   (A.FunctionDec(rev(func_decls)) :: not_func_decls)
+              | var_decl decl_seq           (var_decl :: decl_seq)
+              |                             (nil)
 
 var_decl: VAR ID ASSIGN expr          (A.VarDec{name = Symbol.symbol(ID), escape=(ref true), typ = NONE, init=expr, pos = VARleft})
         | VAR ID COLON ID ASSIGN expr (A.VarDec{name = Symbol.symbol(ID1), escape=(ref true), typ = SOME (Symbol.symbol(ID2), ID2left), init = expr, pos = VARleft})
 
-func_decls: func_decls func_decl (func_decl::func_decls)
-          | func_decl            (func_decl::nil)
+func_decls: func_decls func_decl                                  (func_decl::func_decls)
+          | func_decl                                             (func_decl::nil)
 
 func_decl: FUNCTION ID LPAREN type_fields RPAREN EQ expr          ({name = Symbol.symbol(ID), params = type_fields, result = NONE, body = expr, pos = FUNCTIONleft})
          | FUNCTION ID LPAREN type_fields RPAREN COLON ID EQ expr ({name = Symbol.symbol(ID1), params = type_fields, result = SOME (Symbol.symbol(ID2), ID2left), body = expr, pos = FUNCTIONleft})
 
-not_func_decls: type_decls not_type_decls  (A.TypeDec(rev(type_decls)) :: not_type_decls)
-              | var_decl decl_seq          (var_decl :: decl_seq)
-              |                            (nil)
+not_func_decls: type_decls not_type_decls                         (A.TypeDec(rev(type_decls)) :: not_type_decls)
+              | var_decl decl_seq                                 (var_decl :: decl_seq)
+              |                                                   (nil)
