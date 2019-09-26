@@ -50,7 +50,7 @@ fun appendBuffer(str) =
 %s COMMENT STRING ESCAPE WHITESPACE;
 
 eol = ("\013\010"|"\010"|"\013");
-ws = [\ \t\f];
+ws = [\ \t];
 
 %%
 

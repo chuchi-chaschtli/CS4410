@@ -1,6 +1,7 @@
 structure A = Absyn
 
 %%
+(* TODO: Should we distinguish ID from TYPE_ID? Does this require Lexer changes? *)
 %term EOF
   | ID of string
   | INT of int
@@ -124,7 +125,7 @@ type_fields: type_field                   ()
            | type_fields COMMA type_field ()
            |                              ()
 
-type_field: ID COMMA ID ()
+type_field: ID COLON ID ()
 
 var_decl: VAR ID ASSIGN expr          ((*(A.VarDec{name=Symbol.symbol(ID), escape=(ref true), typ=NONE, init=expr, pos=VARleft}*))
         | VAR ID COLON ID ASSIGN expr ((*(A.VarDec{name=Symbol.symbol(ID1), escape=(ref true), typ=SOME (Symbol.symbol(ID2), ID2left), init=exp, pos=VARleft})*))

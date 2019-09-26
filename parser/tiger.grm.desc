@@ -1396,9 +1396,9 @@ state 89:
 
 state 90:
 
-	type_field : ID . COMMA ID 
+	type_field : ID . COLON ID 
 
-	COMMA	shift 102
+	COLON	shift 102
 
 
 	.	error
@@ -1595,7 +1595,7 @@ state 101:
 
 state 102:
 
-	type_field : ID COMMA . ID 
+	type_field : ID COLON . ID 
 
 	ID	shift 113
 
@@ -1791,7 +1791,7 @@ state 112:
 
 state 113:
 
-	type_field : ID COMMA ID .  (reduce by rule 54)
+	type_field : ID COLON ID .  (reduce by rule 54)
 
 
 
