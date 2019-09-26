@@ -19,7 +19,7 @@ structure A = Absyn
        | expr         of A.exp
        | binary_expr  of A.exp
        | expr_seq     (* of (A.exp * pos) list *)
-       | expr_list    (* of A.exp list *)
+       | expr_list    of A.exp list
        | field_list   (* of (A.symbol * A.exp * pos) list *)
        | lvalue       of A.var
        | decl_seq     of A.dec list
@@ -70,13 +70,13 @@ expr: STRING                                 (A.StringExp(STRING, STRINGleft))
     | MINUS expr                %prec UMINUS (A.OpExp{left = A.IntExp(0), oper = A.MinusOp, right = expr, pos = MINUSleft})
     | binary_expr                            (binary_expr)
     | lvalue ASSIGN expr                     (A.AssignExp({var = lvalue, exp = expr, pos = lvalueleft}))
-    | ID LPAREN expr_list RPAREN             (A.NilExp)
+    | ID LPAREN expr_list RPAREN             (A.CallExp{func = Symbol.symbol(ID), args = rev(expr_list), pos = IDleft})
     | LPAREN expr_seq RPAREN                 (A.NilExp (*A.SeqExp(rev(expr_seq))*))
     | ID LBRACE field_list RBRACE            (A.NilExp (* RecordExp *))
     (* TODO: Validate this parses correctly in AST compared to lvalue *)
     | ID LBRACK expr RBRACK OF expr          () (*** Shift-reduce conflict with lvalue: favor shifting OF ***)
-    | IF expr THEN expr                      (A.NilExp (*A.IfExp{test=expr1, then'=expr2, else'=NONE, pos=IFleft}*))
-    | IF expr THEN expr ELSE expr            (A.NilExp (*A.IfExp{test=expr1, then'=expr2, else'=SOME expr3, pos=IFleft}*))
+    | IF expr THEN expr                      (A.IfExp{test=expr1, then'=expr2, else'=NONE, pos=IFleft})
+    | IF expr THEN expr ELSE expr            (A.IfExp{test=expr1, then'=expr2, else'=SOME expr3, pos=IFleft})
     | WHILE expr DO expr                     (A.WhileExp{test = expr1, body = expr2, pos = WHILEleft})
     | FOR ID ASSIGN expr TO expr DO expr     (A.ForExp{var = Symbol.symbol(ID), escape = ref true, lo = expr1, hi = expr2, body = expr3, pos = FORleft})
     | BREAK                                  (A.BreakExp(BREAKleft))
@@ -101,9 +101,9 @@ expr_seq: expr_seq SEMICOLON expr  ((expr, exprleft)::(*expr_seq*)nil)
         | expr                     ((expr, exprleft)::nil)
         |                          ()
 
-expr_list: expr_list COMMA expr    (expr::(*expr_list*)nil)
+expr_list: expr_list COMMA expr    (expr::expr_list)
          | expr                    (expr::nil)
-         |                         ()
+         |                         (nil)
 
 field_list: field_list COMMA ID EQ expr     ()
           | ID EQ expr                      ()
