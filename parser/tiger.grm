@@ -81,7 +81,7 @@ expr: STRING                                 ((*A.StringExp(STRING, STRINGleft)*
     | LET decl_seq IN expr_seq END           ((*A.LetExp{decs = rev(decl_seq), body = A.SeqExp(rev(expr_seq)), pos = LETleft}*))
 
 (*** Shift-reduce conflict on all of these: resolved via precedence ***)
-(*** 12 shift reduce conflicts )
+(*** 12 shift reduce conflicts ***)
 binary_op: PLUS       %prec PLUS ((*A.OpExp{left = exp1, oper = A.PlusOp, right = exp2, pos = exp1left}*))
          | MINUS     %prec MINUS ((*A.OpExp{left = exp1, oper = A.MinusOp, right = exp2, pos = exp1left}*))
          | TIMES     %prec TIMES ((*A.OpExp{left = exp1, oper = A.TimesOp, right = exp2, pos = exp1left}*))
