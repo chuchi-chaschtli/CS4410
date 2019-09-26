@@ -40,14 +40,17 @@ structure A = Absyn
 %eop EOF
 %noshift EOF
 
-%nonassoc ASSIGN THEN
+%nonassoc ASSIGN
+%nonassoc ID WHILE DO
+%nonassoc LBRACK RBRACK OF
+%nonassoc THEN
 %nonassoc ELSE
 %left OR
 %left AND
 %nonassoc EQ NEQ GT LT GE LE
 %left PLUS MINUS
 %left TIMES DIVIDE
-%left UMINUS
+%nonassoc UMINUS
 
 %name Tiger
 
