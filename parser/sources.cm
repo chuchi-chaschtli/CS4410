@@ -5,7 +5,7 @@ errormsg.sml
 table.sig
 table.sml
 symbol.sml
-parsetest.sml
+parse.sml
 tiger.lex
 tiger.grm
 

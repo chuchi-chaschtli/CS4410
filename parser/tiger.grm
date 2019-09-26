@@ -23,16 +23,16 @@ structure A = Absyn
        | field_list   of (A.symbol * A.exp * pos) list
        | field        of (A.symbol * A.exp * pos)
        | lvalue       of A.var
-       | decl_seq     of (* A.dec *) list
-       | decl         (* of A.dec *)
+       | decl_seq     of A.dec list
+       | decl         of A.dec
        | type_decls   of {name: A.symbol, pos: pos, ty: A.ty} list
        | type_decl    of {name: A.symbol, pos: pos, ty: A.ty}
        | type_val     of A.ty
        | type_fields  of A.field list
        | type_field   of A.field
        | var_decl     of A.dec
-       | func_decls   (* of A.fundec list *)
-       | func_decl    (* of A.dec list *)
+       | func_decls   of A.fundec list
+       | func_decl    of A.fundec
 
 %pos int
 %verbose
@@ -62,7 +62,7 @@ structure A = Absyn
 
 %%
 
-program: expr ((*expr*))
+program: expr (expr)
 
 expr: STRING                                 (A.StringExp(STRING, STRINGleft))
     | INT                                    (A.IntExp(INT))
@@ -119,7 +119,7 @@ lvalue: ID                                  (A.SimpleVar(Symbol.symbol(ID), IDle
 
 decl: type_decls    (A.TypeDec(rev(type_decls)))
     | var_decl      (var_decl)
-    | func_decls    (A.FunctionDec(rev(nil)))
+    | func_decls    (A.FunctionDec(rev(func_decls)))
 
 decl_seq: decl_seq decl  (decl::decl_seq)
         | decl           (decl::nil)
@@ -142,5 +142,8 @@ type_field: ID COLON ID ({name = Symbol.symbol(ID1), escape = (ref true), typ = 
 var_decl: VAR ID ASSIGN expr          (A.VarDec{name = Symbol.symbol(ID), escape=(ref true), typ = NONE, init=expr, pos = VARleft})
         | VAR ID COLON ID ASSIGN expr (A.VarDec{name = Symbol.symbol(ID1), escape=(ref true), typ = SOME (Symbol.symbol(ID2), ID2left), init = expr, pos = VARleft})
 
-func_decl: FUNCTION ID LPAREN type_fields RPAREN EQ expr          (A.NilExp)
-         | FUNCTION ID LPAREN type_fields RPAREN COLON ID EQ expr (A.NilExp)
+func_decls: func_decls func_decl (func_decl::func_decls)
+          | func_decl            (func_decl::nil)
+
+func_decl: FUNCTION ID LPAREN type_fields RPAREN EQ expr          ({name = Symbol.symbol(ID), params = type_fields, result = NONE, body = expr, pos = FUNCTIONleft})
+         | FUNCTION ID LPAREN type_fields RPAREN COLON ID EQ expr ({name = Symbol.symbol(ID1), params = type_fields, result = SOME (Symbol.symbol(ID2), ID2left), body = expr, pos = FUNCTIONleft})
