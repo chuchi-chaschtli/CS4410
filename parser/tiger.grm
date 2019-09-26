@@ -1,7 +1,7 @@
 structure A = Absyn
 
 %%
-(* TODO: Should we distinguish ID from TYPE_ID? Does this require Lexer changes? *)
+(* TODO: Should we distinguish ID from TYPE_ID? *)
 %term EOF
   | ID of string
   | INT of int
@@ -30,6 +30,7 @@ structure A = Absyn
        | type_field   (* of A.ty *)
        | var_decl     (* of A.dec *)
        | func_decl    (* of A.dec list *)
+       | arr_access   (*   *)
 
 %pos int
 %verbose
@@ -70,7 +71,7 @@ expr: STRING                                 ((*A.StringExp(STRING, STRINGleft)*
     | lvalue ASSIGN expr                     ()
     | ID LPAREN expr_list RPAREN             ()
     | LPAREN expr_seq RPAREN                 ((*A.SeqExp(rev(expr_seq))*))
-    | ID LBRACE field_list RBRACE            ()
+    | ID LBRACE field_list RBRACE            ((* RecordExp *))
     | ID LBRACK expr RBRACK OF expr          ()
     | IF expr THEN expr                      ((*A.IfExp({test=exp1, then'=exp2, else'=NONE, pos=IFleft})*))
     | IF expr THEN expr ELSE expr            ((*A.IfExp({test=exp1, then'=exp2, else'=SOME exp3, pos=IFleft})*))
@@ -107,6 +108,7 @@ field_list: field_list COMMA ID EQ expr     ()
 lvalue: ID                                  ((* A.SimpleVar(Symbol.symbol(ID), IDleft) *))
       | lvalue DOT ID                       ((* A.FieldVar(lvalue, Symbol.symbol(ID), lvalueleft) *))
       | lvalue LBRACK expr RBRACK           ((* A.SubscriptVar(lvalue, expr, lvalueleft) *))
+      | ID LBRACK expr RBRACK               ()
 
 decl: type_decl     ()
     | var_decl      ()

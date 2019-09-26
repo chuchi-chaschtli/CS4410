@@ -258,6 +258,7 @@ state 13:
 	expr : ID . LBRACE field_list RBRACE 
 	expr : ID . LBRACK expr RBRACK OF expr 
 	lvalue : ID .  (reduce by rule 39)
+	lvalue : ID . LBRACK expr RBRACK 
 
 	LPAREN	shift 45
 	LBRACK	shift 44
@@ -453,38 +454,38 @@ state 29:
 
 state 30:
 
-	decl : func_decl .  (reduce by rule 44)
+	decl : func_decl .  (reduce by rule 45)
+
+
+
+	.	reduce by rule 45
+
+
+state 31:
+
+	decl : var_decl .  (reduce by rule 44)
 
 
 
 	.	reduce by rule 44
 
 
-state 31:
+state 32:
 
-	decl : var_decl .  (reduce by rule 43)
+	decl : type_decl .  (reduce by rule 43)
 
 
 
 	.	reduce by rule 43
 
 
-state 32:
-
-	decl : type_decl .  (reduce by rule 42)
-
-
-
-	.	reduce by rule 42
-
-
 state 33:
 
-	decl_seq : decl .  (reduce by rule 46)
+	decl_seq : decl .  (reduce by rule 47)
 
 
 
-	.	reduce by rule 46
+	.	reduce by rule 47
 
 
 state 34:
@@ -645,6 +646,7 @@ state 43:
 state 44:
 
 	expr : ID LBRACK . expr RBRACK OF expr 
+	lvalue : ID LBRACK . expr RBRACK 
 
 	ID	shift 13
 	INT	shift 12
@@ -780,11 +782,11 @@ state 49:
 
 state 50:
 
-	decl_seq : decl_seq decl .  (reduce by rule 45)
+	decl_seq : decl_seq decl .  (reduce by rule 46)
 
 
 
-	.	reduce by rule 45
+	.	reduce by rule 46
 
 
 state 51:
@@ -967,6 +969,7 @@ state 62:
 
 	expr : expr . binary_op expr 
 	expr : ID LBRACK expr . RBRACK OF expr 
+	lvalue : ID LBRACK expr . RBRACK 
 
 	RBRACK	shift 78
 	PLUS	shift 29
@@ -1098,7 +1101,7 @@ state 70:
 	type_fields	goto 89
 	type_field	goto 88
 
-	.	reduce by rule 53
+	.	reduce by rule 54
 
 
 state 71:
@@ -1252,11 +1255,12 @@ state 77:
 state 78:
 
 	expr : ID LBRACK expr RBRACK . OF expr 
+	lvalue : ID LBRACK expr RBRACK .  (reduce by rule 42)
 
 	OF	shift 95
 
 
-	.	error
+	.	reduce by rule 42
 
 
 state 79:
@@ -1301,11 +1305,11 @@ state 81:
 
 state 82:
 
-	type_decl : TYPE ID EQ type_val .  (reduce by rule 47)
+	type_decl : TYPE ID EQ type_val .  (reduce by rule 48)
 
 
 
-	.	reduce by rule 47
+	.	reduce by rule 48
 
 
 state 83:
@@ -1327,22 +1331,22 @@ state 84:
 	type_fields	goto 98
 	type_field	goto 88
 
-	.	reduce by rule 53
+	.	reduce by rule 54
 
 
 state 85:
 
-	type_val : ID .  (reduce by rule 48)
+	type_val : ID .  (reduce by rule 49)
 
 
 
-	.	reduce by rule 48
+	.	reduce by rule 49
 
 
 state 86:
 
 	expr : expr . binary_op expr 
-	var_decl : VAR ID ASSIGN expr .  (reduce by rule 55)
+	var_decl : VAR ID ASSIGN expr .  (reduce by rule 56)
 
 	PLUS	shift 29
 	MINUS	shift 28
@@ -1359,7 +1363,7 @@ state 86:
 
 	binary_op	goto 17
 
-	.	reduce by rule 55
+	.	reduce by rule 56
 
 
 state 87:
@@ -1374,11 +1378,11 @@ state 87:
 
 state 88:
 
-	type_fields : type_field .  (reduce by rule 51)
+	type_fields : type_field .  (reduce by rule 52)
 
 
 
-	.	reduce by rule 51
+	.	reduce by rule 52
 
 
 state 89:
@@ -1709,26 +1713,26 @@ state 106:
 
 state 107:
 
-	type_val : ARRAY OF ID .  (reduce by rule 50)
+	type_val : ARRAY OF ID .  (reduce by rule 51)
+
+
+
+	.	reduce by rule 51
+
+
+state 108:
+
+	type_val : LBRACE type_fields RBRACE .  (reduce by rule 50)
 
 
 
 	.	reduce by rule 50
 
 
-state 108:
-
-	type_val : LBRACE type_fields RBRACE .  (reduce by rule 49)
-
-
-
-	.	reduce by rule 49
-
-
 state 109:
 
 	expr : expr . binary_op expr 
-	var_decl : VAR ID COLON ID ASSIGN expr .  (reduce by rule 56)
+	var_decl : VAR ID COLON ID ASSIGN expr .  (reduce by rule 57)
 
 	PLUS	shift 29
 	MINUS	shift 28
@@ -1745,7 +1749,7 @@ state 109:
 
 	binary_op	goto 17
 
-	.	reduce by rule 56
+	.	reduce by rule 57
 
 
 state 110:
@@ -1782,20 +1786,20 @@ state 111:
 
 state 112:
 
-	type_fields : type_fields COMMA type_field .  (reduce by rule 52)
+	type_fields : type_fields COMMA type_field .  (reduce by rule 53)
 
 
 
-	.	reduce by rule 52
+	.	reduce by rule 53
 
 
 state 113:
 
-	type_field : ID COLON ID .  (reduce by rule 54)
+	type_field : ID COLON ID .  (reduce by rule 55)
 
 
 
-	.	reduce by rule 54
+	.	reduce by rule 55
 
 
 state 114:
@@ -1846,7 +1850,7 @@ state 115:
 state 116:
 
 	expr : expr . binary_op expr 
-	func_decl : FUNCTION ID LPAREN type_fields RPAREN EQ expr .  (reduce by rule 57)
+	func_decl : FUNCTION ID LPAREN type_fields RPAREN EQ expr .  (reduce by rule 58)
 
 	PLUS	shift 29
 	MINUS	shift 28
@@ -1863,7 +1867,7 @@ state 116:
 
 	binary_op	goto 17
 
-	.	reduce by rule 57
+	.	reduce by rule 58
 
 
 state 117:
@@ -1936,7 +1940,7 @@ state 119:
 state 120:
 
 	expr : expr . binary_op expr 
-	func_decl : FUNCTION ID LPAREN type_fields RPAREN COLON ID EQ expr .  (reduce by rule 58)
+	func_decl : FUNCTION ID LPAREN type_fields RPAREN COLON ID EQ expr .  (reduce by rule 59)
 
 	PLUS	shift 29
 	MINUS	shift 28
@@ -1953,7 +1957,7 @@ state 120:
 
 	binary_op	goto 17
 
-	.	reduce by rule 58
+	.	reduce by rule 59
 
 
 state 121:
