@@ -72,6 +72,7 @@ expr: STRING                                 ((*A.StringExp(STRING, STRINGleft)*
     | ID LPAREN expr_list RPAREN             ()
     | LPAREN expr_seq RPAREN                 ((*A.SeqExp(rev(expr_seq))*))
     | ID LBRACE field_list RBRACE            ((* RecordExp *))
+    (* TODO: Validate this parses correctly in AST compared to lvalue *)
     | ID LBRACK expr RBRACK OF expr          () (*** Shift-reduce conflict with lvalue: favor shifting OF ***)
     | IF expr THEN expr                      ((*A.IfExp({test=exp1, then'=exp2, else'=NONE, pos=IFleft})*))
     | IF expr THEN expr ELSE expr            ((*A.IfExp({test=exp1, then'=exp2, else'=SOME exp3, pos=IFleft})*))
