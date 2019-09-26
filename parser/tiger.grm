@@ -18,11 +18,11 @@ structure A = Absyn
 %nonterm program      of A.exp
        | expr         of A.exp
        | binary_expr  of A.exp
-       | expr_seq     (* of (A.exp * pos) list *)
+       | expr_seq     of (A.exp * pos) list
        | expr_list    of A.exp list
        | field_list   (* of (A.symbol * A.exp * pos) list *)
        | lvalue       of A.var
-       | decl_seq     of A.dec list
+       | decl_seq     of (* A.dec *) list
        | decl         (* of A.dec *)
        | type_decls   (* of {name: A.symbol, pos: pos, ty: A.ty} list *)
        | type_decl    (* of A.dec list *)
@@ -80,7 +80,7 @@ expr: STRING                                 (A.StringExp(STRING, STRINGleft))
     | WHILE expr DO expr                     (A.WhileExp{test = expr1, body = expr2, pos = WHILEleft})
     | FOR ID ASSIGN expr TO expr DO expr     (A.ForExp{var = Symbol.symbol(ID), escape = ref true, lo = expr1, hi = expr2, body = expr3, pos = FORleft})
     | BREAK                                  (A.BreakExp(BREAKleft))
-    | LET decl_seq IN expr_seq END           (A.LetExp{decs = rev(decl_seq), body = A.SeqExp(rev(nil)), pos = LETleft})
+    | LET decl_seq IN expr_seq END           (A.LetExp{decs = rev(decl_seq), body = A.SeqExp(rev(expr_seq)), pos = LETleft})
 
 (*** Shift-reduce conflict on all of these: resolved via precedence ***)
 (*** 12 shift reduce conflicts ***)
@@ -97,9 +97,9 @@ binary_expr: expr PLUS   expr (A.OpExp{left = expr1, oper = A.PlusOp, right = ex
            | expr AND    expr (A.IfExp{test = expr1, then'=expr2, else' = SOME(A.IntExp(0)), pos = expr1left})
            | expr OR     expr (A.IfExp{test = expr1, then'=A.IntExp(1), else'=SOME expr2, pos=expr1left})
 
-expr_seq: expr_seq SEMICOLON expr  ((expr, exprleft)::(*expr_seq*)nil)
+expr_seq: expr_seq SEMICOLON expr  ((expr, exprleft)::expr_seq)
         | expr                     ((expr, exprleft)::nil)
-        |                          ()
+        |                          (nil)
 
 expr_list: expr_list COMMA expr    (expr::expr_list)
          | expr                    (expr::nil)
@@ -118,8 +118,8 @@ decl: type_decls    (A.TypeDec(rev(nil)))
     | var_decl      (var_decl)
     | func_decls    (A.FunctionDec(rev(nil)))
 
-decl_seq: decl_seq decl  (nil (*decl::decl_seq*))
-        | decl           (nil (*decl::nil*))
+decl_seq: decl_seq decl  (decl::decl_seq)
+        | decl           (decl::nil)
 
 type_decl: TYPE ID EQ type_val ()
 
