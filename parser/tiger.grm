@@ -25,12 +25,12 @@ structure A = Absyn
        | lvalue       of A.var
        | decl_seq     of (* A.dec *) list
        | decl         (* of A.dec *)
-       | type_decls   (* of {name: A.symbol, pos: pos, ty: A.ty} list *)
-       | type_decl    (* of A.dec list *)
-       | type_val     (* of A.ty *)
+       | type_decls   of {name: A.symbol, pos: pos, ty: A.ty} list
+       | type_decl    of {name: A.symbol, pos: pos, ty: A.ty}
+       | type_val     of A.ty
        | type_fields  (* of A.field list *)
        | type_field   (* of A.ty *)
-       | var_decl     (* of A.dec *)
+       | var_decl     of A.dec
        | func_decls   (* of A.fundec list *)
        | func_decl    (* of A.dec list *)
 
@@ -117,18 +117,21 @@ lvalue: ID                                  (A.SimpleVar(Symbol.symbol(ID), IDle
       | lvalue LBRACK expr RBRACK           (A.SubscriptVar(lvalue, expr, lvalueleft))
       | ID LBRACK expr RBRACK               (A.SubscriptVar(A.SimpleVar(Symbol.symbol(ID), IDleft), expr, IDleft))
 
-decl: type_decls    (A.TypeDec(rev(nil)))
+decl: type_decls    (A.TypeDec(rev(type_decls)))
     | var_decl      (var_decl)
     | func_decls    (A.FunctionDec(rev(nil)))
 
 decl_seq: decl_seq decl  (decl::decl_seq)
         | decl           (decl::nil)
 
-type_decl: TYPE ID EQ type_val ()
+type_decls: type_decls type_decl (type_decl::type_decls)
+          | type_decl            (type_decl::nil)
 
-type_val: ID                        ()
-        | LBRACE type_fields RBRACE ()
-        | ARRAY OF ID               ()
+type_decl: TYPE ID EQ type_val ({name = Symbol.symbol(ID), ty = type_val, pos = TYPEleft})
+
+type_val: ID                        (A.NameTy(Symbol.symbol(ID), 0))
+        | LBRACE type_fields RBRACE (A.RecordTy(nil))
+        | ARRAY OF ID               (A.ArrayTy(Symbol.symbol(ID), 0))
 
 type_fields: type_field                   ()
            | type_fields COMMA type_field ()
@@ -136,8 +139,8 @@ type_fields: type_field                   ()
 
 type_field: ID COLON ID ()
 
-var_decl: VAR ID ASSIGN expr          ((*(A.VarDec{name=Symbol.symbol(ID), escape=(ref true), typ=NONE, init=expr, pos=VARleft}*))
-        | VAR ID COLON ID ASSIGN expr ((*(A.VarDec{name=Symbol.symbol(ID1), escape=(ref true), typ=SOME (Symbol.symbol(ID2), ID2left), init=exp, pos=VARleft})*))
+var_decl: VAR ID ASSIGN expr          (A.VarDec{name=Symbol.symbol(ID), escape=(ref true), typ=NONE, init=expr, pos=VARleft})
+        | VAR ID COLON ID ASSIGN expr (A.VarDec{name=Symbol.symbol(ID1), escape=(ref true), typ=SOME (Symbol.symbol(ID2), ID2left), init=expr, pos=VARleft})
 
 func_decl: FUNCTION ID LPAREN type_fields RPAREN EQ expr          (A.NilExp)
          | FUNCTION ID LPAREN type_fields RPAREN COLON ID EQ expr (A.NilExp)
