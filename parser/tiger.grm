@@ -14,7 +14,6 @@ structure A = Absyn
   | BREAK | NIL
   | FUNCTION | VAR | TYPE
 
-(* TODO fix nonterm list types *)
 %nonterm program      of A.exp
        | expr         of A.exp
        | binary_expr  of A.exp
