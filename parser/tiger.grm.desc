@@ -1,54 +1,54 @@
 49 shift/reduce conflicts
 
 error:  state 13: shift/reduce conflict (shift LBRACK, reduce by rule 39)
-error:  state 49: shift/reduce conflict (shift OR, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift AND, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift GE, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift GT, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift LE, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift LT, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift NEQ, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift EQ, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift DIVIDE, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift TIMES, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift MINUS, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift PLUS, reduce by rule 6)
-error:  state 72: shift/reduce conflict (shift OR, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift AND, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift GE, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift GT, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift LE, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift LT, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift NEQ, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift EQ, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift DIVIDE, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift TIMES, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift MINUS, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift PLUS, reduce by rule 14)
-error:  state 106: shift/reduce conflict (shift OR, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift AND, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift GE, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift GT, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift LE, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift LT, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift NEQ, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift EQ, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift DIVIDE, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift TIMES, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift MINUS, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift PLUS, reduce by rule 11)
-error:  state 118: shift/reduce conflict (shift OR, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift AND, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift GE, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift GT, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift LE, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift LT, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift NEQ, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift EQ, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift DIVIDE, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift TIMES, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift MINUS, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift PLUS, reduce by rule 15)
+error:  state 50: shift/reduce conflict (shift OR, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift AND, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift GE, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift GT, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift LE, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift LT, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift NEQ, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift EQ, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift DIVIDE, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift TIMES, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift MINUS, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift PLUS, reduce by rule 6)
+error:  state 73: shift/reduce conflict (shift OR, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift AND, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift GE, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift GT, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift LE, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift LT, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift NEQ, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift EQ, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift DIVIDE, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift TIMES, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift MINUS, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift PLUS, reduce by rule 14)
+error:  state 107: shift/reduce conflict (shift OR, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift AND, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift GE, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift GT, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift LE, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift LT, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift NEQ, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift EQ, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift DIVIDE, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift TIMES, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift MINUS, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift PLUS, reduce by rule 11)
+error:  state 119: shift/reduce conflict (shift OR, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift AND, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift GE, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift GT, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift LE, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift LT, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift NEQ, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift EQ, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift DIVIDE, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift TIMES, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift MINUS, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift PLUS, reduce by rule 15)
 
 state 0:
 
@@ -66,7 +66,7 @@ state 0:
 	BREAK	shift 4
 	NIL	shift 3
 
-	program	goto 121
+	program	goto 122
 	expr	goto 2
 	lvalue	goto 1
 
@@ -203,11 +203,24 @@ state 8:
 
 state 9:
 
-	expr : MINUS .  (reduce by rule 5)
+	expr : MINUS . expr 
 
+	ID	shift 13
+	INT	shift 12
+	STRING	shift 11
+	LPAREN	shift 10
+	MINUS	shift 9
+	IF	shift 8
+	WHILE	shift 7
+	FOR	shift 6
+	LET	shift 5
+	BREAK	shift 4
+	NIL	shift 3
 
+	expr	goto 41
+	lvalue	goto 1
 
-	.	reduce by rule 5
+	.	error
 
 
 state 10:
@@ -226,8 +239,8 @@ state 10:
 	BREAK	shift 4
 	NIL	shift 3
 
-	expr	goto 42
-	expr_seq	goto 41
+	expr	goto 43
+	expr_seq	goto 42
 	lvalue	goto 1
 
 	.	reduce by rule 32
@@ -260,9 +273,9 @@ state 13:
 	lvalue : ID .  (reduce by rule 39)
 	lvalue : ID . LBRACK expr RBRACK 
 
-	LPAREN	shift 45
-	LBRACK	shift 44
-	LBRACE	shift 43
+	LPAREN	shift 46
+	LBRACK	shift 45
+	LBRACE	shift 44
 
 
 	.	reduce by rule 39
@@ -284,7 +297,7 @@ state 14:
 	BREAK	shift 4
 	NIL	shift 3
 
-	expr	goto 46
+	expr	goto 47
 	lvalue	goto 1
 
 	.	error
@@ -294,7 +307,7 @@ state 15:
 
 	lvalue : lvalue DOT . ID 
 
-	ID	shift 47
+	ID	shift 48
 
 
 	.	error
@@ -316,7 +329,7 @@ state 16:
 	BREAK	shift 4
 	NIL	shift 3
 
-	expr	goto 48
+	expr	goto 49
 	lvalue	goto 1
 
 	.	error
@@ -338,7 +351,7 @@ state 17:
 	BREAK	shift 4
 	NIL	shift 3
 
-	expr	goto 49
+	expr	goto 50
 	lvalue	goto 1
 
 	.	error
@@ -493,12 +506,12 @@ state 34:
 	expr : LET decl_seq . IN expr_seq END 
 	decl_seq : decl_seq . decl 
 
-	IN	shift 51
+	IN	shift 52
 	FUNCTION	shift 37
 	VAR	shift 36
 	TYPE	shift 35
 
-	decl	goto 50
+	decl	goto 51
 	type_decl	goto 32
 	var_decl	goto 31
 	func_decl	goto 30
@@ -510,7 +523,7 @@ state 35:
 
 	type_decl : TYPE . ID EQ type_val 
 
-	ID	shift 52
+	ID	shift 53
 
 
 	.	error
@@ -521,7 +534,7 @@ state 36:
 	var_decl : VAR . ID ASSIGN expr 
 	var_decl : VAR . ID COLON ID ASSIGN expr 
 
-	ID	shift 53
+	ID	shift 54
 
 
 	.	error
@@ -532,7 +545,7 @@ state 37:
 	func_decl : FUNCTION . ID LPAREN type_fields RPAREN EQ expr 
 	func_decl : FUNCTION . ID LPAREN type_fields RPAREN COLON ID EQ expr 
 
-	ID	shift 54
+	ID	shift 55
 
 
 	.	error
@@ -542,7 +555,7 @@ state 38:
 
 	expr : FOR ID . ASSIGN expr TO expr DO expr 
 
-	ASSIGN	shift 55
+	ASSIGN	shift 56
 
 
 	.	error
@@ -565,7 +578,7 @@ state 39:
 	GE	shift 20
 	AND	shift 19
 	OR	shift 18
-	DO	shift 56
+	DO	shift 57
 
 	binary_op	goto 17
 
@@ -590,7 +603,7 @@ state 40:
 	GE	shift 20
 	AND	shift 19
 	OR	shift 18
-	THEN	shift 57
+	THEN	shift 58
 
 	binary_op	goto 17
 
@@ -599,17 +612,28 @@ state 40:
 
 state 41:
 
+	expr : MINUS expr .  (reduce by rule 5)
+	expr : expr . binary_op expr 
+
+
+	binary_op	goto 17
+
+	.	reduce by rule 5
+
+
+state 42:
+
 	expr : LPAREN expr_seq . RPAREN 
 	expr_seq : expr_seq . SEMICOLON expr 
 
-	SEMICOLON	shift 59
-	RPAREN	shift 58
+	SEMICOLON	shift 60
+	RPAREN	shift 59
 
 
 	.	error
 
 
-state 42:
+state 43:
 
 	expr : expr . binary_op expr 
 	expr_seq : expr .  (reduce by rule 31)
@@ -632,18 +656,18 @@ state 42:
 	.	reduce by rule 31
 
 
-state 43:
+state 44:
 
 	expr : ID LBRACE . field_list RBRACE 
 
-	ID	shift 61
+	ID	shift 62
 
-	field_list	goto 60
+	field_list	goto 61
 
 	.	reduce by rule 38
 
 
-state 44:
+state 45:
 
 	expr : ID LBRACK . expr RBRACK OF expr 
 	lvalue : ID LBRACK . expr RBRACK 
@@ -660,13 +684,13 @@ state 44:
 	BREAK	shift 4
 	NIL	shift 3
 
-	expr	goto 62
+	expr	goto 63
 	lvalue	goto 1
 
 	.	error
 
 
-state 45:
+state 46:
 
 	expr : ID LPAREN . expr_list RPAREN 
 
@@ -682,14 +706,14 @@ state 45:
 	BREAK	shift 4
 	NIL	shift 3
 
-	expr	goto 64
-	expr_list	goto 63
+	expr	goto 65
+	expr_list	goto 64
 	lvalue	goto 1
 
 	.	reduce by rule 35
 
 
-state 46:
+state 47:
 
 	expr : expr . binary_op expr 
 	expr : lvalue ASSIGN expr .  (reduce by rule 7)
@@ -712,7 +736,7 @@ state 46:
 	.	reduce by rule 7
 
 
-state 47:
+state 48:
 
 	lvalue : lvalue DOT ID .  (reduce by rule 40)
 
@@ -721,12 +745,12 @@ state 47:
 	.	reduce by rule 40
 
 
-state 48:
+state 49:
 
 	expr : expr . binary_op expr 
 	lvalue : lvalue LBRACK expr . RBRACK 
 
-	RBRACK	shift 65
+	RBRACK	shift 66
 	PLUS	shift 29
 	MINUS	shift 28
 	TIMES	shift 27
@@ -744,20 +768,20 @@ state 48:
 
 	.	error
 
-error:  state 49: shift/reduce conflict (shift OR, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift AND, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift GE, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift GT, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift LE, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift LT, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift NEQ, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift EQ, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift DIVIDE, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift TIMES, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift MINUS, reduce by rule 6)
-error:  state 49: shift/reduce conflict (shift PLUS, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift OR, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift AND, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift GE, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift GT, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift LE, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift LT, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift NEQ, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift EQ, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift DIVIDE, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift TIMES, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift MINUS, reduce by rule 6)
+error:  state 50: shift/reduce conflict (shift PLUS, reduce by rule 6)
 
-state 49:
+state 50:
 
 	expr : expr . binary_op expr 
 	expr : expr binary_op expr .  (reduce by rule 6)
@@ -780,7 +804,7 @@ state 49:
 	.	reduce by rule 6
 
 
-state 50:
+state 51:
 
 	decl_seq : decl_seq decl .  (reduce by rule 46)
 
@@ -789,7 +813,7 @@ state 50:
 	.	reduce by rule 46
 
 
-state 51:
+state 52:
 
 	expr : LET decl_seq IN . expr_seq END 
 
@@ -805,30 +829,18 @@ state 51:
 	BREAK	shift 4
 	NIL	shift 3
 
-	expr	goto 42
-	expr_seq	goto 66
+	expr	goto 43
+	expr_seq	goto 67
 	lvalue	goto 1
 
 	.	reduce by rule 32
 
 
-state 52:
+state 53:
 
 	type_decl : TYPE ID . EQ type_val 
 
-	EQ	shift 67
-
-
-	.	error
-
-
-state 53:
-
-	var_decl : VAR ID . ASSIGN expr 
-	var_decl : VAR ID . COLON ID ASSIGN expr 
-
-	COLON	shift 69
-	ASSIGN	shift 68
+	EQ	shift 68
 
 
 	.	error
@@ -836,10 +848,11 @@ state 53:
 
 state 54:
 
-	func_decl : FUNCTION ID . LPAREN type_fields RPAREN EQ expr 
-	func_decl : FUNCTION ID . LPAREN type_fields RPAREN COLON ID EQ expr 
+	var_decl : VAR ID . ASSIGN expr 
+	var_decl : VAR ID . COLON ID ASSIGN expr 
 
-	LPAREN	shift 70
+	COLON	shift 70
+	ASSIGN	shift 69
 
 
 	.	error
@@ -847,29 +860,18 @@ state 54:
 
 state 55:
 
-	expr : FOR ID ASSIGN . expr TO expr DO expr 
+	func_decl : FUNCTION ID . LPAREN type_fields RPAREN EQ expr 
+	func_decl : FUNCTION ID . LPAREN type_fields RPAREN COLON ID EQ expr 
 
-	ID	shift 13
-	INT	shift 12
-	STRING	shift 11
-	LPAREN	shift 10
-	MINUS	shift 9
-	IF	shift 8
-	WHILE	shift 7
-	FOR	shift 6
-	LET	shift 5
-	BREAK	shift 4
-	NIL	shift 3
+	LPAREN	shift 71
 
-	expr	goto 71
-	lvalue	goto 1
 
 	.	error
 
 
 state 56:
 
-	expr : WHILE expr DO . expr 
+	expr : FOR ID ASSIGN . expr TO expr DO expr 
 
 	ID	shift 13
 	INT	shift 12
@@ -891,8 +893,7 @@ state 56:
 
 state 57:
 
-	expr : IF expr THEN . expr 
-	expr : IF expr THEN . expr ELSE expr 
+	expr : WHILE expr DO . expr 
 
 	ID	shift 13
 	INT	shift 12
@@ -914,16 +915,8 @@ state 57:
 
 state 58:
 
-	expr : LPAREN expr_seq RPAREN .  (reduce by rule 9)
-
-
-
-	.	reduce by rule 9
-
-
-state 59:
-
-	expr_seq : expr_seq SEMICOLON . expr 
+	expr : IF expr THEN . expr 
+	expr : IF expr THEN . expr ELSE expr 
 
 	ID	shift 13
 	INT	shift 12
@@ -943,23 +936,44 @@ state 59:
 	.	error
 
 
+state 59:
+
+	expr : LPAREN expr_seq RPAREN .  (reduce by rule 9)
+
+
+
+	.	reduce by rule 9
+
+
 state 60:
 
-	expr : ID LBRACE field_list . RBRACE 
-	field_list : field_list . COMMA ID EQ expr 
+	expr_seq : expr_seq SEMICOLON . expr 
 
-	COMMA	shift 76
-	RBRACE	shift 75
+	ID	shift 13
+	INT	shift 12
+	STRING	shift 11
+	LPAREN	shift 10
+	MINUS	shift 9
+	IF	shift 8
+	WHILE	shift 7
+	FOR	shift 6
+	LET	shift 5
+	BREAK	shift 4
+	NIL	shift 3
 
+	expr	goto 75
+	lvalue	goto 1
 
 	.	error
 
 
 state 61:
 
-	field_list : ID . EQ expr 
+	expr : ID LBRACE field_list . RBRACE 
+	field_list : field_list . COMMA ID EQ expr 
 
-	EQ	shift 77
+	COMMA	shift 77
+	RBRACE	shift 76
 
 
 	.	error
@@ -967,11 +981,21 @@ state 61:
 
 state 62:
 
+	field_list : ID . EQ expr 
+
+	EQ	shift 78
+
+
+	.	error
+
+
+state 63:
+
 	expr : expr . binary_op expr 
 	expr : ID LBRACK expr . RBRACK OF expr 
 	lvalue : ID LBRACK expr . RBRACK 
 
-	RBRACK	shift 78
+	RBRACK	shift 79
 	PLUS	shift 29
 	MINUS	shift 28
 	TIMES	shift 27
@@ -990,19 +1014,19 @@ state 62:
 	.	error
 
 
-state 63:
+state 64:
 
 	expr : ID LPAREN expr_list . RPAREN 
 	expr_list : expr_list . COMMA expr 
 
-	COMMA	shift 80
-	RPAREN	shift 79
+	COMMA	shift 81
+	RPAREN	shift 80
 
 
 	.	error
 
 
-state 64:
+state 65:
 
 	expr : expr . binary_op expr 
 	expr_list : expr .  (reduce by rule 34)
@@ -1025,7 +1049,7 @@ state 64:
 	.	reduce by rule 34
 
 
-state 65:
+state 66:
 
 	lvalue : lvalue LBRACK expr RBRACK .  (reduce by rule 41)
 
@@ -1034,32 +1058,32 @@ state 65:
 	.	reduce by rule 41
 
 
-state 66:
+state 67:
 
 	expr : LET decl_seq IN expr_seq . END 
 	expr_seq : expr_seq . SEMICOLON expr 
 
-	SEMICOLON	shift 59
-	END	shift 81
+	SEMICOLON	shift 60
+	END	shift 82
 
-
-	.	error
-
-
-state 67:
-
-	type_decl : TYPE ID EQ . type_val 
-
-	ID	shift 85
-	LBRACE	shift 84
-	ARRAY	shift 83
-
-	type_val	goto 82
 
 	.	error
 
 
 state 68:
+
+	type_decl : TYPE ID EQ . type_val 
+
+	ID	shift 86
+	LBRACE	shift 85
+	ARRAY	shift 84
+
+	type_val	goto 83
+
+	.	error
+
+
+state 69:
 
 	var_decl : VAR ID ASSIGN . expr 
 
@@ -1075,36 +1099,36 @@ state 68:
 	BREAK	shift 4
 	NIL	shift 3
 
-	expr	goto 86
+	expr	goto 87
 	lvalue	goto 1
-
-	.	error
-
-
-state 69:
-
-	var_decl : VAR ID COLON . ID ASSIGN expr 
-
-	ID	shift 87
-
 
 	.	error
 
 
 state 70:
 
+	var_decl : VAR ID COLON . ID ASSIGN expr 
+
+	ID	shift 88
+
+
+	.	error
+
+
+state 71:
+
 	func_decl : FUNCTION ID LPAREN . type_fields RPAREN EQ expr 
 	func_decl : FUNCTION ID LPAREN . type_fields RPAREN COLON ID EQ expr 
 
-	ID	shift 90
+	ID	shift 91
 
-	type_fields	goto 89
-	type_field	goto 88
+	type_fields	goto 90
+	type_field	goto 89
 
 	.	reduce by rule 54
 
 
-state 71:
+state 72:
 
 	expr : expr . binary_op expr 
 	expr : FOR ID ASSIGN expr . TO expr DO expr 
@@ -1121,26 +1145,26 @@ state 71:
 	GE	shift 20
 	AND	shift 19
 	OR	shift 18
-	TO	shift 91
+	TO	shift 92
 
 	binary_op	goto 17
 
 	.	error
 
-error:  state 72: shift/reduce conflict (shift OR, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift AND, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift GE, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift GT, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift LE, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift LT, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift NEQ, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift EQ, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift DIVIDE, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift TIMES, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift MINUS, reduce by rule 14)
-error:  state 72: shift/reduce conflict (shift PLUS, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift OR, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift AND, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift GE, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift GT, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift LE, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift LT, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift NEQ, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift EQ, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift DIVIDE, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift TIMES, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift MINUS, reduce by rule 14)
+error:  state 73: shift/reduce conflict (shift PLUS, reduce by rule 14)
 
-state 72:
+state 73:
 
 	expr : expr . binary_op expr 
 	expr : WHILE expr DO expr .  (reduce by rule 14)
@@ -1163,7 +1187,7 @@ state 72:
 	.	reduce by rule 14
 
 
-state 73:
+state 74:
 
 	expr : expr . binary_op expr 
 	expr : IF expr THEN expr .  (reduce by rule 12)
@@ -1181,14 +1205,14 @@ state 73:
 	GE	shift 20
 	AND	shift 19
 	OR	shift 18
-	ELSE	shift 92
+	ELSE	shift 93
 
 	binary_op	goto 17
 
 	.	reduce by rule 12
 
 
-state 74:
+state 75:
 
 	expr : expr . binary_op expr 
 	expr_seq : expr_seq SEMICOLON expr .  (reduce by rule 30)
@@ -1211,7 +1235,7 @@ state 74:
 	.	reduce by rule 30
 
 
-state 75:
+state 76:
 
 	expr : ID LBRACE field_list RBRACE .  (reduce by rule 10)
 
@@ -1220,17 +1244,17 @@ state 75:
 	.	reduce by rule 10
 
 
-state 76:
+state 77:
 
 	field_list : field_list COMMA . ID EQ expr 
 
-	ID	shift 93
+	ID	shift 94
 
 
 	.	error
 
 
-state 77:
+state 78:
 
 	field_list : ID EQ . expr 
 
@@ -1246,24 +1270,24 @@ state 77:
 	BREAK	shift 4
 	NIL	shift 3
 
-	expr	goto 94
+	expr	goto 95
 	lvalue	goto 1
 
 	.	error
 
 
-state 78:
+state 79:
 
 	expr : ID LBRACK expr RBRACK . OF expr 
 	lvalue : ID LBRACK expr RBRACK .  (reduce by rule 42)
 
-	OF	shift 95
+	OF	shift 96
 
 
 	.	reduce by rule 42
 
 
-state 79:
+state 80:
 
 	expr : ID LPAREN expr_list RPAREN .  (reduce by rule 8)
 
@@ -1272,7 +1296,7 @@ state 79:
 	.	reduce by rule 8
 
 
-state 80:
+state 81:
 
 	expr_list : expr_list COMMA . expr 
 
@@ -1288,13 +1312,13 @@ state 80:
 	BREAK	shift 4
 	NIL	shift 3
 
-	expr	goto 96
+	expr	goto 97
 	lvalue	goto 1
 
 	.	error
 
 
-state 81:
+state 82:
 
 	expr : LET decl_seq IN expr_seq END .  (reduce by rule 17)
 
@@ -1303,7 +1327,7 @@ state 81:
 	.	reduce by rule 17
 
 
-state 82:
+state 83:
 
 	type_decl : TYPE ID EQ type_val .  (reduce by rule 48)
 
@@ -1312,29 +1336,29 @@ state 82:
 	.	reduce by rule 48
 
 
-state 83:
+state 84:
 
 	type_val : ARRAY . OF ID 
 
-	OF	shift 97
+	OF	shift 98
 
 
 	.	error
 
 
-state 84:
+state 85:
 
 	type_val : LBRACE . type_fields RBRACE 
 
-	ID	shift 90
+	ID	shift 91
 
-	type_fields	goto 98
-	type_field	goto 88
+	type_fields	goto 99
+	type_field	goto 89
 
 	.	reduce by rule 54
 
 
-state 85:
+state 86:
 
 	type_val : ID .  (reduce by rule 49)
 
@@ -1343,7 +1367,7 @@ state 85:
 	.	reduce by rule 49
 
 
-state 86:
+state 87:
 
 	expr : expr . binary_op expr 
 	var_decl : VAR ID ASSIGN expr .  (reduce by rule 56)
@@ -1366,17 +1390,17 @@ state 86:
 	.	reduce by rule 56
 
 
-state 87:
+state 88:
 
 	var_decl : VAR ID COLON ID . ASSIGN expr 
 
-	ASSIGN	shift 99
+	ASSIGN	shift 100
 
 
 	.	error
 
 
-state 88:
+state 89:
 
 	type_fields : type_field .  (reduce by rule 52)
 
@@ -1385,24 +1409,14 @@ state 88:
 	.	reduce by rule 52
 
 
-state 89:
+state 90:
 
 	type_fields : type_fields . COMMA type_field 
 	func_decl : FUNCTION ID LPAREN type_fields . RPAREN EQ expr 
 	func_decl : FUNCTION ID LPAREN type_fields . RPAREN COLON ID EQ expr 
 
-	COMMA	shift 101
-	RPAREN	shift 100
-
-
-	.	error
-
-
-state 90:
-
-	type_field : ID . COLON ID 
-
-	COLON	shift 102
+	COMMA	shift 102
+	RPAREN	shift 101
 
 
 	.	error
@@ -1410,29 +1424,17 @@ state 90:
 
 state 91:
 
-	expr : FOR ID ASSIGN expr TO . expr DO expr 
+	type_field : ID . COLON ID 
 
-	ID	shift 13
-	INT	shift 12
-	STRING	shift 11
-	LPAREN	shift 10
-	MINUS	shift 9
-	IF	shift 8
-	WHILE	shift 7
-	FOR	shift 6
-	LET	shift 5
-	BREAK	shift 4
-	NIL	shift 3
+	COLON	shift 103
 
-	expr	goto 103
-	lvalue	goto 1
 
 	.	error
 
 
 state 92:
 
-	expr : IF expr THEN expr ELSE . expr 
+	expr : FOR ID ASSIGN expr TO . expr DO expr 
 
 	ID	shift 13
 	INT	shift 12
@@ -1454,15 +1456,37 @@ state 92:
 
 state 93:
 
-	field_list : field_list COMMA ID . EQ expr 
+	expr : IF expr THEN expr ELSE . expr 
 
-	EQ	shift 105
+	ID	shift 13
+	INT	shift 12
+	STRING	shift 11
+	LPAREN	shift 10
+	MINUS	shift 9
+	IF	shift 8
+	WHILE	shift 7
+	FOR	shift 6
+	LET	shift 5
+	BREAK	shift 4
+	NIL	shift 3
 
+	expr	goto 105
+	lvalue	goto 1
 
 	.	error
 
 
 state 94:
+
+	field_list : field_list COMMA ID . EQ expr 
+
+	EQ	shift 106
+
+
+	.	error
+
+
+state 95:
 
 	expr : expr . binary_op expr 
 	field_list : ID EQ expr .  (reduce by rule 37)
@@ -1485,7 +1509,7 @@ state 94:
 	.	reduce by rule 37
 
 
-state 95:
+state 96:
 
 	expr : ID LBRACK expr RBRACK OF . expr 
 
@@ -1501,13 +1525,13 @@ state 95:
 	BREAK	shift 4
 	NIL	shift 3
 
-	expr	goto 106
+	expr	goto 107
 	lvalue	goto 1
 
 	.	error
 
 
-state 96:
+state 97:
 
 	expr : expr . binary_op expr 
 	expr_list : expr_list COMMA expr .  (reduce by rule 33)
@@ -1530,29 +1554,29 @@ state 96:
 	.	reduce by rule 33
 
 
-state 97:
+state 98:
 
 	type_val : ARRAY OF . ID 
 
-	ID	shift 107
-
-
-	.	error
-
-
-state 98:
-
-	type_val : LBRACE type_fields . RBRACE 
-	type_fields : type_fields . COMMA type_field 
-
-	COMMA	shift 101
-	RBRACE	shift 108
+	ID	shift 108
 
 
 	.	error
 
 
 state 99:
+
+	type_val : LBRACE type_fields . RBRACE 
+	type_fields : type_fields . COMMA type_field 
+
+	COMMA	shift 102
+	RBRACE	shift 109
+
+
+	.	error
+
+
+state 100:
 
 	var_decl : VAR ID COLON ID ASSIGN . expr 
 
@@ -1568,46 +1592,46 @@ state 99:
 	BREAK	shift 4
 	NIL	shift 3
 
-	expr	goto 109
+	expr	goto 110
 	lvalue	goto 1
-
-	.	error
-
-
-state 100:
-
-	func_decl : FUNCTION ID LPAREN type_fields RPAREN . EQ expr 
-	func_decl : FUNCTION ID LPAREN type_fields RPAREN . COLON ID EQ expr 
-
-	COLON	shift 111
-	EQ	shift 110
-
 
 	.	error
 
 
 state 101:
 
-	type_fields : type_fields COMMA . type_field 
+	func_decl : FUNCTION ID LPAREN type_fields RPAREN . EQ expr 
+	func_decl : FUNCTION ID LPAREN type_fields RPAREN . COLON ID EQ expr 
 
-	ID	shift 90
+	COLON	shift 112
+	EQ	shift 111
 
-	type_field	goto 112
 
 	.	error
 
 
 state 102:
 
-	type_field : ID COLON . ID 
+	type_fields : type_fields COMMA . type_field 
 
-	ID	shift 113
+	ID	shift 91
 
+	type_field	goto 113
 
 	.	error
 
 
 state 103:
+
+	type_field : ID COLON . ID 
+
+	ID	shift 114
+
+
+	.	error
+
+
+state 104:
 
 	expr : expr . binary_op expr 
 	expr : FOR ID ASSIGN expr TO expr . DO expr 
@@ -1624,14 +1648,14 @@ state 103:
 	GE	shift 20
 	AND	shift 19
 	OR	shift 18
-	DO	shift 114
+	DO	shift 115
 
 	binary_op	goto 17
 
 	.	error
 
 
-state 104:
+state 105:
 
 	expr : expr . binary_op expr 
 	expr : IF expr THEN expr ELSE expr .  (reduce by rule 13)
@@ -1654,7 +1678,7 @@ state 104:
 	.	reduce by rule 13
 
 
-state 105:
+state 106:
 
 	field_list : field_list COMMA ID EQ . expr 
 
@@ -1670,25 +1694,25 @@ state 105:
 	BREAK	shift 4
 	NIL	shift 3
 
-	expr	goto 115
+	expr	goto 116
 	lvalue	goto 1
 
 	.	error
 
-error:  state 106: shift/reduce conflict (shift OR, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift AND, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift GE, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift GT, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift LE, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift LT, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift NEQ, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift EQ, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift DIVIDE, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift TIMES, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift MINUS, reduce by rule 11)
-error:  state 106: shift/reduce conflict (shift PLUS, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift OR, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift AND, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift GE, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift GT, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift LE, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift LT, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift NEQ, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift EQ, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift DIVIDE, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift TIMES, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift MINUS, reduce by rule 11)
+error:  state 107: shift/reduce conflict (shift PLUS, reduce by rule 11)
 
-state 106:
+state 107:
 
 	expr : expr . binary_op expr 
 	expr : ID LBRACK expr RBRACK OF expr .  (reduce by rule 11)
@@ -1711,7 +1735,7 @@ state 106:
 	.	reduce by rule 11
 
 
-state 107:
+state 108:
 
 	type_val : ARRAY OF ID .  (reduce by rule 51)
 
@@ -1720,7 +1744,7 @@ state 107:
 	.	reduce by rule 51
 
 
-state 108:
+state 109:
 
 	type_val : LBRACE type_fields RBRACE .  (reduce by rule 50)
 
@@ -1729,7 +1753,7 @@ state 108:
 	.	reduce by rule 50
 
 
-state 109:
+state 110:
 
 	expr : expr . binary_op expr 
 	var_decl : VAR ID COLON ID ASSIGN expr .  (reduce by rule 57)
@@ -1752,7 +1776,7 @@ state 109:
 	.	reduce by rule 57
 
 
-state 110:
+state 111:
 
 	func_decl : FUNCTION ID LPAREN type_fields RPAREN EQ . expr 
 
@@ -1768,23 +1792,23 @@ state 110:
 	BREAK	shift 4
 	NIL	shift 3
 
-	expr	goto 116
+	expr	goto 117
 	lvalue	goto 1
 
 	.	error
 
 
-state 111:
+state 112:
 
 	func_decl : FUNCTION ID LPAREN type_fields RPAREN COLON . ID EQ expr 
 
-	ID	shift 117
+	ID	shift 118
 
 
 	.	error
 
 
-state 112:
+state 113:
 
 	type_fields : type_fields COMMA type_field .  (reduce by rule 53)
 
@@ -1793,7 +1817,7 @@ state 112:
 	.	reduce by rule 53
 
 
-state 113:
+state 114:
 
 	type_field : ID COLON ID .  (reduce by rule 55)
 
@@ -1802,7 +1826,7 @@ state 113:
 	.	reduce by rule 55
 
 
-state 114:
+state 115:
 
 	expr : FOR ID ASSIGN expr TO expr DO . expr 
 
@@ -1818,13 +1842,13 @@ state 114:
 	BREAK	shift 4
 	NIL	shift 3
 
-	expr	goto 118
+	expr	goto 119
 	lvalue	goto 1
 
 	.	error
 
 
-state 115:
+state 116:
 
 	expr : expr . binary_op expr 
 	field_list : field_list COMMA ID EQ expr .  (reduce by rule 36)
@@ -1847,7 +1871,7 @@ state 115:
 	.	reduce by rule 36
 
 
-state 116:
+state 117:
 
 	expr : expr . binary_op expr 
 	func_decl : FUNCTION ID LPAREN type_fields RPAREN EQ expr .  (reduce by rule 58)
@@ -1870,29 +1894,29 @@ state 116:
 	.	reduce by rule 58
 
 
-state 117:
+state 118:
 
 	func_decl : FUNCTION ID LPAREN type_fields RPAREN COLON ID . EQ expr 
 
-	EQ	shift 119
+	EQ	shift 120
 
 
 	.	error
 
-error:  state 118: shift/reduce conflict (shift OR, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift AND, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift GE, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift GT, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift LE, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift LT, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift NEQ, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift EQ, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift DIVIDE, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift TIMES, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift MINUS, reduce by rule 15)
-error:  state 118: shift/reduce conflict (shift PLUS, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift OR, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift AND, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift GE, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift GT, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift LE, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift LT, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift NEQ, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift EQ, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift DIVIDE, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift TIMES, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift MINUS, reduce by rule 15)
+error:  state 119: shift/reduce conflict (shift PLUS, reduce by rule 15)
 
-state 118:
+state 119:
 
 	expr : expr . binary_op expr 
 	expr : FOR ID ASSIGN expr TO expr DO expr .  (reduce by rule 15)
@@ -1915,7 +1939,7 @@ state 118:
 	.	reduce by rule 15
 
 
-state 119:
+state 120:
 
 	func_decl : FUNCTION ID LPAREN type_fields RPAREN COLON ID EQ . expr 
 
@@ -1931,13 +1955,13 @@ state 119:
 	BREAK	shift 4
 	NIL	shift 3
 
-	expr	goto 120
+	expr	goto 121
 	lvalue	goto 1
 
 	.	error
 
 
-state 120:
+state 121:
 
 	expr : expr . binary_op expr 
 	func_decl : FUNCTION ID LPAREN type_fields RPAREN COLON ID EQ expr .  (reduce by rule 59)
@@ -1960,7 +1984,7 @@ state 120:
 	.	reduce by rule 59
 
 
-state 121:
+state 122:
 
 
 	EOF	accept
@@ -1968,5 +1992,5 @@ state 121:
 
 	.	error
 
-384 of 749 action table entries left after compaction
-94 goto table entries
+384 of 761 action table entries left after compaction
+97 goto table entries
