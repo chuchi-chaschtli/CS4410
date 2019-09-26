@@ -495,6 +495,18 @@ val preferred_change : (term list * term list) list =
 (nil
 ,nil
  $$ (T 7))::
+(nil
+ $$ (T 18),nil
+ $$ (T 27))::
+(nil
+ $$ (T 27),nil
+ $$ (T 18))::
+(nil
+ $$ (T 31) $$ (T 6),nil
+ $$ (T 31))::
+(nil
+,nil
+ $$ (T 38) $$ (T 2) $$ (T 37))::
 nil
 val noShift = 
 fn (T 0) => true | _ => false
