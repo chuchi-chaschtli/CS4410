@@ -62,8 +62,6 @@ structure A = Absyn
 %value INT (1)
 %value STRING ("")
 
-%change EQ -> ASSIGN | ASSIGN -> EQ | SEMICOLON ELSE -> ELSE | -> IN INT END
-
 %%
 
 program: expr (expr)
