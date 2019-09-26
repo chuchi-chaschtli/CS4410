@@ -15,20 +15,22 @@ structure A = Absyn
   | FUNCTION | VAR | TYPE
 
 (* TODO fix nonterm list types *)
-%nonterm program      (* of A.exp *)
+%nonterm program      of A.exp
        | expr         of A.exp
        | binary_expr  of A.exp
-       | expr_seq     of (A.exp * pos) list
-       | expr_list    of A.exp list
+       | expr_seq     (* of (A.exp * pos) list *)
+       | expr_list    (* of A.exp list *)
        | field_list   (* of (A.symbol * A.exp * pos) list *)
        | lvalue       of A.var
-       | decl_seq     (* of A.dec list *)
+       | decl_seq     of A.dec list
        | decl         (* of A.dec *)
+       | type_decls   (* of {name: A.symbol, pos: pos, ty: A.ty} list *)
        | type_decl    (* of A.dec list *)
        | type_val     (* of A.ty *)
        | type_fields  (* of A.field list *)
        | type_field   (* of A.ty *)
        | var_decl     (* of A.dec *)
+       | func_decls   (* of A.fundec list *)
        | func_decl    (* of A.dec list *)
 
 %pos int
@@ -64,21 +66,21 @@ program: expr ((*expr*))
 expr: STRING                                 (A.StringExp(STRING, STRINGleft))
     | INT                                    (A.IntExp(INT))
     | NIL                                    (A.NilExp)
-    | lvalue                                 ()
+    | lvalue                                 (A.VarExp(lvalue))
     | MINUS expr                %prec UMINUS (A.OpExp{left = A.IntExp(0), oper = A.MinusOp, right = expr, pos = MINUSleft})
     | binary_expr                            (binary_expr)
-    | lvalue ASSIGN expr                     ()
-    | ID LPAREN expr_list RPAREN             ()
-    | LPAREN expr_seq RPAREN                 ((*A.SeqExp(rev(expr_seq))*))
-    | ID LBRACE field_list RBRACE            ((* RecordExp *))
+    | lvalue ASSIGN expr                     (A.AssignExp({var = lvalue, exp = expr, pos = lvalueleft}))
+    | ID LPAREN expr_list RPAREN             (A.NilExp)
+    | LPAREN expr_seq RPAREN                 (A.NilExp (*A.SeqExp(rev(expr_seq))*))
+    | ID LBRACE field_list RBRACE            (A.NilExp (* RecordExp *))
     (* TODO: Validate this parses correctly in AST compared to lvalue *)
     | ID LBRACK expr RBRACK OF expr          () (*** Shift-reduce conflict with lvalue: favor shifting OF ***)
-    | IF expr THEN expr                      ((*A.IfExp{test=expr1, then'=expr2, else'=NONE, pos=IFleft}*))
-    | IF expr THEN expr ELSE expr            ((*A.IfExp{test=expr1, then'=expr2, else'=SOME expr3, pos=IFleft}*))
+    | IF expr THEN expr                      (A.NilExp (*A.IfExp{test=expr1, then'=expr2, else'=NONE, pos=IFleft}*))
+    | IF expr THEN expr ELSE expr            (A.NilExp (*A.IfExp{test=expr1, then'=expr2, else'=SOME expr3, pos=IFleft}*))
     | WHILE expr DO expr                     (A.WhileExp{test = expr1, body = expr2, pos = WHILEleft})
     | FOR ID ASSIGN expr TO expr DO expr     (A.ForExp{var = Symbol.symbol(ID), escape = ref true, lo = expr1, hi = expr2, body = expr3, pos = FORleft})
     | BREAK                                  (A.BreakExp(BREAKleft))
-    | LET decl_seq IN expr_seq END           ((*A.LetExp{decs = rev(decl_seq), body = A.SeqExp(rev(expr_seq)), pos = LETleft}*))
+    | LET decl_seq IN expr_seq END           (A.LetExp{decs = rev(decl_seq), body = A.SeqExp(rev(nil)), pos = LETleft})
 
 (*** Shift-reduce conflict on all of these: resolved via precedence ***)
 (*** 12 shift reduce conflicts ***)
@@ -95,11 +97,11 @@ binary_expr: expr PLUS   expr (A.OpExp{left = expr1, oper = A.PlusOp, right = ex
            | expr AND    expr (A.IfExp{test = expr1, then'=expr2, else' = SOME(A.IntExp(0)), pos = expr1left})
            | expr OR     expr (A.IfExp{test = expr1, then'=A.IntExp(1), else'=SOME expr2, pos=expr1left})
 
-expr_seq: expr_seq SEMICOLON expr  ((expr, exprleft)::expr_seq)
+expr_seq: expr_seq SEMICOLON expr  ((expr, exprleft)::(*expr_seq*)nil)
         | expr                     ((expr, exprleft)::nil)
         |                          ()
 
-expr_list: expr_list COMMA expr    (expr::expr_list)
+expr_list: expr_list COMMA expr    (expr::(*expr_list*)nil)
          | expr                    (expr::nil)
          |                         ()
 
@@ -112,12 +114,12 @@ lvalue: ID                                  (A.SimpleVar(Symbol.symbol(ID), IDle
       | lvalue LBRACK expr RBRACK           (A.SubscriptVar(lvalue, expr, lvalueleft))
       | ID LBRACK expr RBRACK               (A.SubscriptVar(A.SimpleVar(Symbol.symbol(ID), IDleft), expr, IDleft))
 
-decl: type_decl     ()
-    | var_decl      ()
-    | func_decl     ()
+decl: type_decls    (A.TypeDec(rev(nil)))
+    | var_decl      (var_decl)
+    | func_decls    (A.FunctionDec(rev(nil)))
 
-decl_seq: decl_seq decl  ((*decl::decl_seq*))
-        | decl           ((*decl::nil*))
+decl_seq: decl_seq decl  (nil (*decl::decl_seq*))
+        | decl           (nil (*decl::nil*))
 
 type_decl: TYPE ID EQ type_val ()
 
@@ -134,5 +136,5 @@ type_field: ID COLON ID ()
 var_decl: VAR ID ASSIGN expr          ((*(A.VarDec{name=Symbol.symbol(ID), escape=(ref true), typ=NONE, init=expr, pos=VARleft}*))
         | VAR ID COLON ID ASSIGN expr ((*(A.VarDec{name=Symbol.symbol(ID1), escape=(ref true), typ=SOME (Symbol.symbol(ID2), ID2left), init=exp, pos=VARleft})*))
 
-func_decl: FUNCTION ID LPAREN type_fields RPAREN EQ expr          ()
-         | FUNCTION ID LPAREN type_fields RPAREN COLON ID EQ expr ()
+func_decl: FUNCTION ID LPAREN type_fields RPAREN EQ expr          (A.NilExp)
+         | FUNCTION ID LPAREN type_fields RPAREN COLON ID EQ expr (A.NilExp)
