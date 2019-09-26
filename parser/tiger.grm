@@ -139,8 +139,8 @@ type_fields: type_field                   (type_field::nil)
 
 type_field: ID COLON ID ({name = Symbol.symbol(ID1), escape = (ref true), typ = Symbol.symbol(ID2), pos = IDleft})
 
-var_decl: VAR ID ASSIGN expr          (A.VarDec{name=Symbol.symbol(ID), escape=(ref true), typ=NONE, init=expr, pos=VARleft})
-        | VAR ID COLON ID ASSIGN expr (A.VarDec{name=Symbol.symbol(ID1), escape=(ref true), typ=SOME (Symbol.symbol(ID2), ID2left), init=expr, pos=VARleft})
+var_decl: VAR ID ASSIGN expr          (A.VarDec{name = Symbol.symbol(ID), escape=(ref true), typ = NONE, init=expr, pos = VARleft})
+        | VAR ID COLON ID ASSIGN expr (A.VarDec{name = Symbol.symbol(ID1), escape=(ref true), typ = SOME (Symbol.symbol(ID2), ID2left), init = expr, pos = VARleft})
 
 func_decl: FUNCTION ID LPAREN type_fields RPAREN EQ expr          (A.NilExp)
          | FUNCTION ID LPAREN type_fields RPAREN COLON ID EQ expr (A.NilExp)
