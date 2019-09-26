@@ -23,15 +23,17 @@ structure A = Absyn
        | field        of (A.symbol * A.exp * pos)
        | lvalue       of A.var
        | decl_seq     of A.dec list
-       | decl         of A.dec
+       | decl         of A.dec list
        | type_decls   of {name: A.symbol, pos: pos, ty: A.ty} list
        | type_decl    of {name: A.symbol, pos: pos, ty: A.ty}
+       | not_type_decls of A.dec list
        | type_val     of A.ty
        | type_fields  of A.field list
        | type_field   of A.field
        | var_decl     of A.dec
        | func_decls   of A.fundec list
        | func_decl    of A.fundec
+       | not_func_decls of A.dec list
 
 %pos int
 %verbose
@@ -83,7 +85,7 @@ expr: STRING                                 (A.StringExp(STRING, STRINGleft))
     | WHILE expr DO expr                     (A.WhileExp{test = expr1, body = expr2, pos = WHILEleft})
     | FOR ID ASSIGN expr TO expr DO expr     (A.ForExp{var = Symbol.symbol(ID), escape = ref true, lo = expr1, hi = expr2, body = expr3, pos = FORleft})
     | BREAK                                  (A.BreakExp(BREAKleft))
-    | LET decl_seq IN expr_seq END           (A.LetExp{decs = rev(decl_seq), body = A.SeqExp(rev(expr_seq)), pos = LETleft})
+    | LET decl_seq IN expr_seq END           (A.LetExp{decs = decl_seq, body = A.SeqExp(rev(expr_seq)), pos = LETleft})
 
 (*** Shift-reduce conflict on all of these: resolved via precedence ***)
 (*** 12 shift reduce conflicts ***)
@@ -119,12 +121,10 @@ lvalue: ID                                  (A.SimpleVar(Symbol.symbol(ID), IDle
       | lvalue LBRACK expr RBRACK           (A.SubscriptVar(lvalue, expr, lvalueleft))
       | ID LBRACK expr RBRACK               (A.SubscriptVar(A.SimpleVar(Symbol.symbol(ID), IDleft), expr, IDleft))
 
-decl: type_decls    (A.TypeDec(rev(type_decls)))
-    | var_decl      (var_decl)
-    | func_decls    (A.FunctionDec(rev(func_decls)))
-
-decl_seq: decl_seq decl  (decl::decl_seq)
-        | decl           (decl::nil)
+decl_seq: type_decls not_type_decls  (A.TypeDec(rev(type_decls))::not_type_decls)
+        | func_decls not_func_decls  (A.FunctionDec(rev(func_decls))::not_func_decls)
+        | var_decl decl_seq          (var_decl::decl_seq)
+        |                            (nil)
 
 type_decls: type_decls type_decl (type_decl::type_decls)
           | type_decl            (type_decl::nil)
@@ -141,6 +141,10 @@ type_fields: type_field                   (type_field::nil)
 
 type_field: ID COLON ID ({name = Symbol.symbol(ID1), escape = (ref true), typ = Symbol.symbol(ID2), pos = IDleft})
 
+not_type_decls: func_decls not_func_decls  (A.FunctionDec(rev(func_decls)) :: not_func_decls)
+              | var_decl decl_seq          (var_decl :: decl_seq)
+              |                            (nil)
+
 var_decl: VAR ID ASSIGN expr          (A.VarDec{name = Symbol.symbol(ID), escape=(ref true), typ = NONE, init=expr, pos = VARleft})
         | VAR ID COLON ID ASSIGN expr (A.VarDec{name = Symbol.symbol(ID1), escape=(ref true), typ = SOME (Symbol.symbol(ID2), ID2left), init = expr, pos = VARleft})
 
@@ -149,3 +153,7 @@ func_decls: func_decls func_decl (func_decl::func_decls)
 
 func_decl: FUNCTION ID LPAREN type_fields RPAREN EQ expr          ({name = Symbol.symbol(ID), params = type_fields, result = NONE, body = expr, pos = FUNCTIONleft})
          | FUNCTION ID LPAREN type_fields RPAREN COLON ID EQ expr ({name = Symbol.symbol(ID1), params = type_fields, result = SOME (Symbol.symbol(ID2), ID2left), body = expr, pos = FUNCTIONleft})
+
+not_func_decls: type_decls not_type_decls  (A.TypeDec(rev(type_decls)) :: not_type_decls)
+              | var_decl decl_seq          (var_decl :: decl_seq)
+              |                            (nil)
