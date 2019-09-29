@@ -54,6 +54,8 @@ it forces the reader to remember that the list is being created in reverse order
 
 * We discovered a lexer issue during our Parser testing where we had specified our whitespace as `[\ \t\f]`. This resulted in `test   for` being lexed as `ID(test)` and `ID(or)`, cutting off the `f` rather than lexing `FOR`. We remedied this by simply removing `\f` from our whitespace definition.
 
+* Likewise, we also discovered that our character-location error reporting was off by one: an error on `5.18` would be reported as being on `5.19`. To fix this we simply store `yypos-1` in place of `yypos`, which seems to solve our problem.
+
 ### Stylistic Decisions
 
 * For the time being, we opted to have a mutually recursive grammar for our declaration sequences, as doing so removed all shift-reduce conflicts from our grammar entirely. The alternative to this is to keep the declaration grammar more simplistic, and simply use the default behavior of favoring shift over reduce in a given shift-reduce conflict. If this was the path we took instead, we would annotate our parser with `%expected 2` to indicate that there were 2 expected shift-reduce conflicts that we were okay with.
