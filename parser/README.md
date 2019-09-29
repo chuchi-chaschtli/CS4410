@@ -16,7 +16,7 @@ We found these documents helpful in our implementation of the parser.
 
 * If-Then with a dangling else results in a shift-reduce conflict. Per in-class discussions, we shift, which means the ELSE binds to the most "recent" seen if statement.
 
-* l-value expressions and array assignment expressions had a shift-reduce conflict in the case of `lvalue LBRACK expr RBRACK`, because our productions also define `lvalue -> ID` as a valid production. To disambiguate, we decided to add another production rule `lvalue -> ID LBRACK expr LBRACK`.
+* l-value expressions and array assignment expressions had a shift-reduce conflict in the case of `lvalue LBRACK expr RBRACK`, because our productions also define `lvalue -> ID` as a valid production. To disambiguate, we decided to add another production rule `lvalue -> ID LBRACK expr LBRACK`. Theoretically, disambiguating between TYPE_ID and ID would remove this conflict, however introducing the naive alias of `TYPE_ID: ID` resulted in a number of reduce-reduce conflicts, such that we determined that the question of whether a given ID is a type_id should be delegated to after the AST has been parsed (most likely the type-checker).
 
 * The binary operators we defined caused shift-reduce conflicts with the grammar productions for IF, WHILE, FOR, ASSIGN, ARRAY expressions. To fully evaluate the expression, we must shift.
 
@@ -36,7 +36,6 @@ not_type_decls: func_decls not_func_decls   (A.FunctionDec(rev(func_decls)) :: n
               |                             (nil)
 ```
 
-* We considered adding TYPE_ID as a separate terminal within our grammar to help disambiguate between a type and a traditional ID, however introducing the naive alias of `TYPE_ID: ID` resulted in a number of reduce-reduce conflicts, such that we determined that the determination of whether a given ID is a type or a variable should be delegated to after the AST has been parsed (most likely the type-checker).
 
 ### Other Points of Interest
 
