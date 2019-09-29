@@ -17,12 +17,12 @@ val lineNum = ErrorMsg.lineNum
 val linePos = ErrorMsg.linePos
 val err = ErrorMsg.error
 
-val lineCursor = ref 0
+val lineCursor = ref 1
 fun setCursorPast(yypos, yytext) = (lineCursor := (yypos + String.size(yytext)) - hd(!linePos))
 fun initNewline(yypos) = (lineNum := !lineNum + 1;
                           linePos := yypos :: !linePos;
                           lineCursor := 1);
-fun makeToken(tokenizer, yypos, yytext) = (tokenizer(yypos, yypos + String.size(yytext)));
+fun makeToken(tokenizer, yypos, yytext) = (tokenizer(yypos-1, yypos + String.size(yytext)));
 
 (* If we hit end of file, we only care about current state, not code validation *)
 fun eof() = (
