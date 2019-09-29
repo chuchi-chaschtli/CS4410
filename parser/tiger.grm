@@ -14,23 +14,28 @@ structure A = Absyn
   | BREAK | NIL
   | FUNCTION | VAR | TYPE
 
-(* TODO fix nonterm list types *)
-%nonterm program      (* of A.exp *)
-       | expr         (* of A.exp *)
-       | binary_op    (* of A.exp *)
-       | expr_seq     (* of (A.exp * pos) list *)
-       | expr_list    (* of A.exp list *)
-       | field_list   (* of (A.symbol * A.exp * pos) list *)
-       | lvalue       (* of A.var *)
-       | decl_seq     (* of A.dec list *)
-       | decl         (* of A.dec *)
-       | type_decl    (* of A.dec list *)
-       | type_val     (* of A.ty *)
-       | type_fields  (* of A.field list *)
-       | type_field   (* of A.ty *)
-       | var_decl     (* of A.dec *)
-       | func_decl    (* of A.dec list *)
-       | arr_access   (*   *)
+%nonterm program        of A.exp
+       | expr           of A.exp
+       | binary_expr    of A.exp
+       | expr_seq       of (A.exp * pos) list
+       | expr_list      of A.exp list
+       | field_list     of (A.symbol * A.exp * pos) list
+       | field          of (A.symbol * A.exp * pos)
+       | lvalue         of A.var
+       | decl_seq       of A.dec list
+       | decl           of A.dec list
+       | type_decls     of {name: A.symbol, pos: pos, ty: A.ty} list
+       | type_decl      of {name: A.symbol, pos: pos, ty: A.ty}
+       | not_type_decls of A.dec list
+       | type_val       of A.ty
+       | type_fields    of A.field list
+       | type_field     of A.field
+       | var_decls      of A.dec list
+       | var_decl       of A.dec
+       | not_var_decls  of A.dec list
+       | func_decls     of A.fundec list
+       | func_decl      of A.fundec
+       | not_func_decls of A.dec list
 
 %pos int
 %verbose
@@ -38,14 +43,17 @@ structure A = Absyn
 %eop EOF
 %noshift EOF
 
-%nonassoc ASSIGN THEN
+%nonassoc ASSIGN
+%nonassoc ID WHILE DO
+%nonassoc LBRACK RBRACK OF
+%nonassoc THEN
 %nonassoc ELSE
 %left OR
 %left AND
 %nonassoc EQ NEQ GT LT GE LE
 %left PLUS MINUS
 %left TIMES DIVIDE
-%left UMINUS
+%nonassoc UMINUS
 
 %name Tiger
 
@@ -58,82 +66,104 @@ structure A = Absyn
 %value INT (1)
 %value STRING ("")
 
+%pure
+
 %%
 
-program: expr ((*expr*))
+program: expr (expr)
 
-expr: STRING                                 ((*A.StringExp(STRING, STRINGleft)*))
-    | INT                                    ((*A.IntExp(INT)*))
-    | NIL                                    ((*A.NilExp*))
-    | lvalue                                 ()
-    | MINUS expr                %prec UMINUS ((*A.OpExp{left = A.IntExp(0), oper = A.MinusOp, right = expr, pos = MINUSleft}*))
-    | expr binary_op expr                    ((*binary_expr*))
-    | lvalue ASSIGN expr                     ()
-    | ID LPAREN expr_list RPAREN             ()
-    | LPAREN expr_seq RPAREN                 ((*A.SeqExp(rev(expr_seq))*))
-    | ID LBRACE field_list RBRACE            ((* RecordExp *))
+expr: STRING                                 (A.StringExp(STRING, STRINGleft))
+    | INT                                    (A.IntExp(INT))
+    | NIL                                    (A.NilExp)
+    | lvalue                                 (A.VarExp(lvalue))
+    | MINUS expr                %prec UMINUS (A.OpExp{left = A.IntExp(0), oper = A.MinusOp, right = expr, pos = MINUSleft})
+    | binary_expr                            (binary_expr)
+    | lvalue ASSIGN expr                     (A.AssignExp({var = lvalue, exp = expr, pos = lvalueleft}))
+    | ID LPAREN expr_list RPAREN             (A.CallExp{func = Symbol.symbol(ID), args = expr_list, pos = IDleft})
+    | LPAREN expr_seq RPAREN                 (A.SeqExp(expr_seq))
+    | ID LBRACE field_list RBRACE            (A.RecordExp{fields = field_list, typ = Symbol.symbol(ID), pos = IDleft})
     (* TODO: Validate this parses correctly in AST compared to lvalue *)
-    | ID LBRACK expr RBRACK OF expr          () (*** Shift-reduce conflict with lvalue: favor shifting OF ***)
-    | IF expr THEN expr                      ((*A.IfExp({test=exp1, then'=exp2, else'=NONE, pos=IFleft})*))
-    | IF expr THEN expr ELSE expr            ((*A.IfExp({test=exp1, then'=exp2, else'=SOME exp3, pos=IFleft})*))
-    | WHILE expr DO expr                     ((*A.WhileExp{test = exp1, body = exp2, pos = WHILEleft}*))
-    | FOR ID ASSIGN expr TO expr DO expr     ((*A.ForExp{var = Symbol.symbol(ID), escape = ref true, lo = exp1, hi = exp2, body = exp3, pos = FORleft}*))
-    | BREAK                                  ((*A.BreakExp(BREAKleft)*))
-    | LET decl_seq IN expr_seq END           ((*A.LetExp{decs = rev(decl_seq), body = A.SeqExp(rev(expr_seq)), pos = LETleft}*))
+    | ID LBRACK expr RBRACK OF expr          (A.ArrayExp{typ = Symbol.symbol(ID), size = expr1, init = expr2, pos = IDleft}) (*** Shift-reduce conflict with lvalue: favor shifting OF ***)
+    | IF expr THEN expr                      (A.IfExp{test=expr1, then'=expr2, else'=NONE, pos=IFleft})
+    | IF expr THEN expr ELSE expr            (A.IfExp{test=expr1, then'=expr2, else'=SOME expr3, pos=IFleft})
+    | WHILE expr DO expr                     (A.WhileExp{test = expr1, body = expr2, pos = WHILEleft})
+    | FOR ID ASSIGN expr TO expr DO expr     (A.ForExp{var = Symbol.symbol(ID), escape = ref true, lo = expr1, hi = expr2, body = expr3, pos = FORleft})
+    | BREAK                                  (A.BreakExp(BREAKleft))
+    | LET decl_seq IN expr_seq END           (A.LetExp{decs = decl_seq, body = A.SeqExp(expr_seq), pos = LETleft})
 
 (*** Shift-reduce conflict on all of these: resolved via precedence ***)
 (*** 12 shift reduce conflicts ***)
-binary_op: PLUS       %prec PLUS ((*A.OpExp{left = exp1, oper = A.PlusOp, right = exp2, pos = exp1left}*))
-         | MINUS     %prec MINUS ((*A.OpExp{left = exp1, oper = A.MinusOp, right = exp2, pos = exp1left}*))
-         | TIMES     %prec TIMES ((*A.OpExp{left = exp1, oper = A.TimesOp, right = exp2, pos = exp1left}*))
-         | DIVIDE   %prec DIVIDE ((*A.OpExp{left = exp1, oper = A.DivideOp, right = exp2, pos = exp1left}*))
-         | EQ           %prec EQ ((*A.OpExp{left = exp1, oper = A.EqOp, right = exp2, pos = exp1left}*))
-         | NEQ         %prec NEQ ((*A.OpExp{left = exp1, oper = A.NeqOp, right = exp2, pos = exp1left}*))
-         | LT           %prec LT ((*A.OpExp{left = exp1, oper = A.LtOp, right = exp2, pos = exp1left}*))
-         | GT           %prec GT ((*A.OpExp{left = exp1, oper = A.GtOp, right = exp2, pos = exp1left}*))
-         | GE           %prec GE ((*A.OpExp{left = exp1, oper = A.GeOp, right = exp2, pos = exp1left}*))
-         | LE           %prec LE ((*A.OpExp{left = exp1, oper = A.LeOp, right = exp2, pos = exp1left}*))
-         | AND         %prec AND ((*A.IfExp{test = exp1, then'=exp2, else' = SOME(A.IntExp(0)), pos = exp1left}*))
-         | OR           %prec OR ((*A.IfExp{test = exp1, then'=A.IntExp(1), else'=SOME exp2, pos=exp1left}*))
+binary_expr: expr PLUS   expr (A.OpExp{left = expr1, oper = A.PlusOp, right = expr2, pos = expr1left})
+           | expr MINUS  expr (A.OpExp{left = expr1, oper = A.MinusOp, right = expr2, pos = expr1left})
+           | expr TIMES  expr (A.OpExp{left = expr1, oper = A.TimesOp, right = expr2, pos = expr1left})
+           | expr DIVIDE expr (A.OpExp{left = expr1, oper = A.DivideOp, right = expr2, pos = expr1left})
+           | expr EQ     expr (A.OpExp{left = expr1, oper = A.EqOp, right = expr2, pos = expr1left})
+           | expr NEQ    expr (A.OpExp{left = expr1, oper = A.NeqOp, right = expr2, pos = expr1left})
+           | expr LT     expr (A.OpExp{left = expr1, oper = A.LtOp, right = expr2, pos = expr1left})
+           | expr GT     expr (A.OpExp{left = expr1, oper = A.GtOp, right = expr2, pos = expr1left})
+           | expr GE     expr (A.OpExp{left = expr1, oper = A.GeOp, right = expr2, pos = expr1left})
+           | expr LE     expr (A.OpExp{left = expr1, oper = A.LeOp, right = expr2, pos = expr1left})
+           | expr AND    expr (A.IfExp{test = expr1, then'=expr2, else' = SOME(A.IntExp(0)), pos = expr1left})
+           | expr OR     expr (A.IfExp{test = expr1, then'=A.IntExp(1), else'=SOME(expr2), pos=expr1left})
 
-expr_seq: expr_seq SEMICOLON expr  ((*(expr, exprleft)::expr_seq*))
-        | expr                     ((*(expr, exprleft)::nil*))
-        |                          ()
+expr_seq: expr_seq SEMICOLON expr  (expr_seq @ (expr, exprleft)::nil)
+        | expr                     ((expr, exprleft)::nil)
+        |                          (nil)
 
-expr_list: expr_list COMMA expr    ((*expr::expr_list*))
-         | expr                    ((*expr::nil*))
-         |                         ()
+expr_list: expr_list COMMA expr    (expr_list @ expr::nil)
+         | expr                    (expr::nil)
+         |                         (nil)
 
-field_list: field_list COMMA ID EQ expr     ()
-          | ID EQ expr                      ()
-          |                                 ()
+field_list: field_list COMMA field (field_list @ field::nil)
+          | field                  (field::nil)
+          |                        (nil)
 
-lvalue: ID                                  ((* A.SimpleVar(Symbol.symbol(ID), IDleft) *))
-      | lvalue DOT ID                       ((* A.FieldVar(lvalue, Symbol.symbol(ID), lvalueleft) *))
-      | lvalue LBRACK expr RBRACK           ((* A.SubscriptVar(lvalue, expr, lvalueleft) *))
-      | ID LBRACK expr RBRACK               ()
+field: ID EQ expr                  ((Symbol.symbol(ID), expr, IDleft))
 
-decl: type_decl     ()
-    | var_decl      ()
-    | func_decl     ()
+lvalue: ID                         (A.SimpleVar(Symbol.symbol(ID), IDleft))
+      | lvalue DOT ID              (A.FieldVar(lvalue, Symbol.symbol(ID), lvalueleft))
+      | lvalue LBRACK expr RBRACK  (A.SubscriptVar(lvalue, expr, lvalueleft))
+      | ID LBRACK expr RBRACK      (A.SubscriptVar(A.SimpleVar(Symbol.symbol(ID), IDleft), expr, IDleft))
 
-decl_seq: decl_seq decl  ((*decl::decl_seq*))
-        | decl           ((*decl::nil*))
+decl_seq: type_decls not_type_decls   (A.TypeDec(type_decls)::not_type_decls)
+        | func_decls not_func_decls   (A.FunctionDec(func_decls)::not_func_decls)
+        | var_decls  not_var_decls    (var_decls @ not_var_decls)
 
-type_decl: TYPE ID EQ type_val ()
+type_decls: type_decls type_decl            (type_decls @ type_decl::nil)
+          | type_decl                       (type_decl::nil)
 
-type_val: ID                        ()
-        | LBRACE type_fields RBRACE ()
-        | ARRAY OF ID               ()
+type_decl: TYPE ID EQ type_val              ({name = Symbol.symbol(ID), ty = type_val, pos = TYPEleft})
 
-type_fields: type_field                   ()
-           | type_fields COMMA type_field ()
-           |                              ()
+type_val: ID                                (A.NameTy(Symbol.symbol(ID), IDleft))
+        | LBRACE type_fields RBRACE         (A.RecordTy(type_fields))
+        | ARRAY OF ID                       (A.ArrayTy(Symbol.symbol(ID), ARRAYleft))
 
-type_field: ID COLON ID ()
+type_fields: type_field                     (type_field::nil)
+           | type_fields COMMA type_field   (type_fields @ type_field::nil)
+           |                                (nil)
 
-var_decl: VAR ID ASSIGN expr          ((*(A.VarDec{name=Symbol.symbol(ID), escape=(ref true), typ=NONE, init=expr, pos=VARleft}*))
-        | VAR ID COLON ID ASSIGN expr ((*(A.VarDec{name=Symbol.symbol(ID1), escape=(ref true), typ=SOME (Symbol.symbol(ID2), ID2left), init=exp, pos=VARleft})*))
+type_field: ID COLON ID                     ({name = Symbol.symbol(ID1), escape = (ref true), typ = Symbol.symbol(ID2), pos = IDleft})
 
-func_decl: FUNCTION ID LPAREN type_fields RPAREN EQ expr          ()
-         | FUNCTION ID LPAREN type_fields RPAREN COLON ID EQ expr ()
+not_type_decls: func_decls not_func_decls   (A.FunctionDec(func_decls) :: not_func_decls)
+              | var_decls not_var_decls     (var_decls @ not_var_decls)
+              |                             (nil)
+
+var_decls: var_decls var_decl (var_decls @ (var_decl::nil))
+         | var_decl           (var_decl::nil)
+
+not_var_decls: type_decls not_type_decls    (A.TypeDec(type_decls)::not_type_decls)
+             | func_decls not_func_decls    (A.FunctionDec(func_decls)::not_func_decls)
+             |                              (nil)
+
+var_decl: VAR ID ASSIGN expr          (A.VarDec{name = Symbol.symbol(ID), escape=(ref true), typ = NONE, init=expr, pos = VARleft})
+        | VAR ID COLON ID ASSIGN expr (A.VarDec{name = Symbol.symbol(ID1), escape=(ref true), typ = SOME (Symbol.symbol(ID2), ID2left), init = expr, pos = VARleft})
+
+func_decls: func_decls func_decl                                  (func_decls @ func_decl::nil)
+          | func_decl                                             (func_decl::nil)
+
+func_decl: FUNCTION ID LPAREN type_fields RPAREN EQ expr          ({name = Symbol.symbol(ID), params = type_fields, result = NONE, body = expr, pos = FUNCTIONleft})
+         | FUNCTION ID LPAREN type_fields RPAREN COLON ID EQ expr ({name = Symbol.symbol(ID1), params = type_fields, result = SOME (Symbol.symbol(ID2), ID2left), body = expr, pos = FUNCTIONleft})
+
+not_func_decls: type_decls not_type_decls                         (A.TypeDec(type_decls)::not_type_decls)
+              | var_decls not_var_decls                           (var_decls @ not_var_decls)
+              |                                                   (nil)
