@@ -41,6 +41,8 @@ expr_list: expr_list COMMA expr    (???)
          | expr                    (expr::nil)
          |                         (nil)
 ```
-How do we fill the semantic action for the case where we have to recurse? We could just do `expr::expr_list`, which is very readable, but then we have to reverse the tokens at the end using `rev()`. Indeed, this is what we did at first. However, this makes it so there isn't really a tangible benefit to having a left recursive grammar in the first place. A left recursive grammar is already less readable to most native English speakers (who read left to right). We go from a linear stack space to constant stack space, but add time complexity on the reverse call (which is linear). Instead what we do is concatenate a one element list at the end every time like `expr_list @ (expr::nil)`.
+How do we fill the semantic action for the case where we have to recurse? We could just do `expr::expr_list`, but then we have to reverse the tokens at the end using `rev()`. Alternatively, we could avoid using a `rev()` call by utilizing list concatenation like `expr_list @ (expr::nil)`. Both rev() and list concatenation are effectively linear runtime on the size of the list. However, we think the benefit of having a constant stack space outweighs the linear runtime cost on doing
+list concatenation. We think it's more readable to use list concatenation over reversing the list at the end, because otherwise
+it forces the reader to remember that the list is being created in reverse order.
 
 * We also specified `%pure`. As discussed in class, this is just evaluating the semantic actions as we parse, instead of creating thunks to be deferred.
