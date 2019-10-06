@@ -55,7 +55,7 @@ struct
             fun verifyArithOperands =
               (checkInt(tyLeft, pos);
                checkInt(tyRight, pos);
-               {exp=(), ty=Types.INT})
+               {exp=((* TODO: do something with expLeft and expRight here? *)), ty=Types.INT})
           in
             case oper
               of A.PlusOp   => verifyArithOperands()
