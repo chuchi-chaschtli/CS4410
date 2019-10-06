@@ -46,6 +46,10 @@ struct
     then ()
     else ErrorMsg.error pos "expression " exp ^ " must be an int"
 
+  fun actual_ty typ =
+    case typ of (T.NAME (_, ref(SOME inner))) => actual_ty inner
+              | other                         => other;
+
   fun transExp(venv, tenv) =
     let
       fun trexp (A.OpExp{left, oper, right, pos}) =
@@ -137,24 +141,22 @@ struct
         | trexp (A.BreakExp) = {exp = (), ty =  T.UNIT} (* TODO check our BREAK more thoroughly *)
         | trexp (A.ArrayExp{typ, size, init, pos}) =
           let
-            val typType = S.look tenv typ
-            val sizeType = trexp size
-            val initType = trexp init
+            val binding = S.look tenv typ
+            val {exp=expSize, ty=tySize} = trexp size
+            val {exp=expInit, ty=tyInit} = trexp init
           in
-            (case typType
-              of SOME(Env.VarEntry{ty}) =>
-                if ty = T.ARRAY{innerTy, unique}
-                then
-                  if sizeType.ty = T.INT
-                  then
-                    if initType.ty = innerTy
-                    then {exp = (), ty = T.ARRAY{ty, unique}}
-                    else (ErrorMsg.error pos ("array type does not match "); (* TODO Should be type of inner *)
+            (case binding
+              of SOME(ty) =>
+                (case actual_ty ty
+                  of (T.ARRAY{ty, unique}) =>
+                     (checkInt(tySize, pos);
+                     if actual_ty(ty) = actualTy(tyInit)
+                     then {exp = (), ty = T.ARRAY{ty, unique}}
+                     else (ErrorMsg.error pos ("array type " ^ T.toString initTy
+                              ^ " does not match " ^ T.toString ty);
                           {exp = (), ty = T.INT}))
-                  else (ErrorMsg.error pos ("array size is not int "); (* TODO report size type *)
-                        {exp = (), ty = T.INT}))
-                else (ErrorMsg.error pos ("type is not array " ^ S.name typ);
-                      {exp = (), ty = T.INT}))
+                   | _ => ErrorMsg.error pos ("type is not array " ^ S.name typ);
+                          {exp = (), ty = T.INT})
               | NONE => (ErrorMsg.error pos ("undefined array type " ^ S.name typ);
                          {exp = (), ty = T.INT}))
           end
