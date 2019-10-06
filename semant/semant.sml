@@ -44,7 +44,12 @@ struct
   fun checkInt ({exp, ty}, pos) =
     if ty = Types.INT
     then ()
-    else ErrorMsg.error pos "expression " exp ^ " must be an int"
+    else ErrorMsg.error pos "expression must be an int, found: " ^ T.toString(ty) ^ " instead"
+
+  fun checkUnit ({exp, ty}, pos) =
+    if ty = Types.UNIT
+    then ()
+    else ErrorMsg.error pos "expression must be a unit, found: " ^ T.toString(ty) ^ " instead"
 
   fun actual_ty typ =
     case typ of (T.NAME (_, ref(SOME inner))) => actual_ty inner
@@ -123,19 +128,14 @@ struct
             else (ErrorMsg.error pos "non-int conditional within if ");  (* TODO report cond type *)
                  {exp = (), ty = T.INT}
           end
-        | trexp (A.WhileExp{test, body, pos}) =
+        | trexp (A.WhileExp{cond, body, pos}) =
           let
-            val condType = trexp test
-            val bodyType = trexp body
+            val {exp=expCond, ty=tyCond} = trexp cond
+            val {exp=expBody, ty=tyBody} = trexp body
           in
-            if condType.ty = T.INT
-            then
-              if bodyType.ty = T.UNIT
-              then {exp = (), ty = T.UNIT}
-              else (ErrorMsg.error pos "non-void body within while ");  (* TODO report body type *)
-                   {exp = (), ty = T.INT}
-            else (ErrorMsg.error pos "non-int conditional within while ");  (* TODO report cond type *)
-                 {exp = (), ty = T.INT}
+            checkInt(tyCond, pos);
+            checkUnit(tyBody, pos);
+            {exp = (), ty = T.UNIT}
           end
         | trexp (A.ForExp ...) ...
         | trexp (A.BreakExp) = {exp = (), ty =  T.UNIT} (* TODO check our BREAK more thoroughly *)
