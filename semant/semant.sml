@@ -41,25 +41,45 @@ struct
   transDec : venv * tenv * A.dec -> {venv : venv, tenv : tenv}
   transTy :         tenv * A.ty  -> T.ty
 
-  fun checkInt ({exp, ty}, pos) = (...)
+  fun checkInt ({exp, ty}, pos) =
+    if ty = Types.INT
+    then ()
+    else ErrorMsg.error pos "expression " exp ^ " must be an int"
 
   fun transExp(venv, tenv) =
     let
-      fun trexp (A.OpExp{left, oper = A.PlusOp, right, pos}) =
-                (checkInt(trexp left, pos);
-                 checkInt(trexp right, pos);
-                 {exp = (), ty = T.INT})
+      fun trexp (A.OpExp{left, oper, right, pos}) =
+          let
+            val {exp=expLeft, ty=tyLeft} = trexp left
+            val {exp=expRight, ty=tyRight} = trexp right
+            fun verifyArithOperands =
+              (checkInt(tyLeft, pos);
+               checkInt(tyRight, pos);
+               {exp=(), ty=Types.INT})
+          in
+            case oper
+              of A.PlusOp   => verifyArithOperands()
+               | A.MinusOp  => verifyArithOperands()
+               | A.TimesOp  => verifyArithOperands()
+               | A.DivideOp => verifyArithOperands()
+               | A.LtOp     => verifyArithOperands()
+               | A.LeOp     => verifyArithOperands()
+               | A.GtOp     => verifyArithOperands()
+               | A.GeOp     => verifyArithOperands()
+               | A.EqOp     => (* TODO: verify both sides can be compared *)
+               | A.NeqOp    => (* TODO: verify both sides can be compared *)
+          end
         | trexp (A.LetExp{decs, body, pos}) =
-            let val {venv = venv', tenv = tenv'} = 
+            let val {venv = venv', tenv = tenv'} =
                 transDecs(venv, tenv, decs)
-            in 
+            in
               transExp(venv', tenv') body
             end
         | trexp (A.VarExp(var)) = trvar(var)
         | trexp (A.NilExp) = {exp = (), ty = T.NIL}
         | trexp (A.IntExp(n)) = {exp = (), ty = T.INT}
         | trexp (A.StringExp(str, posn)) = {exp = (), ty = T.STRING}
-        | trexp (A.CallExp{func, args, pos}) = 
+        | trexp (A.CallExp{func, args, pos}) =
           (case S.look(venv, func)
               of SOME(Env.FunEntry{formals = ty list, result = ty}) =>
                   (map trexp formals; (* TODO handle output of type checked args *)
@@ -69,11 +89,11 @@ struct
         | trexp (A.RecordExp{fields, typ, pos}) =
           (map trexp field; (* TODO handle output of type checked fields (fold?) *)
             {exp = (), ty = T.RECORD}) (* Fold? *)
-        | trexp (A.SeqExp{exprs}) = 
+        | trexp (A.SeqExp{exprs}) =
           ((map trexp exprs; (* TODO handle output of type checked exprs (fold?) *)
             {exp = (), ty = T.UNIT}) (* Fold? *))
-        | trexp (A.AssignExp{var, expr, pos}) = 
-          let 
+        | trexp (A.AssignExp{var, expr, pos}) =
+          let
             val e = trexp expr
             val v = trvar var
           in
@@ -82,15 +102,15 @@ struct
             else (ErrorMsg.error pos "mismatching types within assignment ");  (* TODO report types *)
                  {exp = (), ty = T.INT}
           end
-        | trexp (A.IfExp{test, then', else', pos}) = 
+        | trexp (A.IfExp{test, then', else', pos}) =
           let
             val condType = trexp test
             val thenType = trexp then'
-          in 
+          in
             if condType.ty = T.INT
             then
               (case else'
-                of SOME(expr) =>  
+                of SOME(expr) =>
                   if trexp(expr).ty = thenType.ty
                   then {exp = (), ty = thenType.ty}
                   else (ErrorMsg.error pos "mismatching then-else types within if ");  (* TODO report types *)
@@ -103,8 +123,8 @@ struct
           let
             val condType = trexp test
             val bodyType = trexp body
-          in 
-            if condType.ty = T.INT 
+          in
+            if condType.ty = T.INT
             then
               if bodyType.ty = T.UNIT
               then {exp = (), ty = T.UNIT}
@@ -116,15 +136,15 @@ struct
         | trexp (A.ForExp ...) ...
         | trexp (A.BreakExp) = {exp = (), ty =  T.UNIT} (* TODO check our BREAK more thoroughly *)
         | trexp (A.ArrayExp{typ, size, init, pos}) =
-          let 
+          let
             val typType = S.look tenv typ
             val sizeType = trexp size
             val initType = trexp init
           in
             (case typType
-              of SOME(Env.VarEntry{ty}) => 
+              of SOME(Env.VarEntry{ty}) =>
                 if ty = T.ARRAY{innerTy, unique}
-                then 
+                then
                   if sizeType.ty = T.INT
                   then
                     if initType.ty = innerTy
@@ -168,12 +188,11 @@ struct
            {venv = venv', tenv = tenv}
       end
 
-      
-    fun transDecs(venv, tenv, l) = 
+
+    fun transDecs(venv, tenv, l) =
       let
         fun f({ve, te}, dec) = transDec(ve, te, dec)
       in
         foldl f l {venv, tenv}
       end
 end
-
