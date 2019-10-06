@@ -176,8 +176,25 @@ struct
                    {exp = (), ty = actual_ty ty}
                  | NONE => (ErrorMsg.error pos ("undefined variable " ^ S.name id);
                             {exp = (), ty = T.INT}))
-        | trvar (A.FieldVar(v, id, pos)) = ...
-        | trvar (A.SubscriptVar(v, exp, pos)) = ...
+        | trvar (A.FieldVar(v, id, pos)) =
+          let
+          in
+            (case ty
+              of T.RECORD (fields, unique) =>
+                (* TODO: Record access?*);
+                {exp=(), ty= T.RECORD}
+              | _ => ErrorMsg.error pos "Tried to access record field of object that is not a record";
+                     {exp=(), ty = T.INT})
+          end
+        | trvar (A.SubscriptVar(var, exp, pos)) =
+          let
+            val {exp=tyExp, ty=tyVar} = trvar(var)
+          in
+            case tyVar
+              of T.ARRAY (ty, unique) => {exp=(), ty=ty}
+               | _ => (ErrorMsg.error pos "Attempted to access a non-array type: " ^ T.toString(ty));
+                      {exp=(), ty=Ty.INT}
+          end
     in
       trexp
     end
