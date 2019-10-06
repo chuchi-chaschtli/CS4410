@@ -142,8 +142,8 @@ struct
           let
             val venvUpdated = S.enter venv var Env.VarEntry{ty = T.INT}
           in
-            checkInt(lo, pos);
-            checkInt(hi, pos);
+            checkInt(trexp(lo).ty, pos);
+            checkInt(trexp(hi).ty, pos);
             checkUnit((transExp(venvUpdated, tenv) body), pos);
 		        {exp=(), ty=T.UNIT}
           end
