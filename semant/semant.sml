@@ -138,7 +138,15 @@ struct
             checkUnit(tyBody, pos);
             {exp = (), ty = T.UNIT}
           end
-        | trexp (A.ForExp ...) ...
+        | trexp (A.ForExp{var, escape, lo, hi, body, pos})
+          let
+            val venvUpdated = S.enter venv var Env.VarEntry{ty = T.INT}
+          in
+            checkInt(lo, pos);
+            checkInt(hi, pos);
+            checkUnit((transExp(venvUpdated, tenv) body), pos);
+		        {exp=(), ty=T.UNIT}
+          end
         | trexp (A.BreakExp) = {exp = (), ty =  T.UNIT} (* TODO check our BREAK more thoroughly *)
         | trexp (A.ArrayExp{typ, size, init, pos}) =
           let
