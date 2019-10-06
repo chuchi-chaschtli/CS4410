@@ -200,10 +200,10 @@ struct
       end
 
 
-    fun transDecs(venv, tenv, l) =
-      let
-        fun f({ve, te}, dec) = transDec(ve, te, dec)
-      in
-        foldl f l {venv, tenv}
-      end
+  fun transDecs(venv, tenv, decs) =
+    let
+      fun f({ve, te}, dec) = transDec(ve, te, dec)
+    in
+      foldl f {venv, tenv} decs
+    end
 end
