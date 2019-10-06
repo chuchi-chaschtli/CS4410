@@ -41,12 +41,12 @@ struct
   transDec : venv * tenv * A.dec -> {venv : venv, tenv : tenv}
   transTy :         tenv * A.ty  -> T.ty
 
-  fun checkInt ({exp, ty}, pos) =
+  fun checkInt (ty, pos) =
     if ty = Types.INT
     then ()
     else ErrorMsg.error pos "expression must be an int, found: " ^ T.toString(ty) ^ " instead"
 
-  fun checkUnit ({exp, ty}, pos) =
+  fun checkUnit (ty, pos) =
     if ty = Types.UNIT
     then ()
     else ErrorMsg.error pos "expression must be a unit, found: " ^ T.toString(ty) ^ " instead"
@@ -113,20 +113,21 @@ struct
           end
         | trexp (A.IfExp{test, then', else', pos}) =
           let
-            val condType = trexp test
-            val thenType = trexp then'
+            val {exp=expCond, ty=tyCond} = trexp cond
+            val {exp=expBody, ty=tyThen} = trexp then'
           in
-            if condType.ty = T.INT
-            then
-              (case else'
-                of SOME(expr) =>
-                  if trexp(expr).ty = thenType.ty
-                  then {exp = (), ty = thenType.ty}
-                  else (ErrorMsg.error pos "mismatching then-else types within if ");  (* TODO report types *)
-                       {exp = (), ty = T.INT}
-                | NONE => {exp = (), ty = thenType.ty})
-            else (ErrorMsg.error pos "non-int conditional within if ");  (* TODO report cond type *)
-                 {exp = (), ty = T.INT}
+            checkInt(tyCond, pos);
+            (case else'
+              of SOME(expr) =>
+                let
+                  val tyElse = trexp(expr).ty
+                in
+                  if tyThen = tyElse
+                  then {exp = (), ty = tyThen}
+                  else (ErrorMsg.error pos ("then type " ^ tyThen ^ " does not match else type " ^ tyElse);
+                       {exp = (), ty = T.INT})
+                end
+              | NONE => {exp = (), ty = tyThen})
           end
         | trexp (A.WhileExp{cond, body, pos}) =
           let
