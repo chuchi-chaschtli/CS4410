@@ -176,13 +176,19 @@ struct
                    {exp = (), ty = actual_ty ty}
                  | NONE => (ErrorMsg.error pos ("undefined variable " ^ S.name id);
                             {exp = (), ty = T.INT}))
-        | trvar (A.FieldVar(v, id, pos)) =
+        | trvar (A.FieldVar(var, id, pos)) =
           let
+            fun getFieldTypeWithId (nil, id, pos) =
+                (ErrorMsg.error pos ("record does not have field with id: " ^ id);
+                T.UNIT)
+              | getFieldTypeWithId ((name, ty)::rest, id, pos) =
+                if (name = id)
+                then ty
+                else getTypeWithId(rest, id, pos)
           in
             (case ty
               of T.RECORD (fields, unique) =>
-                (* TODO: Record access?*);
-                {exp=(), ty= T.RECORD}
+                {exp=(), ty= getFieldTypeWithId(fields, id, pos)}
               | _ => ErrorMsg.error pos "Tried to access record field of object that is not a record";
                      {exp=(), ty = T.INT})
           end
