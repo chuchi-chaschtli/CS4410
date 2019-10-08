@@ -4,12 +4,16 @@ structure S = Symbol
 
 signature ENV =
 sig
+  type venv
+  type tenv
+
   type access
   type ty
   datatype enventry = VarEntry of {ty: ty}
                     | FunEntry of {formals: ty list, result : ty}
-  val base_tenv : ty S.table (* predefined types *)
-  val base_venv : enventry S.table (* predefined functions *)
+
+  val base_venv : venv (* predefined functions *)
+  val base_tenv : tenv (* predefined types *)
 end
 
 structure Env :> ENV =
@@ -20,6 +24,9 @@ struct
   datatype enventry = VarEntry of {ty: ty}
                     | FunEntry of {formals: ty list, result : ty}
 
+  type venv = enventry S.table
+  type tenv = ty S.table
+
   val base_tenv = S.empty (* predefined types *)
   val base_venv = S.empty (* predefined functions *)
 end
@@ -29,17 +36,23 @@ struct
   type exp = unit
 end
 
-structure Semant =
+signature SEMANTICS =
+sig
+  type venv
+  type tenv
+  type expty
+
+  val transVar : venv * tenv * A.var -> expty
+  val transExp : venv * tenv * A.exp -> expty
+  val transDec : venv * tenv * A.dec -> {venv : venv, tenv : tenv}
+  val transTy  :        tenv * A.ty  -> T.ty
+end
+
+structure Semant :> SEMANTICS =
 struct
-  type venv = Env.enventry S.empty
-  type tenv = ty S.empty
-
+  type venv = Env.venv
+  type tenv = Env.tenv
   type expty = {exp: Translate.exp, ty: T.ty}
-
-  (* transVar : venv * tenv * A.var -> expty
-  transExp : venv * tenv * A.exp -> expty
-  transDec : venv * tenv * A.dec -> {venv : venv, tenv : tenv}
-  transTy :         tenv * A.ty  -> T.ty *)
 
   fun checkInt (ty, pos) =
     if ty = Types.INT
