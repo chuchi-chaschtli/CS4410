@@ -1,13 +1,13 @@
 Group is
 
-./parser/absyn.sml
-./parser/errormsg.sml
-./parser/table.sig
-./parser/table.sml
-./parser/symbol.sml
-./parser/parse.sml
-./parser/tiger.lex
-./parser/tiger.grm
+../parser/absyn.sml
+../parser/errormsg.sml
+../parser/table.sig
+../parser/table.sml
+../parser/symbol.sml
+../parser/parse.sml
+../parser/tiger.lex
+../parser/tiger.grm
 
 types.sml
 semant.sml

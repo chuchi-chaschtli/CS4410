@@ -26,7 +26,7 @@ end
 
 structure Translate =
 struct
-  struct type exp = unit
+  type exp = unit
 end
 
 structure Semant =
@@ -36,10 +36,10 @@ struct
 
   type expty = {exp: Translate.exp, ty: T.ty}
 
-  transVar : venv * tenv * A.var -> expty
+  (* transVar : venv * tenv * A.var -> expty
   transExp : venv * tenv * A.exp -> expty
   transDec : venv * tenv * A.dec -> {venv : venv, tenv : tenv}
-  transTy :         tenv * A.ty  -> T.ty
+  transTy :         tenv * A.ty  -> T.ty *)
 
   fun checkInt (ty, pos) =
     if ty = Types.INT
@@ -75,8 +75,8 @@ struct
                | A.LeOp     => verifyArithOperands()
                | A.GtOp     => verifyArithOperands()
                | A.GeOp     => verifyArithOperands()
-               | A.EqOp     => (* TODO: verify both sides can be compared *)
-               | A.NeqOp    => (* TODO: verify both sides can be compared *)
+               (*| A.EqOp     =>  TODO: verify both sides can be compared *)
+               (*| A.NeqOp    =>  TODO: verify both sides can be compared *)
           end
         | trexp (A.LetExp{decs, body, pos}) =
             let val {venv = venv', tenv = tenv'} =
@@ -120,7 +120,7 @@ struct
             (case else'
               of SOME(expr) =>
                 let
-                  val tyElse = trexp(expr).ty
+                  val {exp=expElse, ty=tyElse} = trexp expr
                 in
                   if tyThen = tyElse
                   then {exp = (), ty = tyThen}
@@ -138,12 +138,12 @@ struct
             checkUnit(tyBody, pos);
             {exp = (), ty = T.UNIT}
           end
-        | trexp (A.ForExp{var, escape, lo, hi, body, pos})
+        | trexp (A.ForExp{var, escape, lo, hi, body, pos}) =
           let
             val venvUpdated = S.enter venv var Env.VarEntry{ty = T.INT}
           in
-            checkInt(trexp(lo).ty, pos);
-            checkInt(trexp(hi).ty, pos);
+            checkInt(#trexp(lo) ty, pos);
+            checkInt(#trexp(hi) ty, pos);
             checkUnit((transExp(venvUpdated, tenv) body), pos);
 		        {exp=(), ty=T.UNIT}
           end
@@ -160,7 +160,7 @@ struct
                   of (T.ARRAY{ty, unique}) =>
                      (checkInt(tySize, pos);
                      if actual_ty(ty) = actualTy(tyInit)
-                     then {exp = (), ty = T.ARRAY{ty, unique}}
+                     then {exp = (), ty = T.ARRAY{ty=ty, unique=unique}}
                      else (ErrorMsg.error pos ("array type " ^ T.toString initTy
                               ^ " does not match " ^ T.toString ty);
                           {exp = (), ty = T.INT}))
@@ -199,7 +199,7 @@ struct
             case tyVar
               of T.ARRAY (ty, unique) => {exp=(), ty=ty}
                | _ => (ErrorMsg.error pos "Attempted to access a non-array type: " ^ T.toString(ty));
-                      {exp=(), ty=Ty.INT}
+                      {exp=(), ty=T.INT}
           end
     in
       trexp
@@ -227,6 +227,6 @@ struct
     let
       fun f({ve, te}, dec) = transDec(ve, te, dec)
     in
-      foldl f {venv, tenv} decs
+      foldl f {ve=venv, te=tenv} decs
     end
 end
