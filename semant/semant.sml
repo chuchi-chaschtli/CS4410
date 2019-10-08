@@ -4,29 +4,20 @@ structure S = Symbol
 
 signature ENV =
 sig
-  type venv
-  type tenv
-
   type access
   type ty
   datatype enventry = VarEntry of {ty: ty}
                     | FunEntry of {formals: ty list, result : ty}
-
-  val base_venv : venv (* predefined functions *)
-  val base_tenv : tenv (* predefined types *)
+  val base_tenv : ty S.table (* predefined types *)
+  val base_venv : enventry S.table (* predefined functions *)
 end
 
 structure Env :> ENV =
 struct
   type access = unit
   type ty = T.ty
-
   datatype enventry = VarEntry of {ty: ty}
                     | FunEntry of {formals: ty list, result : ty}
-
-  type venv = enventry S.table
-  type tenv = ty S.table
-
   val base_tenv = S.empty (* predefined types *)
   val base_venv = S.empty (* predefined functions *)
 end
@@ -38,31 +29,32 @@ end
 
 signature SEMANTICS =
 sig
+  type expty
   type venv
   type tenv
-  type expty
 
-  val transVar : venv * tenv * A.var -> expty
-  val transExp : venv * tenv * A.exp -> expty
-  val transDec : venv * tenv * A.dec -> {venv : venv, tenv : tenv}
-  val transTy  :        tenv * A.ty  -> T.ty
+  (* val transVar : Env.venv * Env.tenv * A.var -> expty *)
+  val transExp  : venv * tenv -> A.exp -> expty
+  val transDec  : venv * tenv * A.dec -> {venv : venv, tenv : tenv}
+  val transDecs : venv * tenv * A.dec list -> {venv : venv, tenv : tenv}
+  (* val transTy  :        tenv * A.ty  -> Types.ty *)
 end
 
 structure Semant :> SEMANTICS =
 struct
-  type venv = Env.venv
-  type tenv = Env.tenv
-  type expty = {exp: Translate.exp, ty: T.ty}
+  type expty = {exp: Translate.exp, ty: Types.ty}
+  type venv = Env.enventry S.table
+  type tenv = Env.ty S.table
 
   fun checkInt (ty, pos) =
     if ty = Types.INT
     then ()
-    else ErrorMsg.error pos "expression must be an int, found: " ^ T.toString(ty) ^ " instead"
+    else ErrorMsg.error pos ("expression must be an int, found: " ^ T.toString(ty) ^ " instead")
 
   fun checkUnit (ty, pos) =
     if ty = Types.UNIT
     then ()
-    else ErrorMsg.error pos "expression must be a unit, found: " ^ T.toString(ty) ^ " instead"
+    else ErrorMsg.error pos ("expression must be a unit, found: " ^ T.toString(ty) ^ " instead")
 
   fun actual_ty typ =
     case typ of (T.NAME (_, ref(SOME inner))) => actual_ty inner
@@ -211,7 +203,7 @@ struct
           in
             case tyVar
               of T.ARRAY (ty, unique) => {exp=(), ty=ty}
-               | _ => (ErrorMsg.error pos "Attempted to access a non-array type: " ^ T.toString(ty));
+               | _ => (ErrorMsg.error pos ("Attempted to access a non-array type: " ^ T.toString(ty)));
                       {exp=(), ty=T.INT}
           end
     in
@@ -219,7 +211,7 @@ struct
     end
 
   fun transDec (venv, tenv, A.VarDec{name, typ=NONE, init, ...}) =
-    let val {exp, ty} = transExp(venv, tenv, init)
+    let val {exp, ty} = transExp(venv, tenv) init
       in {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = ty})}
     end
     | transDec (venv, tenv, A.TypeDec[{name, ty}]) =
