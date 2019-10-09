@@ -100,28 +100,31 @@ struct
                    fold {exp = (), ty = result}) (* Fold? *)
               | NONE => (ErrorMsg.error pos ("undefined function " ^ S.name func);
                           {exp = (), ty = T.UNIT})) *)
-        | trexp (A.RecordExp{fields, typ, pos}) =
-          (map trexp fields; (* TODO handle output of type checked fields (fold?) *)
-            {exp = (), ty = T.RECORD}) (* Fold? *)
-        | trexp (A.SeqExp{exprs}) =
-          ((map trexp exprs; (* TODO handle output of type checked exprs (fold?) *)
-            {exp = (), ty = T.UNIT}) (* Fold? *))
-        | trexp (A.AssignExp{var, expr, pos}) =
+        (* | trexp (A.RecordExp{fields, typ, pos}) =
           let
-            val {exp=exprExp, ty=exprTy} = trexp expr
-            val {exp=varExp, ty=varTy} = trexp var
+          in
+            (map trexp fields); (* TODO handle output of type checked fields (fold?) *)
+            {exp = (), ty = T.RECORD}
+          end (* Fold? *) *)
+        (* | trexp (A.SeqExp{exprs}) =
+          ((map trexp exprs; (* TODO handle output of type checked exprs (fold?) *)
+            {exp = (), ty = T.UNIT}) (* Fold? *)) *)
+        | trexp (A.AssignExp{var, exp, pos}) =
+          let
+            val {exp=exprExp, ty=exprTy} = trexp exp
+            val {exp=varExp, ty=varTy} = trvar var
           in
             if exprTy = varTy
             then {exp = (), ty = varTy}
             else (ErrorMsg.error pos ("mismatching types within assignment ");  (* TODO report types *)
                  {exp = (), ty = T.INT})
           end
-        | trexp (A.IfExp{cond, then', else', pos}) =
+        | trexp (A.IfExp{test, then', else', pos}) =
           let
-            val {exp=expCond, ty=tyCond} = trexp cond
+            val {exp=expTest, ty=tyTest} = trexp test
             val {exp=expBody, ty=tyThen} = trexp then'
           in
-            checkInt(tyCond, pos);
+            checkInt(tyTest, pos);
             (case else'
               of SOME(expr) =>
                 let
@@ -134,12 +137,12 @@ struct
                 end
               | NONE => {exp = (), ty = tyThen})
           end
-        | trexp (A.WhileExp{cond, body, pos}) =
+        | trexp (A.WhileExp{test, body, pos}) =
           let
-            val {exp=expCond, ty=tyCond} = trexp cond
+            val {exp=expTest, ty=tyTest} = trexp test
             val {exp=expBody, ty=tyBody} = trexp body
           in
-            checkInt(tyCond, pos);
+            checkInt(tyTest, pos);
             checkUnit(tyBody, pos);
             {exp = (), ty = T.UNIT}
           end
@@ -154,7 +157,7 @@ struct
             checkUnit((transExp(venvUpdated, tenv) body), pos);
 		        {exp=(), ty=T.UNIT}
           end
-        | trexp (A.BreakExp) = {exp = (), ty =  T.UNIT} (* TODO check our BREAK more thoroughly *)
+        | trexp (A.BreakExp(pos)) = {exp = (), ty =  T.UNIT} (* TODO check our BREAK more thoroughly *)
         | trexp (A.ArrayExp{typ, size, init, pos}) =
           let
             val binding = S.look(tenv, typ)
@@ -180,7 +183,7 @@ struct
       and trvar (A.SimpleVar(id, pos)) =
             (case S.look(venv, id)
                 of SOME(Env.VarEntry{ty}) =>
-                   {exp = (), ty = actual_ty ty}
+                   {exp = (), ty = T.NIL}
                  | NONE => (ErrorMsg.error pos ("undefined variable " ^ S.name id);
                             {exp = (), ty = T.INT}))
         | trvar (A.FieldVar(var, id, pos)) =
