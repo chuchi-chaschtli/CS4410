@@ -27,9 +27,9 @@ struct
   type exp = unit
 end
 
-signature SEMANTICS =
+(* signature SEMANTICS =
 sig
-  type expty
+  eqtype expty
   type venv
   type tenv
 
@@ -38,13 +38,20 @@ sig
   (* val transDec  : venv * tenv * A.dec -> {venv : venv, tenv : tenv} *)
   (* val transDecs : venv * tenv * A.dec list -> {venv : venv, tenv : tenv} *)
   (* val transTy  :        tenv * A.ty  -> T.ty *)
-end
+end *)
 
-structure Semant :> SEMANTICS =
+(* structure Semant :> SEMANTICS = *)
+structure Semant =
 struct
   type expty = {exp: Translate.exp, ty: T.ty}
   type venv = Env.enventry S.table
   type tenv = Env.ty S.table
+
+  (* val transVar : venv * tenv * A.var -> expty *)
+  (* val transExp : venv * tenv -> A.exp -> expty *)
+  (* val transDec  : venv * tenv * A.dec -> {venv : venv, tenv : tenv} *)
+  (* val transDecs : venv * tenv * A.dec list -> {venv : venv, tenv : tenv} *)
+  (* val transTy  :        tenv * A.ty  -> T.ty *)
 
   fun checkInt (ty, pos) =
     if ty = T.INT
@@ -148,13 +155,14 @@ struct
           end
         | trexp (A.ForExp{var, escape, lo, hi, body, pos}) =
           let
-            val {exp=expLo, ty=tyLo} = trexp lo
-            val {exp=expHi, ty=tyHi} = trexp hi
+            val {exp=loExp, ty=tyLo} = trexp lo
+            val {exp=hiExp, ty=tyHi} = trexp hi
             val venvUpdated = S.enter(venv, var, T.INT)
+            val {exp=updatedExp, ty=updatedTy} = (transExp(venvUpdated, tenv) body)
           in
             checkInt(tyLo, pos);
             checkInt(tyHi, pos);
-            checkUnit((transExp(venvUpdated, tenv) body), pos);
+            checkUnit(updatedTy, pos);
 		        {exp=(), ty=T.UNIT}
           end
         | trexp (A.BreakExp(pos)) = {exp = (), ty =  T.UNIT} (* TODO check our BREAK more thoroughly *)
@@ -182,8 +190,8 @@ struct
 
       and trvar (A.SimpleVar(id, pos)) =
             (case S.look(venv, id)
-                of SOME(Env.VarEntry{ty}) =>
-                   {exp = (), ty = T.NIL}
+                of SOME(ty) =>
+                   {exp = (), ty = actual_ty ty}
                  | NONE => (ErrorMsg.error pos ("undefined variable " ^ S.name id);
                             {exp = (), ty = T.INT}))
         | trvar (A.FieldVar(var, id, pos)) =
@@ -198,7 +206,7 @@ struct
           in
             (case T.UNIT
               of T.RECORD (fields, unique) =>
-                {exp=(), ty= getFieldTypeWithId(fields, id, pos)}
+                {exp=(), ty= T.NIL (*getFieldTypeWithId(fields, id, pos)*)}
               | _ => (ErrorMsg.error pos ("Tried to access record field of object that is not a record");
                      {exp=(), ty = T.INT}))
           end
