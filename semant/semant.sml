@@ -35,8 +35,8 @@ sig
 
   (* val transVar : venv * tenv * A.var -> expty *)
   val transExp  : venv * tenv -> A.exp -> expty
-  val transDec  : venv * tenv * A.dec -> {venv : venv, tenv : tenv}
-  val transDecs : venv * tenv * A.dec list -> {venv : venv, tenv : tenv}
+  (* val transDec  : venv * tenv * A.dec -> {venv : venv, tenv : tenv} *)
+  (* val transDecs : venv * tenv * A.dec list -> {venv : venv, tenv : tenv} *)
   (* val transTy  :        tenv * A.ty  -> T.ty *)
 end
 
@@ -69,7 +69,7 @@ struct
             fun verifyArithOperands() =
               (checkInt(tyLeft, pos);
                checkInt(tyRight, pos);
-               {exp=((* TODO: do something with expLeft and expRight here? *)), ty=Types.INT})
+               {exp=((* TODO: do something with expLeft and expRight here? *)), ty=T.INT})
           in
             case oper
               of A.PlusOp   => verifyArithOperands()
@@ -83,12 +83,12 @@ struct
                (*| A.EqOp     =>  TODO: verify both sides can be compared *)
                (*| A.NeqOp    =>  TODO: verify both sides can be compared *)
           end
-        | trexp (A.LetExp{decs, body, pos}) =
-            let val {venv = venv', tenv = tenv'} =
+        | trexp (A.LetExp{decs, body, pos}) = {exp = (), ty = T.NIL}
+            (* let val {venv = venv', tenv = tenv'} =
                 transDecs(venv, tenv, decs)
             in
               transExp(venv', tenv') body
-            end
+            end *)
         | trexp (A.VarExp(var)) = trvar(var)
         | trexp (A.NilExp) = {exp = (), ty = T.NIL}
         | trexp (A.IntExp(n)) = {exp = (), ty = T.INT}
@@ -212,7 +212,7 @@ struct
       trexp
     end
 
-  fun transDec (venv, tenv, A.VarDec{name, typ=NONE, init, ...}) =
+  (* fun transDec (venv, tenv, A.VarDec{name, typ=NONE, init, ...}) =
     let val {exp, ty} = transExp(venv, tenv) init
       in {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = ty})}
     end
@@ -235,5 +235,5 @@ struct
       fun f({ve, te}, dec) = transDec(ve, te, dec)
     in
       foldl f {ve=venv, te=tenv} decs
-    end
+    end *)
 end
