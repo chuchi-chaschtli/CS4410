@@ -135,11 +135,10 @@ struct
             {exp = (), ty = T.RECORD}
           end (* Fold? *) *)
         | trexp (A.SeqExp(exprs)) =
-          let fun verifyExprs nil = ()
-                | verifyExprs ((expr, pos)::rest) = (trexp expr; verifyExprs(rest))
+          let fun verifyExprs nil = ({exp = (), ty = T.UNIT})
+                | verifyExprs ((expr, pos)::rest) = (verifyExprs(rest); trexp expr)
           in
-            verifyExprs(exprs);
-            {exp = (), ty = T.UNIT} (* TODO: Accumulate the translated expressions? *)
+            verifyExprs(exprs)
           end
         | trexp (A.AssignExp{var, exp, pos}) =
           let
@@ -165,9 +164,10 @@ struct
                   if tyThen = tyElse
                   then {exp = (), ty = tyThen}
                   else (ErrorMsg.error pos ("then type " ^ T.toString(tyThen) ^ " does not match else type " ^ T.toString(tyElse));
-                       {exp = (), ty = T.INT})
+                       {exp = (), ty = tyThen})
                 end
-              | NONE => {exp = (), ty = tyThen})
+              | NONE => (checkUnit(tyThen, pos);
+                         {exp = (), ty = T.UNIT}))
           end
         | trexp (A.WhileExp{test, body, pos}) =
           let
