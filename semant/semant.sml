@@ -101,12 +101,12 @@ struct
                | A.EqOp     => verifyEquatableOperands()
                | A.NeqOp    => verifyEquatableOperands()
           end
-        | trexp (A.LetExp{decs, body, pos}) = {exp = (), ty = T.NIL}
-            (* let val {venv = venv', tenv = tenv'} =
+        | trexp (A.LetExp{decs, body, pos}) =
+            let val {venv = venv', tenv = tenv'} =
                 transDecs(venv, tenv, decs)
             in
               transExp(venv', tenv') body
-            end *)
+            end
         | trexp (A.VarExp(var)) = trvar(var)
         | trexp (A.NilExp) = {exp = (), ty = T.NIL}
         | trexp (A.IntExp(n)) = {exp = (), ty = T.INT}
@@ -252,7 +252,7 @@ struct
 
     fun transProg exp = (transExp(Env.base_venv, Env.base_tenv) exp)
 
-  (* fun transDec (venv, tenv, A.VarDec{name, typ=NONE, init, ...}) =
+  fun transDec (venv, tenv, A.VarDec{name, typ=NONE, init, ...}) =
     let val {exp, ty} = transExp(venv, tenv) init
       in {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = ty})}
     end
@@ -263,7 +263,7 @@ struct
           fun transparam{name, typ, pos} = case S.look(tenv, typ) of SOME t => {name=name, ty=t}
           val params' = map transparam params
           val venv' = S.enter(venv, name, Env.FunEntry{formals = map #ty params', result = result_ty})
-          fun enterparam ({name, ty}, venv) = S.enter(venv, name, Env.VarEntry{access=(), ty=ty})
+          fun enterparam ({name, ty}, venv) = S.enter(venv, name, Env.VarEntry{(* TODO: access=(),*) ty=ty})
           val venv'' = fold enterparam params' venv'
         in transExp(venv'', tenv) body;
            {venv = venv', tenv = tenv}
@@ -272,8 +272,14 @@ struct
 
   fun transDecs (venv, tenv, decs) =
     let
-      fun f({ve, te}, dec) = transDec(ve, te, dec)
+      fun f({ve, te}, dec::nil) = transDec(ve, te, dec)
+        | f({ve, te}, dec::decs) =
+          let val {venv=venv', tenv=tenv'} = transDec(ve, te, dec)
+          in
+            f({ve=venv', te=tenv'}, decs)
+          end
     in
-      foldl f {ve=venv, te=tenv} decs
-    end *)
+      f ({ve=venv, te=tenv}, decs)
+      (* foldl f {ve=venv, te=tenv} decs*)
+    end
 end
