@@ -11,6 +11,7 @@ Group is
 
 types.sml
 semant.sml
+driver.sml
 
 $/smlnj-lib.cm
 $/ml-yacc-lib.cm
