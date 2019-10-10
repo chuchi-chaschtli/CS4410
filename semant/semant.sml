@@ -245,6 +245,8 @@ struct
       trexp
     end
 
+    fun transProg exp = (transExp(Env.base_venv, Env.base_tenv) exp)
+
   (* fun transDec (venv, tenv, A.VarDec{name, typ=NONE, init, ...}) =
     let val {exp, ty} = transExp(venv, tenv) init
       in {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = ty})}
