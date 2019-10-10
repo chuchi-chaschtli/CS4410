@@ -70,6 +70,8 @@ struct
     case typ of (T.NAME (_, ref(SOME inner))) => actual_ty inner
               | other                         => other;
 
+  fun transTy (tenv, ty) = T.NIL (* TODO: implement *)
+
   fun transExp(venv, tenv) =
     let
       fun trexp (A.OpExp{left, oper, right, pos}) =
@@ -250,11 +252,7 @@ struct
       trexp
     end
 
-  fun transProg exp = (transExp(Env.base_venv, Env.base_tenv) exp)
-
-  fun transTy (tenv, ty) = T.NIL (* TODO: implement *)
-
-  fun transDec (venv, tenv, A.VarDec{name, typ=NONE, init, ...}) =
+  and transDec (venv, tenv, A.VarDec{name, typ=NONE, init, ...}) =
       let val {exp, ty} = transExp(venv, tenv) init
         in {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = ty})}
       end
@@ -271,7 +269,7 @@ struct
            {venv = venv', tenv = tenv}
       end
 
-  fun transDecs (venv, tenv, decs) =
+  and transDecs (venv, tenv, decs) =
     let
       fun f({ve, te}, dec::nil) = transDec(ve, te, dec)
         | f({ve, te}, dec::decs) =
@@ -283,4 +281,6 @@ struct
       f ({ve=venv, te=tenv}, decs)
       (* foldl f {ve=venv, te=tenv} decs*)
     end
+
+  fun transProg exp = (transExp(Env.base_venv, Env.base_tenv) exp)
 end
