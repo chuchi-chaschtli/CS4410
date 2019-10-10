@@ -119,9 +119,13 @@ struct
             (map trexp fields); (* TODO handle output of type checked fields (fold?) *)
             {exp = (), ty = T.RECORD}
           end (* Fold? *) *)
-        (* | trexp (A.SeqExp{exprs}) =
-          ((map trexp exprs; (* TODO handle output of type checked exprs (fold?) *)
-            {exp = (), ty = T.UNIT}) (* Fold? *)) *)
+        | trexp (A.SeqExp(exprs)) =
+          let fun verifyExprs nil = ()
+                | verifyExprs ((expr, pos)::rest) = (trexp expr; verifyExprs(rest))
+          in
+            verifyExprs(exprs);
+            {exp = (), ty = T.UNIT} (* TODO: Accumulate the translated expressions? *)
+          end
         | trexp (A.AssignExp{var, exp, pos}) =
           let
             val {exp=exprExp, ty=exprTy} = trexp exp
