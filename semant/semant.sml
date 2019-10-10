@@ -5,19 +5,17 @@ structure S = Symbol
 signature ENV =
 sig
   type access
-  type ty
-  datatype enventry = VarEntry of {ty: ty}
-                    | FunEntry of {formals: ty list, result : ty}
-  val base_tenv : ty S.table (* predefined types *)
+  datatype enventry = VarEntry of {ty: T.ty}
+                    | FunEntry of {formals: T.ty list, result : T.ty}
+  val base_tenv : T.ty S.table (* predefined types *)
   val base_venv : enventry S.table (* predefined functions *)
 end
 
 structure Env :> ENV =
 struct
   type access = unit
-  type ty = T.ty
-  datatype enventry = VarEntry of {ty: ty}
-                    | FunEntry of {formals: ty list, result : ty}
+  datatype enventry = VarEntry of {ty: T.ty}
+                    | FunEntry of {formals: T.ty list, result : T.ty}
   val base_tenv = S.empty (* predefined types *)
   val base_venv = S.empty (* predefined functions *)
 end
@@ -45,7 +43,7 @@ structure Semant =
 struct
   type expty = {exp: Translate.exp, ty: T.ty}
   type venv = Env.enventry S.table
-  type tenv = Env.ty S.table
+  type tenv = T.ty S.table
 
   (* val transVar : venv * tenv * A.var -> expty *)
   (* val transExp : venv * tenv -> A.exp -> expty *)
@@ -100,13 +98,21 @@ struct
         | trexp (A.NilExp) = {exp = (), ty = T.NIL}
         | trexp (A.IntExp(n)) = {exp = (), ty = T.INT}
         | trexp (A.StringExp(str, posn)) = {exp = (), ty = T.STRING}
-        (* | trexp (A.CallExp{func, args, pos}) =
+        | trexp (A.CallExp{func, args, pos}) =
           (case S.look(venv, func)
-              of SOME(Env.FunEntry{formals = nil, result = ty}) =>
-                  (map trexp formals; (* TODO handle output of type checked args *)
-                   fold {exp = (), ty = result}) (* Fold? *)
-              | NONE => (ErrorMsg.error pos ("undefined function " ^ S.name func);
-                          {exp = (), ty = T.UNIT})) *)
+              of SOME(Env.FunEntry{formals, result}) =>
+                (let fun verifyFormals(firstFormal::restFormals, firstArg::restArgs) =
+                          if (firstFormal = #ty (trexp firstArg))
+                          then ()
+                          else verifyFormals(restFormals, restArgs)
+                      | verifyFormals(nil, nil) = ()
+                      | verifyFormals(_, _) = ErrorMsg.error pos ("function formals length differs from arg length")
+                in
+                  verifyFormals(formals, args)
+                end;
+                {exp = (), ty = result})
+              | NONE => (ErrorMsg.error pos ("undefined function " ^ S.name(func));
+                          {exp = (), ty = T.UNIT}))
         (* | trexp (A.RecordExp{fields, typ, pos}) =
           let
           in
@@ -157,7 +163,7 @@ struct
           let
             val {exp=loExp, ty=tyLo} = trexp lo
             val {exp=hiExp, ty=tyHi} = trexp hi
-            val venvUpdated = S.enter(venv, var, T.INT)
+            val venvUpdated = S.enter(venv, var, Env.VarEntry{ty=T.INT})
             val {exp=updatedExp, ty=updatedTy} = (transExp(venvUpdated, tenv) body)
           in
             checkInt(tyLo, pos);
@@ -190,7 +196,7 @@ struct
 
       and trvar (A.SimpleVar(id, pos)) =
             (case S.look(venv, id)
-                of SOME(ty) =>
+                of SOME(Env.VarEntry{ty}) =>
                    {exp = (), ty = actual_ty ty}
                  | NONE => (ErrorMsg.error pos ("undefined variable " ^ S.name id);
                             {exp = (), ty = T.INT}))
