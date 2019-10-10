@@ -5,19 +5,17 @@ structure S = Symbol
 signature ENV =
 sig
   type access
-  type ty
-  datatype enventry = VarEntry of {ty: ty}
-                    | FunEntry of {formals: ty list, result : ty}
-  val base_tenv : ty S.table (* predefined types *)
+  datatype enventry = VarEntry of {ty: T.ty}
+                    | FunEntry of {formals: T.ty list, result : T.ty}
+  val base_tenv : T.ty S.table (* predefined types *)
   val base_venv : enventry S.table (* predefined functions *)
 end
 
 structure Env :> ENV =
 struct
   type access = unit
-  type ty = T.ty
-  datatype enventry = VarEntry of {ty: ty}
-                    | FunEntry of {formals: ty list, result : ty}
+  datatype enventry = VarEntry of {ty: T.ty}
+                    | FunEntry of {formals: T.ty list, result : T.ty}
   val base_tenv = S.empty (* predefined types *)
   val base_venv = S.empty (* predefined functions *)
 end
@@ -27,9 +25,9 @@ struct
   type exp = unit
 end
 
-signature SEMANTICS =
+(* signature SEMANTICS =
 sig
-  type expty
+  eqtype expty
   type venv
   type tenv
 
@@ -38,13 +36,20 @@ sig
   (* val transDec  : venv * tenv * A.dec -> {venv : venv, tenv : tenv} *)
   (* val transDecs : venv * tenv * A.dec list -> {venv : venv, tenv : tenv} *)
   (* val transTy  :        tenv * A.ty  -> T.ty *)
-end
+end *)
 
-structure Semant :> SEMANTICS =
+(* structure Semant :> SEMANTICS = *)
+structure Semant =
 struct
   type expty = {exp: Translate.exp, ty: T.ty}
   type venv = Env.enventry S.table
-  type tenv = Env.ty S.table
+  type tenv = T.ty S.table
+
+  (* val transVar : venv * tenv * A.var -> expty *)
+  (* val transExp : venv * tenv -> A.exp -> expty *)
+  (* val transDec  : venv * tenv * A.dec -> {venv : venv, tenv : tenv} *)
+  (* val transDecs : venv * tenv * A.dec list -> {venv : venv, tenv : tenv} *)
+  (* val transTy  :        tenv * A.ty  -> T.ty *)
 
   fun checkInt (ty, pos) =
     if ty = T.INT
@@ -93,22 +98,34 @@ struct
         | trexp (A.NilExp) = {exp = (), ty = T.NIL}
         | trexp (A.IntExp(n)) = {exp = (), ty = T.INT}
         | trexp (A.StringExp(str, posn)) = {exp = (), ty = T.STRING}
-        (* | trexp (A.CallExp{func, args, pos}) =
+        | trexp (A.CallExp{func, args, pos}) =
           (case S.look(venv, func)
-              of SOME(Env.FunEntry{formals = nil, result = ty}) =>
-                  (map trexp formals; (* TODO handle output of type checked args *)
-                   fold {exp = (), ty = result}) (* Fold? *)
-              | NONE => (ErrorMsg.error pos ("undefined function " ^ S.name func);
-                          {exp = (), ty = T.UNIT})) *)
+              of SOME(Env.FunEntry{formals, result}) =>
+                (let fun verifyFormals(firstFormal::restFormals, firstArg::restArgs) =
+                          if (firstFormal = #ty (trexp firstArg))
+                          then ()
+                          else verifyFormals(restFormals, restArgs)
+                      | verifyFormals(nil, nil) = ()
+                      | verifyFormals(_, _) = ErrorMsg.error pos ("function formals length differs from arg length")
+                in
+                  verifyFormals(formals, args)
+                end;
+                {exp = (), ty = result})
+              | NONE => (ErrorMsg.error pos ("undefined function " ^ S.name(func));
+                          {exp = (), ty = T.UNIT}))
         (* | trexp (A.RecordExp{fields, typ, pos}) =
           let
           in
             (map trexp fields); (* TODO handle output of type checked fields (fold?) *)
             {exp = (), ty = T.RECORD}
           end (* Fold? *) *)
-        (* | trexp (A.SeqExp{exprs}) =
-          ((map trexp exprs; (* TODO handle output of type checked exprs (fold?) *)
-            {exp = (), ty = T.UNIT}) (* Fold? *)) *)
+        | trexp (A.SeqExp(exprs)) =
+          let fun verifyExprs nil = ()
+                | verifyExprs ((expr, pos)::rest) = (trexp expr; verifyExprs(rest))
+          in
+            verifyExprs(exprs);
+            {exp = (), ty = T.UNIT} (* TODO: Accumulate the translated expressions? *)
+          end
         | trexp (A.AssignExp{var, exp, pos}) =
           let
             val {exp=exprExp, ty=exprTy} = trexp exp
@@ -148,13 +165,14 @@ struct
           end
         | trexp (A.ForExp{var, escape, lo, hi, body, pos}) =
           let
-            val {exp=expLo, ty=tyLo} = trexp lo
-            val {exp=expHi, ty=tyHi} = trexp hi
-            val venvUpdated = S.enter(venv, var, T.INT)
+            val {exp=loExp, ty=tyLo} = trexp lo
+            val {exp=hiExp, ty=tyHi} = trexp hi
+            val venvUpdated = S.enter(venv, var, Env.VarEntry{ty=T.INT})
+            val {exp=updatedExp, ty=updatedTy} = (transExp(venvUpdated, tenv) body)
           in
             checkInt(tyLo, pos);
             checkInt(tyHi, pos);
-            checkUnit((transExp(venvUpdated, tenv) body), pos);
+            checkUnit(updatedTy, pos);
 		        {exp=(), ty=T.UNIT}
           end
         | trexp (A.BreakExp(pos)) = {exp = (), ty =  T.UNIT} (* TODO check our BREAK more thoroughly *)
@@ -183,13 +201,13 @@ struct
       and trvar (A.SimpleVar(id, pos)) =
             (case S.look(venv, id)
                 of SOME(Env.VarEntry{ty}) =>
-                   {exp = (), ty = T.NIL}
+                   {exp = (), ty = actual_ty ty}
                  | NONE => (ErrorMsg.error pos ("undefined variable " ^ S.name id);
                             {exp = (), ty = T.INT}))
         | trvar (A.FieldVar(var, id, pos)) =
           let
             fun getFieldTypeWithId (nil, id, pos) =
-                (ErrorMsg.error pos ("record does not have field with id: " ^ id);
+                (ErrorMsg.error pos ("record does not have field with id: " ^ S.name id);
                 T.UNIT)
               | getFieldTypeWithId ((name, ty)::rest, id, pos) =
                 if (name = id)
@@ -198,7 +216,7 @@ struct
           in
             (case T.UNIT
               of T.RECORD (fields, unique) =>
-                {exp=(), ty= getFieldTypeWithId(fields, id, pos)}
+                {exp=(), ty = getFieldTypeWithId(fields, id, pos)}
               | _ => (ErrorMsg.error pos ("Tried to access record field of object that is not a record");
                      {exp=(), ty = T.INT}))
           end
