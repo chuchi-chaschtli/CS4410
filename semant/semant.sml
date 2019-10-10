@@ -61,6 +61,11 @@ struct
     then ()
     else ErrorMsg.error pos ("expression must be a unit, found: " ^ T.toString(ty) ^ " instead")
 
+  fun checkEqual(ty1, ty2, pos) =
+    if ty1 = ty2
+    then ()
+    else ErrorMsg.error pos ("expression must be two comparable types, found: " ^ T.toString(ty1) ^ ", " ^ T.toString(ty2))
+
   fun actual_ty typ =
     case typ of (T.NAME (_, ref(SOME inner))) => actual_ty inner
               | other                         => other;
@@ -75,6 +80,9 @@ struct
               (checkInt(tyLeft, pos);
                checkInt(tyRight, pos);
                {exp=((* TODO: do something with expLeft and expRight here? *)), ty=T.INT})
+            fun verifyComparableOperands() =
+              (checkEqual(tyLeft, tyRight, pos);
+               {exp=(), ty=T.INT})
           in
             case oper
               of A.PlusOp   => verifyArithOperands()
@@ -85,8 +93,8 @@ struct
                | A.LeOp     => verifyArithOperands()
                | A.GtOp     => verifyArithOperands()
                | A.GeOp     => verifyArithOperands()
-               (*| A.EqOp     =>  TODO: verify both sides can be compared *)
-               (*| A.NeqOp    =>  TODO: verify both sides can be compared *)
+               | A.EqOp     => verifyComparableOperands()
+               | A.NeqOp    => verifyComparableOperands()
           end
         | trexp (A.LetExp{decs, body, pos}) = {exp = (), ty = T.NIL}
             (* let val {venv = venv', tenv = tenv'} =
@@ -111,6 +119,8 @@ struct
                   verifyFormals(formals, args)
                 end;
                 {exp = (), ty = result})
+              | SOME _ => (ErrorMsg.error pos ("environment entry is not a fun entry");
+                           {exp = (), ty = T.UNIT})
               | NONE => (ErrorMsg.error pos ("undefined function " ^ S.name(func));
                           {exp = (), ty = T.UNIT}))
         (* | trexp (A.RecordExp{fields, typ, pos}) =
@@ -202,6 +212,8 @@ struct
             (case S.look(venv, id)
                 of SOME(Env.VarEntry{ty}) =>
                    {exp = (), ty = actual_ty ty}
+                 | SOME _ => (ErrorMsg.error pos ("environment entry is not a var entry");
+                              {exp = (), ty = T.INT})
                  | NONE => (ErrorMsg.error pos ("undefined variable " ^ S.name id);
                             {exp = (), ty = T.INT}))
         | trvar (A.FieldVar(var, id, pos)) =
