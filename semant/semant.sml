@@ -207,7 +207,7 @@ struct
         | trvar (A.FieldVar(var, id, pos)) =
           let
             fun getFieldTypeWithId (nil, id, pos) =
-                (ErrorMsg.error pos ("record does not have field with id: " ^ id);
+                (ErrorMsg.error pos ("record does not have field with id: " ^ S.name id);
                 T.UNIT)
               | getFieldTypeWithId ((name, ty)::rest, id, pos) =
                 if (name = id)
@@ -216,7 +216,7 @@ struct
           in
             (case T.UNIT
               of T.RECORD (fields, unique) =>
-                {exp=(), ty= T.NIL (*getFieldTypeWithId(fields, id, pos)*)}
+                {exp=(), ty = getFieldTypeWithId(fields, id, pos)}
               | _ => (ErrorMsg.error pos ("Tried to access record field of object that is not a record");
                      {exp=(), ty = T.INT}))
           end
