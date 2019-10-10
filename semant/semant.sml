@@ -25,18 +25,18 @@ struct
   type exp = unit
 end
 
-(* signature SEMANTICS =
+signature SEMANTICS =
 sig
-  eqtype expty
+  type expty
   type venv
   type tenv
-
-  (* val transVar : venv * tenv * A.var -> expty *)
+  val transTy   :        tenv * A.ty  -> T.ty
+  (* val transVar  : venv * tenv * A.var -> expty *)
+  val transDec  : venv * tenv * A.dec -> {venv : venv, tenv : tenv}
+  val transDecs : venv * tenv * A.dec list -> {venv : venv, tenv : tenv}
   val transExp  : venv * tenv -> A.exp -> expty
-  (* val transDec  : venv * tenv * A.dec -> {venv : venv, tenv : tenv} *)
-  (* val transDecs : venv * tenv * A.dec list -> {venv : venv, tenv : tenv} *)
-  (* val transTy  :        tenv * A.ty  -> T.ty *)
-end *)
+end
+
 
 (* structure Semant :> SEMANTICS = *)
 structure Semant =
