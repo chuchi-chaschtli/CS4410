@@ -80,8 +80,13 @@ struct
               (checkInt(tyLeft, pos);
                checkInt(tyRight, pos);
                {exp=((* TODO: do something with expLeft and expRight here? *)), ty=T.INT})
-            fun verifyComparableOperands() =
+            fun verifyEquatableOperands() =
               (checkEqual(tyLeft, tyRight, pos);
+               {exp=(), ty=T.INT})
+            fun verifyComparableOperands() =
+              (if (tyLeft = T.STRING andalso tyRight = T.STRING) orelse (tyLeft = T.INT andalso tyRight = T.INT)
+               then ()
+               else ErrorMsg.error pos ("comparable types must be string or int");
                {exp=(), ty=T.INT})
           in
             case oper
@@ -89,12 +94,12 @@ struct
                | A.MinusOp  => verifyArithOperands()
                | A.TimesOp  => verifyArithOperands()
                | A.DivideOp => verifyArithOperands()
-               | A.LtOp     => verifyArithOperands()
-               | A.LeOp     => verifyArithOperands()
-               | A.GtOp     => verifyArithOperands()
-               | A.GeOp     => verifyArithOperands()
-               | A.EqOp     => verifyComparableOperands()
-               | A.NeqOp    => verifyComparableOperands()
+               | A.LtOp     => verifyComparableOperands()
+               | A.LeOp     => verifyComparableOperands()
+               | A.GtOp     => verifyComparableOperands()
+               | A.GeOp     => verifyComparableOperands()
+               | A.EqOp     => verifyEquatableOperands()
+               | A.NeqOp    => verifyEquatableOperands()
           end
         | trexp (A.LetExp{decs, body, pos}) = {exp = (), ty = T.NIL}
             (* let val {venv = venv', tenv = tenv'} =
