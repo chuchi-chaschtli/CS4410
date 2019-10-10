@@ -252,21 +252,38 @@ struct
       trexp
     end
 
-  and transDec (venv, tenv, A.VarDec{name, typ=NONE, init, ...}) =
+  and transDec (venv, tenv, A.VarDec{name, typ, init, ...}) =
       let val {exp, ty} = transExp(venv, tenv) init
-        in {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = ty})}
+      in
+        (case typ
+          of SOME(sym, pos) =>
+             let val SOME(result_ty) = S.look(tenv, sym)
+             in (checkEqual(ty, result_ty, pos);
+                 {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = result_ty})})
+             end
+           | NONE => {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = ty})})
       end
     | transDec (venv, tenv, A.TypeDec[{name, ty, pos}]) =
       {venv = venv, tenv = S.enter(tenv, name, transTy(tenv, ty))}
-    | transDec (venv, tenv, A.FunctionDec[{name, params, body, pos, result = SOME(returnTy, returnPos)}]) =
-      let val SOME(result_ty) = S.look(tenv, returnTy)
-          fun transparam{name, escape, typ, pos} = case S.look(tenv, typ) of SOME t => {name=name, ty=t}
+    | transDec (venv, tenv, A.FunctionDec[{name, params, body, pos, result}]) =
+      let fun transparam{name, escape, typ, pos} = case S.look(tenv, typ) of SOME t => {name=name, ty=t}
           val params' = map transparam params
-          val venv' = S.enter(venv, name, Env.FunEntry{formals = map #ty params', result = result_ty})
           fun enterparam ({name, ty}, venv) = S.enter(venv, name, Env.VarEntry{(* TODO: access=(),*) ty=ty})
-          val venv'' = foldl enterparam venv' params'
-        in transExp(venv'', tenv) body;
-           {venv = venv', tenv = tenv}
+      in
+        (case result
+          of SOME(returnTy, returnPos) =>
+             let val SOME(result_ty) = S.look(tenv, returnTy)
+                 val venv' = S.enter(venv, name, Env.FunEntry{formals = map #ty params', result = result_ty})
+                 val venv'' = foldl enterparam venv' params'
+             in transExp(venv'', tenv) body;
+                 {venv = venv', tenv = tenv}
+             end
+           | NONE =>
+             let val venv' = S.enter(venv, name, Env.FunEntry{formals = map #ty params', result = T.UNIT})
+                 val venv'' = foldl enterparam venv' params'
+             in transExp(venv'', tenv) body;
+                 {venv = venv', tenv = tenv}
+             end)
       end
 
   and transDecs (venv, tenv, decs) =
