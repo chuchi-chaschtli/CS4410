@@ -70,7 +70,19 @@ struct
     case typ of (T.NAME (_, ref(SOME inner))) => actual_ty inner
               | other                         => other;
 
-  fun transTy (tenv, ty) = T.NIL (* TODO: implement *)
+  fun transTy (tenv, A.NameTy(symbol, pos)) =
+      (case S.look(tenv, symbol)
+        of SOME ty => ty
+         | NONE => (ErrorMsg.error pos ("type not found: " ^ S.name(symbol)); T.NIL))
+    | transTy (tenv, A.ArrayTy(symbol, pos)) =
+      (case S.look(tenv, symbol)
+        of SOME ty => T.ARRAY(ty, ref ())
+         | NONE => (ErrorMsg.error pos ("type not found: " ^ S.name(symbol)); T.NIL))
+    | transTy (tenv, A.RecordTy(fieldList)) =
+      T.RECORD(map
+                (fn field => (#name field, transTy(tenv, A.NameTy(#typ field, #pos field))))
+                fieldList,
+              ref ())
 
   fun transExp(venv, tenv) =
     let
@@ -130,8 +142,8 @@ struct
                            {exp = (), ty = T.UNIT})
               | NONE => (ErrorMsg.error pos ("undefined function " ^ S.name(func));
                           {exp = (), ty = T.UNIT}))
-        (* | trexp (A.RecordExp{fields, typ, pos}) =
-          let
+        | trexp (A.RecordExp{fields, typ, pos}) = {exp = (), ty = T.UNIT}
+          (* let
           in
             (map trexp fields); (* TODO handle output of type checked fields (fold?) *)
             {exp = (), ty = T.RECORD}
@@ -252,18 +264,18 @@ struct
       trexp
     end
 
-  and transDec (venv, tenv, A.VarDec{name, typ, init, ...}) =
-      let val {exp, ty} = transExp(venv, tenv) init
+  and transDec (venv, tenv, A.VarDec{name, typ, init, pos, ...}) =
+      let val {exp, ty=tyInit} = transExp(venv, tenv) init
       in
         (case typ
-          of SOME(sym, pos) =>
-             let val SOME(result_ty) = S.look(tenv, sym)
-             in (checkEqual(ty, result_ty, pos);
-                 {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = result_ty})})
+          of SOME ty =>
+             let val tyResult = transTy(tenv, A.NameTy(ty))
+             in (checkEqual(tyInit, tyResult, pos);
+                 {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = tyResult})})
              end
-           | NONE => {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = ty})})
+           | NONE => {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = tyInit})})
       end
-    | transDec (venv, tenv, A.TypeDec[{name, ty, pos}]) =
+    | transDec (venv, tenv, A.TypeDec[{name, ty, ...}]) =
       {venv = venv, tenv = S.enter(tenv, name, transTy(tenv, ty))}
     | transDec (venv, tenv, A.FunctionDec[{name, params, body, pos, result}]) =
       let fun transparam{name, escape, typ, pos} = case S.look(tenv, typ) of SOME t => {name=name, ty=t}
@@ -285,6 +297,7 @@ struct
                  {venv = venv', tenv = tenv}
              end)
       end
+    | transDec (venv, tenv, _) = {venv=venv, tenv=tenv} (* TODO: better way to make this match exhaustive? *)
 
   and transDecs (venv, tenv, decs) =
     let
