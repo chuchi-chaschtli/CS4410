@@ -216,11 +216,8 @@ struct
                 (case actual_ty ty
                   of (T.ARRAY(ty, unique)) =>
                      (checkInt(tySize, pos);
-                     if actual_ty(ty) = actual_ty(tyInit)
-                     then {exp = (), ty = T.ARRAY(ty, unique)}
-                     else (ErrorMsg.error pos ("array type " ^ T.toString(tyInit)
-                              ^ " does not match " ^ T.toString(ty));
-                          {exp = (), ty = T.INT}))
+                      checkEqual(actual_ty(ty), actual_ty(tyInit), pos);
+                      {exp = (), ty = T.ARRAY(ty, unique)})
                    | _ => (ErrorMsg.error pos ("type is not array " ^ S.name(typ));
                           {exp = (), ty = T.INT}))
               | NONE => (ErrorMsg.error pos ("undefined array type " ^ S.name(typ));
