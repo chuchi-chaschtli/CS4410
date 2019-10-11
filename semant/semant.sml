@@ -142,12 +142,29 @@ struct
                            {exp = (), ty = T.UNIT})
               | NONE => (ErrorMsg.error pos ("undefined function " ^ S.name(func));
                           {exp = (), ty = T.UNIT}))
-        | trexp (A.RecordExp{fields, typ, pos}) = {exp = (), ty = T.UNIT}
-          (* let
-          in
-            (map trexp fields); (* TODO handle output of type checked fields (fold?) *)
-            {exp = (), ty = T.RECORD}
-          end (* Fold? *) *)
+        | trexp (A.RecordExp{fields, typ, pos}) =
+          (case S.look(tenv, typ)
+            of SOME (T.RECORD(fieldList, unique)) =>
+              let fun findId (id, nil) = (ErrorMsg.error pos "id not found"; NONE)
+                    | findId (id, ((fieldId, ty)::rest)) = if (fieldId = id)
+                                                           then SOME ty
+                                                           else findId(id, rest)
+                  fun searchFields((symbol, exp, pos)::rest) =
+                      (case findId(symbol, fieldList)
+                        of SOME ty =>
+                            let val {exp = expField, ty = tyField} = trexp(exp)
+                            in
+                              if (tyField = ty orelse rest = nil)
+                              then ()
+                              else searchFields(rest)
+                            end
+                         | NONE => (ErrorMsg.error pos "record field was undeclared"))
+              in
+                (searchFields fields;
+                 {exp = (), ty = T.RECORD(fieldList, unique)})
+              end
+            | NONE => (ErrorMsg.error pos "record type was undeclared";
+                       {exp=(), ty=T.UNIT}))
         | trexp (A.SeqExp(exprs)) =
           let fun verifyExprs nil = ({exp = (), ty = T.UNIT})
                 | verifyExprs ((expr, pos)::rest) = (verifyExprs(rest); trexp expr)
