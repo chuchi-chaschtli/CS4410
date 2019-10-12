@@ -252,6 +252,7 @@ struct
                             {exp = (), ty = T.INT}))
         | trvar (A.FieldVar(var, id, pos)) =
           let
+            val {exp=expVar, ty=tyVar} = trvar(var)
             fun getFieldTypeWithId (nil, id, pos) =
                 (ErrorMsg.error pos ("record does not have field with id: " ^ S.name id);
                 T.UNIT)
@@ -260,15 +261,15 @@ struct
                 then ty
                 else getFieldTypeWithId(rest, id, pos)
           in
-            (case T.UNIT
+            (case tyVar
               of T.RECORD (fields, unique) =>
                 {exp=(), ty = getFieldTypeWithId(fields, id, pos)}
-              | _ => (ErrorMsg.error pos ("Tried to access record field of object that is not a record");
+              | _ => (ErrorMsg.error pos ("tried to access record field of object that is not a record");
                      {exp=(), ty = T.INT}))
           end
         | trvar (A.SubscriptVar(var, exp, pos)) =
           let
-            val {exp=tyExp, ty=tyVar} = trvar(var)
+            val {exp=expVar, ty=tyVar} = trvar(var)
           in
             case tyVar
               of T.ARRAY (ty, unique) => {exp=(), ty=ty}
