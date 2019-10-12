@@ -167,7 +167,8 @@ struct
                        {exp=(), ty=T.UNIT}))
         | trexp (A.SeqExp(exprs)) =
           let fun verifyExprs nil = ({exp = (), ty = T.UNIT})
-                | verifyExprs ((expr, pos)::rest) = (verifyExprs(rest); trexp expr)
+                | verifyExprs ((expr, pos)::nil) = (trexp expr)
+                | verifyExprs ((expr, pos)::rest) = (trexp expr; verifyExprs(rest))
           in
             verifyExprs(exprs)
           end
