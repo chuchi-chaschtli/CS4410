@@ -16,7 +16,7 @@ struct
   type access = unit
   datatype enventry = VarEntry of {ty: T.ty}
                     | FunEntry of {formals: T.ty list, result : T.ty}
-  val base_tenv = S.empty (* predefined types *)
+  val base_tenv = S.enter(S.enter(S.empty, S.symbol("string"), T.STRING), S.symbol("int"), T.INT) (* TODO: higher order function*)
   val base_venv = S.empty (* predefined functions *)
 end
 
@@ -290,8 +290,13 @@ struct
              end
            | NONE => {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = tyInit})})
       end
-    | transDec (venv, tenv, A.TypeDec[{name, ty, ...}]) =
-      {venv = venv, tenv = S.enter(tenv, name, transTy(tenv, ty))}
+    | transDec (venv, tenv, A.TypeDec(typeDecls)) =
+        if typeDecls = nil
+        then {venv=venv, tenv=tenv}
+        else let val firstDec = hd(typeDecls)
+             in
+              transDec(venv, S.enter(tenv, #name firstDec, transTy(tenv, #ty firstDec)), A.TypeDec(tl(typeDecls)))
+             end
     | transDec (venv, tenv, A.FunctionDec[{name, params, body, pos, result}]) =
       let fun transparam{name, escape, typ, pos} = case S.look(tenv, typ) of SOME t => {name=name, ty=t}
           val params' = map transparam params
