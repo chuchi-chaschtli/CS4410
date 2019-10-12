@@ -100,8 +100,8 @@ struct
             fun verifyComparableOperands() =
               (if (tyLeft = T.STRING andalso tyRight = T.STRING) orelse (tyLeft = T.INT andalso tyRight = T.INT)
                then ()
-               else ErrorMsg.error pos ("comparable types must be string or int");
-               {exp=(), ty=T.INT})
+               else ErrorMsg.error pos "comparable types must be string or int";
+                    {exp=(), ty=T.INT})
           in
             case oper
               of A.PlusOp   => verifyArithOperands()
@@ -133,15 +133,15 @@ struct
                           then ()
                           else verifyFormals(restFormals, restArgs)
                       | verifyFormals(nil, nil) = ()
-                      | verifyFormals(_, _) = ErrorMsg.error pos ("function formals length differs from arg length")
+                      | verifyFormals(_, _) = ErrorMsg.error pos "function formals length differs from arg length"
                 in
                   verifyFormals(formals, args)
                 end;
                 {exp = (), ty = result})
-              | SOME _ => (ErrorMsg.error pos ("environment entry is not a fun entry");
+              | SOME _ => (ErrorMsg.error pos "environment entry is not a fun entry";
                            {exp = (), ty = T.UNIT})
               | NONE => (ErrorMsg.error pos ("undefined function " ^ S.name(func));
-                          {exp = (), ty = T.UNIT}))
+                         {exp = (), ty = T.UNIT}))
         | trexp (A.RecordExp{fields, typ, pos}) =
           (case S.look(tenv, typ)
             of SOME (T.RECORD(fieldList, unique)) =>
@@ -158,7 +158,7 @@ struct
                               then ()
                               else searchFields(rest)
                             end
-                         | NONE => (ErrorMsg.error pos "record field was undeclared"))
+                         | NONE => ErrorMsg.error pos "record field was undeclared")
               in
                 (searchFields fields;
                  {exp = (), ty = T.RECORD(fieldList, unique)})
@@ -179,8 +179,8 @@ struct
           in
             if exprTy = varTy
             then {exp = (), ty = varTy}
-            else (ErrorMsg.error pos ("mismatching types within assignment ");  (* TODO report types *)
-                 {exp = (), ty = T.INT})
+            else (ErrorMsg.error pos "mismatching types within assignment ";  (* TODO report types *)
+                  {exp = (), ty = T.INT})
           end
         | trexp (A.IfExp{test, then', else', pos}) =
           let
@@ -246,7 +246,7 @@ struct
             (case S.look(venv, id)
                 of SOME(Env.VarEntry{ty}) =>
                    {exp = (), ty = actual_ty ty}
-                 | SOME _ => (ErrorMsg.error pos ("environment entry is not a var entry");
+                 | SOME _ => (ErrorMsg.error pos "environment entry is not a var entry";
                               {exp = (), ty = T.INT})
                  | NONE => (ErrorMsg.error pos ("undefined variable " ^ S.name id);
                             {exp = (), ty = T.INT}))
@@ -264,7 +264,7 @@ struct
             (case tyVar
               of T.RECORD (fields, unique) =>
                 {exp=(), ty = getFieldTypeWithId(fields, id, pos)}
-              | _ => (ErrorMsg.error pos ("tried to access record field of object that is not a record");
+              | _ => (ErrorMsg.error pos "tried to access record field of object that is not a record";
                      {exp=(), ty = T.INT}))
           end
         | trvar (A.SubscriptVar(var, exp, pos)) =
