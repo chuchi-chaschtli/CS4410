@@ -154,16 +154,17 @@ struct
                         of SOME ty =>
                             let val {exp = expField, ty = tyField} = trexp(exp)
                             in
-                              if (tyField = ty orelse rest = nil)
+                              if (tyField = ty)
                               then ()
                               else searchFields(rest)
                             end
                          | NONE => ErrorMsg.error pos "record field was undeclared")
+                   | searchFields(nil) = ()
               in
                 (searchFields fields;
                  {exp = (), ty = T.RECORD(fieldList, unique)})
               end
-            | NONE => (ErrorMsg.error pos "record type was undeclared";
+            | _ => (ErrorMsg.error pos "record type was undeclared";
                        {exp=(), ty=T.UNIT}))
         | trexp (A.SeqExp(exprs)) =
           let fun verifyExprs nil = ({exp = (), ty = T.UNIT})
@@ -325,7 +326,8 @@ struct
 
   and transDecs (venv, tenv, decs) =
     let
-      fun f({ve, te}, dec::nil) = transDec(ve, te, dec)
+      fun f({ve, te}, nil) = (ErrorMsg.error 0 "should never occur"; {venv=venv, tenv=tenv})
+        | f({ve, te}, dec::nil) = transDec(ve, te, dec)
         | f({ve, te}, dec::decs) =
           let val {venv=venv', tenv=tenv'} = transDec(ve, te, dec)
           in
