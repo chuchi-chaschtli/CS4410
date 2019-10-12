@@ -6,6 +6,7 @@ signature ENV =
 sig
   type access
   datatype enventry = VarEntry of {ty: T.ty}
+                    | ReadVarEntry of {ty: T.ty}
                     | FunEntry of {formals: T.ty list, result : T.ty}
   val base_tenv : T.ty S.table (* predefined types *)
   val base_venv : enventry S.table (* predefined functions *)
@@ -15,6 +16,7 @@ structure Env :> ENV =
 struct
   type access = unit
   datatype enventry = VarEntry of {ty: T.ty}
+                    | ReadVarEntry of {ty: T.ty}
                     | FunEntry of {formals: T.ty list, result : T.ty}
   val base_tenv = S.enter(S.enter(S.empty, S.symbol("string"), T.STRING), S.symbol("int"), T.INT) (* TODO: higher order function*)
   val base_venv = S.empty (* predefined functions *)
@@ -51,16 +53,19 @@ struct
   (* val transDecs : venv * tenv * A.dec list -> {venv : venv, tenv : tenv} *)
   (* val transTy  :        tenv * A.ty  -> T.ty *)
 
+  (* Checks if a given type is an INT, and throw's an error if it is not *)
   fun checkInt (ty, pos) =
     if ty = T.INT
     then ()
     else ErrorMsg.error pos ("expression must be an int, found: " ^ T.toString(ty) ^ " instead")
 
+  (* Checks if a given type is a UNIT, and throws an error if it is not *)
   fun checkUnit (ty, pos) =
     if ty = T.UNIT
     then ()
     else ErrorMsg.error pos ("expression must be a unit, found: " ^ T.toString(ty) ^ " instead")
 
+  (* Checks if two types are equal, and throws an error if they are not *)
   fun checkEqual(ty1, ty2, pos) =
     if ty1 = ty2
     then ()
@@ -69,6 +74,18 @@ struct
   fun actual_ty typ =
     case typ of (T.NAME (_, ref(SOME inner))) => actual_ty inner
               | other                         => other;
+
+  (* Used to check if a var can be re-assigned to *)
+  (* A.var * Env.enventry S.table -> bool *)
+  fun isVarAssignable (A.SimpleVar(id, pos), venv) =
+        (case S.look(venv, id)
+            of SOME(Env.ReadVarEntry{ty}) => false
+             | _ => true)
+    | isVarAssignable (A.FieldVar(var, id, pos), venv) =
+      (case S.look(venv, id)
+          of SOME(Env.ReadVarEntry{ty}) => false
+           | _ => isVarAssignable(var, venv))
+    | isVarAssignable (A.SubscriptVar(var, exp, pos), venv) = isVarAssignable(var, venv)
 
   fun transTy (tenv, A.NameTy(symbol, pos)) =
       (case S.look(tenv, symbol)
@@ -174,15 +191,18 @@ struct
             verifyExprs(exprs)
           end
         | trexp (A.AssignExp{var, exp, pos}) =
-          let
-            val {exp=exprExp, ty=exprTy} = trexp exp
-            val {exp=varExp, ty=varTy} = trvar var
-          in
-            if exprTy = varTy
-            then {exp = (), ty = varTy}
-            else (ErrorMsg.error pos "mismatching types within assignment ";  (* TODO report types *)
-                  {exp = (), ty = T.INT})
-          end
+          if isVarAssignable(var, venv)
+          then
+              let
+                val {exp=exprExp, ty=exprTy} = trexp exp
+                val {exp=varExp, ty=varTy} = trvar var
+              in
+                if exprTy = varTy
+                then {exp = (), ty = T.UNIT}
+                else (ErrorMsg.error pos "mismatching types within assignment ";  (* TODO report types *)
+                      {exp = (), ty = T.UNIT})
+              end
+          else (ErrorMsg.error pos "cannot re-assign to var"; {exp = (), ty = T.UNIT})
         | trexp (A.IfExp{test, then', else', pos}) =
           let
             val {exp=expTest, ty=tyTest} = trexp test
@@ -215,7 +235,7 @@ struct
           let
             val {exp=loExp, ty=tyLo} = trexp lo
             val {exp=hiExp, ty=tyHi} = trexp hi
-            val venvUpdated = S.enter(venv, var, Env.VarEntry{ty=T.INT})
+            val venvUpdated = S.enter(venv, var, Env.ReadVarEntry{ty=T.INT})
             val {exp=updatedExp, ty=updatedTy} = (transExp(venvUpdated, tenv) body)
           in
             checkInt(tyLo, pos);
@@ -247,6 +267,8 @@ struct
             (case S.look(venv, id)
                 of SOME(Env.VarEntry{ty}) =>
                    {exp = (), ty = actual_ty ty}
+                 | SOME(Env.ReadVarEntry{ty}) =>
+                    {exp = (), ty = actual_ty ty}
                  | SOME _ => (ErrorMsg.error pos "environment entry is not a var entry";
                               {exp = (), ty = T.INT})
                  | NONE => (ErrorMsg.error pos ("undefined variable " ^ S.name id);
