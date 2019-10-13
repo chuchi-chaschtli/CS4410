@@ -53,7 +53,18 @@ struct
   (* val transDecs : venv * tenv * A.dec list -> {venv : venv, tenv : tenv} *)
   (* val transTy  :        tenv * A.ty  -> T.ty *)
 
-  (* Checks if a given type is an INT, and throw's an error if it is not *)
+  (* bogus symbol to indicate whether or not we can break out of an expression.
+  Tiger identifiers do not start with *, so we can safely ensure this will never
+  exist in the actual AST. *)
+  val breakable = S.symbol("*breakable")
+
+  (* Checks if we can break here, and throws an error if we cannot. *)
+  fun checkCanBreak(tenv, pos) =
+    case S.look(tenv, breakable)
+      of SOME _ => ()
+       | NONE => ErrorMsg.error pos "break only allowed inside while/for expression"
+
+  (* Checks if a given type is an INT, and throws an error if it is not *)
   fun checkInt (ty, pos) =
     if ty = T.INT
     then ()
@@ -225,7 +236,8 @@ struct
         | trexp (A.WhileExp{test, body, pos}) =
           let
             val {exp=expTest, ty=tyTest} = trexp test
-            val {exp=expBody, ty=tyBody} = trexp body
+            val tenvUpdated = S.enter(tenv, breakable, T.UNIT)
+            val {exp=expBody, ty=tyBody} = (transExp(venv, tenvUpdated) body)
           in
             checkInt(tyTest, pos);
             checkUnit(tyBody, pos);
@@ -236,14 +248,15 @@ struct
             val {exp=loExp, ty=tyLo} = trexp lo
             val {exp=hiExp, ty=tyHi} = trexp hi
             val venvUpdated = S.enter(venv, var, Env.ReadVarEntry{ty=T.INT})
-            val {exp=updatedExp, ty=updatedTy} = (transExp(venvUpdated, tenv) body)
+            val tenvUpdated = S.enter(tenv, breakable, T.UNIT)
+            val {exp=updatedExp, ty=updatedTy} = (transExp(venvUpdated, tenvUpdated) body)
           in
             checkInt(tyLo, pos);
             checkInt(tyHi, pos);
             checkUnit(updatedTy, pos);
 		        {exp=(), ty=T.UNIT}
           end
-        | trexp (A.BreakExp(pos)) = {exp = (), ty =  T.UNIT} (* TODO check our BREAK more thoroughly *)
+        | trexp (A.BreakExp(pos)) = (checkCanBreak(tenv, pos); {exp = (), ty =  T.UNIT})
         | trexp (A.ArrayExp{typ, size, init, pos}) =
           let
             val binding = S.look(tenv, typ)
