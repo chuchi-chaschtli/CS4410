@@ -82,6 +82,13 @@ struct
     then ()
     else ErrorMsg.error pos ("expression must be two comparable types, found: " ^ T.toString(ty1) ^ ", " ^ T.toString(ty2))
 
+  (* Checks if a symbol list contains the given symbol *)
+  (* symbol list * symbol -> bool *)
+  fun contains(list, symbol) =
+    let val name = S.name symbol
+    in List.exists (fn elem => String.compare(S.name elem, name) = EQUAL) list
+    end
+
   fun actual_ty typ =
     case typ of (T.NAME (_, ref(SOME inner))) => actual_ty inner
               | other                         => other;
@@ -329,11 +336,6 @@ struct
       end
     | transDec (venv, tenv, A.TypeDec(typeDecls)) =
       let
-        fun contains(list, symbol) =
-          let val name = S.name symbol
-          in List.exists (fn elem => String.compare(S.name elem, name) = EQUAL) list
-          end
-
         fun verifyUnique({name, ty, pos}, visited) =
           if contains(visited, name)
           then (ErrorMsg.error pos "multiple matching type names in type declaration sequence"; visited)
@@ -359,29 +361,45 @@ struct
         foldl transTyDec {venv=venv, tenv=tenv} typeDecls
       end
     | transDec (venv, tenv, A.FunctionDec(functionDecls)) =
-      if functionDecls = nil
-      then {venv=venv, tenv=tenv}
-      else
-        let val {name, params, body, pos, result} = hd(functionDecls)
-            fun transparam{name, escape, typ, pos} = case S.look(tenv, typ) of SOME t => {name=name, ty=t}
-            val params' = map transparam params
-            fun enterparam ({name, ty}, venv) = S.enter(venv, name, Env.VarEntry{(* TODO: access=(),*) ty=ty})
-        in
-          (case result
-            of SOME(returnTy, returnPos) =>
-               let val SOME(result_ty) = S.look(tenv, returnTy)
-                   val venv' = S.enter(venv, name, Env.FunEntry{formals = map #ty params', result = result_ty})
-                   val venv'' = foldl enterparam venv' params'
-               in transExp(venv'', tenv) body;
-                  transDec(venv', tenv, A.FunctionDec(tl(functionDecls)))
-               end
-             | NONE =>
-               let val venv' = S.enter(venv, name, Env.FunEntry{formals = map #ty params', result = T.UNIT})
-                   val venv'' = foldl enterparam venv' params'
-               in transExp(venv'', tenv) body;
-                   transDec(venv', tenv, A.FunctionDec(tl(functionDecls)))
-               end)
-        end
+      let
+        fun transparam{name, escape, typ, pos} = case S.look(tenv, typ) of SOME t => {name=name, ty=t}
+        
+        fun verifyUnique({name, params, body, pos, result}, visited) =
+          if contains(visited, name)
+          then (ErrorMsg.error pos "multiple matching function names in function declaration sequence"; visited)
+          else name::visited
+
+        fun verifyReturnType({name, params, body, pos, result}, {venv, tenv}) =
+          let val params' = map transparam params
+              fun enterparam ({name, ty}, venv) = S.enter(venv, name, Env.VarEntry{ty=ty})
+          in
+            (case result
+              of SOME(returnTy, returnPos) =>
+                 let val SOME(result_ty) = S.look(tenv, returnTy)
+                     val venv' = S.enter(venv, name, Env.FunEntry{formals = map #ty params', result = result_ty})
+                     val venv'' = foldl enterparam venv' params'
+                     val {exp=funExp, ty=funTy} = transExp(venv'', tenv) body;
+                 in
+                    checkEqual(funTy, result_ty, returnPos);
+                    {venv=venv', tenv=tenv}
+                 end
+               | NONE =>
+                 let val venv' = S.enter(venv, name, Env.FunEntry{formals = map #ty params', result = T.UNIT})
+                     val venv'' = foldl enterparam venv' params'
+                     val {exp=funExp, ty=funTy} = transExp(venv'', tenv) body;
+                 in
+                    checkEqual(funTy, T.UNIT, pos);
+                    {venv=venv', tenv=tenv}
+                 end)
+          end
+
+          fun dummyVenv ({name, params, body, pos, result}, venv) =
+                  S.enter(venv, name, Env.FunEntry{formals= map #ty (map transparam params), result=T.UNIT})
+          val venv' = foldl dummyVenv venv functionDecls
+      in
+        foldl verifyUnique nil functionDecls;
+        foldl verifyReturnType {venv=venv', tenv=tenv} functionDecls
+      end
 
   and transDecs (venv, tenv, decs) =
     let
