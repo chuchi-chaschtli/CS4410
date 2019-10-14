@@ -328,12 +328,36 @@ struct
            | NONE => {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = tyInit})})
       end
     | transDec (venv, tenv, A.TypeDec(typeDecls)) =
-        if typeDecls = nil
-        then {venv=venv, tenv=tenv}
-        else let val firstDec = hd(typeDecls)
-             in
-              transDec(venv, S.enter(tenv, #name firstDec, transTy(tenv, #ty firstDec)), A.TypeDec(tl(typeDecls)))
-             end
+      let
+        fun contains(list, symbol) =
+          let val name = S.name symbol
+          in List.exists (fn elem => String.compare(S.name elem, name) = EQUAL) list
+          end
+
+        fun verifyUnique({name, ty, pos}, visited) =
+          if contains(visited, name)
+          then (ErrorMsg.error pos "multiple matching type names in type declaration sequence"; visited)
+          else name::visited
+
+        fun verifyAcyclic({name, ty, pos}, _) =
+          let fun verifyAcyclicSymbols(s, visited) =
+            (case S.look(tenv, s) of
+              SOME (T.NAME(symbol, _)) => if contains(visited, symbol)
+                                          then ErrorMsg.error pos "cyclic mutually recursive types found"
+                                          else verifyAcyclicSymbols(s, symbol::visited)
+             | _ => ())
+          in
+            verifyAcyclicSymbols(name, nil)
+          end
+
+        fun dummyTenv ({name, ty, pos}, tenv) = S.enter(tenv, name, T.UNIT)
+        val tenv' = foldl dummyTenv tenv typeDecls
+        fun transTyDec ({name, ty, pos}, {venv, tenv}) = {venv=venv, tenv=S.enter(tenv, name, transTy(tenv', ty))}
+      in
+        foldl verifyUnique nil typeDecls;
+        foldl verifyAcyclic () typeDecls;
+        foldl transTyDec {venv=venv, tenv=tenv} typeDecls
+      end
     | transDec (venv, tenv, A.FunctionDec(functionDecls)) =
       if functionDecls = nil
       then {venv=venv, tenv=tenv}
