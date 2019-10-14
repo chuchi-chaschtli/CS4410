@@ -354,8 +354,8 @@ struct
           (noneRefs := T.NAME(name, ref NONE) :: !noneRefs;
            S.enter(tenv, name, hd(!noneRefs)))
         val dummyTenv = foldl makeHeaderTenv tenv typeDecls
-        fun transTyDec ({name, ty, pos}, {venv, tenv}) = {venv=venv, tenv=S.enter(tenv, name, transTy(dummyTenv, ty))}
-        val {venv=venv', tenv=tenv'} = foldl transTyDec {venv=venv, tenv=tenv} typeDecls
+        fun transTyDec ({name, ty, pos}, {venv, tenv}) = {venv=venv, tenv=S.enter(tenv, name, transTy(tenv, ty))}
+        val {venv=venv', tenv=tenv'} = foldl transTyDec {venv=venv, tenv=dummyTenv} typeDecls
 
         fun rewriteRef(T.NAME(symbol, tyRef)) =
           case S.look(tenv', symbol)
@@ -371,7 +371,7 @@ struct
           (case S.look(tenv', name) of
             SOME (T.NAME(symbol, _)) => if contains(visited, symbol)
                                         then (ErrorMsg.error pos "cyclic mutually recursive types found"; visited)
-                                        else verifyAcyclicSymbols({name=name, ty=ty, pos=pos}, symbol::visited)
+                                        else symbol::visited
            | _ => visited)
 
       in
