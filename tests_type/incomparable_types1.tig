@@ -1,0 +1,8 @@
+/* invalid because types are not comparable;
+   must either both be string or both be int */
+let
+  type rec = {x: int, y: int}
+  var coord:rec := rec { x=0, y= 0 }
+in
+  "aye" <= coord
+end

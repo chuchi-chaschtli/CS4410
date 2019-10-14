@@ -18,8 +18,21 @@ struct
   datatype enventry = VarEntry of {ty: T.ty}
                     | ReadVarEntry of {ty: T.ty}
                     | FunEntry of {formals: T.ty list, result : T.ty}
-  val base_tenv = S.enter(S.enter(S.empty, S.symbol("string"), T.STRING), S.symbol("int"), T.INT) (* TODO: higher order function*)
-  val base_venv = S.empty (* predefined functions *)
+
+  fun populateEnvironment ((symbol, typ), table) = S.enter(table, S.symbol symbol, typ)
+
+  val base_tenv = foldl populateEnvironment S.empty [("string", T.STRING), ("int", T.INT)]
+
+  val base_venv = foldl populateEnvironment S.empty [("print", FunEntry ({formals=[T.STRING], result=T.UNIT})),
+                                                     ("flush", FunEntry ({formals=[], result=T.UNIT})),
+                                                     ("getchar", FunEntry ({formals=[], result=T.STRING})),
+                                                     ("ord", FunEntry ({formals=[T.STRING], result=T.INT})),
+                                                     ("chr", FunEntry ({formals=[T.INT], result=T.STRING})),
+                                                     ("size", FunEntry ({formals=[T.STRING], result=T.INT})),
+                                                     ("substring", FunEntry ({formals=[T.STRING, T.INT, T.INT], result=T.STRING})),
+                                                     ("concat", FunEntry ({formals=[T.STRING, T.STRING], result=T.STRING})),
+                                                     ("not", FunEntry ({formals=[T.INT], result=T.INT})),
+                                                     ("exit", FunEntry ({formals=[T.INT], result=T.UNIT}))]
 end
 
 structure Translate =
@@ -165,8 +178,8 @@ struct
               of SOME(Env.FunEntry{formals, result}) =>
                 (let fun verifyFormals(firstFormal::restFormals, firstArg::restArgs) =
                           if (firstFormal = #ty (trexp firstArg))
-                          then ()
-                          else verifyFormals(restFormals, restArgs)
+                          then verifyFormals(restFormals, restArgs)
+                          else ErrorMsg.error pos "type mismatch in function params"
                       | verifyFormals(nil, nil) = ()
                       | verifyFormals(_, _) = ErrorMsg.error pos "function formals length differs from arg length"
                 in
@@ -217,7 +230,7 @@ struct
               in
                 if exprTy = varTy
                 then {exp = (), ty = T.UNIT}
-                else (ErrorMsg.error pos "mismatching types within assignment ";  (* TODO report types *)
+                else (ErrorMsg.error pos "mismatching types within assignment";
                       {exp = (), ty = T.UNIT})
               end
           else (ErrorMsg.error pos "cannot re-assign to var"; {exp = (), ty = T.UNIT})

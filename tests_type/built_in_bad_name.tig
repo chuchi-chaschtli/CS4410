@@ -1,0 +1,2 @@
+/* invalid because this function is not predefined */
+hi("hello world")
