@@ -1,0 +1,3 @@
+/* invalid because types are not comparable;
+   must either both be string or both be int */
+3 > "wheeee"

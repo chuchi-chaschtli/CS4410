@@ -1,0 +1,2 @@
+/* invalid because this function is predefined and number of arguments incorrect */
+size(3)

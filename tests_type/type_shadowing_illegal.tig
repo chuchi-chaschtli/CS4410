@@ -1,0 +1,10 @@
+/* Invalid type shadowing because of cyclic type declarations */
+
+let
+  type a = b
+  type b = a
+  var f := 3
+  type a = int
+in
+  0
+end
