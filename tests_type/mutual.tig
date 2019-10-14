@@ -1,0 +1,9 @@
+let
+  type a = int
+  type b = c
+  type c = b
+  
+  var x:a := 7
+in
+  x
+end

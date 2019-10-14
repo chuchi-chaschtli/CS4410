@@ -336,10 +336,18 @@ struct
       end
     | transDec (venv, tenv, A.TypeDec(typeDecls)) =
       let
-        fun baseTenv ({name, ty, pos}, tenv) = S.enter(tenv, name, T.NAME(name, ref NONE))
-        val dummyTenv = foldl baseTenv tenv typeDecls
+        val noneRefs = ref nil
+        fun makeHeaderTenv ({name, ty, pos}, tenv) = 
+          (noneRefs := T.NAME(name, ref NONE) :: !noneRefs;
+           S.enter(tenv, name, hd(!noneRefs)))
+        val dummyTenv = foldl makeHeaderTenv tenv typeDecls
         fun transTyDec ({name, ty, pos}, {venv, tenv}) = {venv=venv, tenv=S.enter(tenv, name, transTy(dummyTenv, ty))}
         val {venv=venv', tenv=tenv'} = foldl transTyDec {venv=venv, tenv=tenv} typeDecls
+
+        fun rewriteRef(T.NAME(symbol, tyRef)) =
+          case S.look(tenv', symbol)
+            of SOME(ty) => (tyRef := SOME(ty); nil)
+             | NONE => (ErrorMsg.error 0 "referenced type not present in type environment"; nil) (* NOTE: should never happen *)
 
         fun verifyUnique({name, ty, pos}, visited) =
           if contains(visited, name)
@@ -352,9 +360,11 @@ struct
                                         then (ErrorMsg.error pos "cyclic mutually recursive types found"; visited)
                                         else verifyAcyclicSymbols({name=name, ty=ty, pos=pos}, symbol::visited)
            | _ => visited)
+
       in
         foldl verifyUnique nil typeDecls;
         foldl verifyAcyclicSymbols nil typeDecls;
+        map rewriteRef (!noneRefs);
         {venv=venv', tenv=tenv'}
       end
     | transDec (venv, tenv, A.FunctionDec(functionDecls)) =
@@ -400,7 +410,7 @@ struct
 
   and transDecs (venv, tenv, decs) =
     let
-      fun f({ve, te}, nil) = (ErrorMsg.error 0 "should never occur"; {venv=venv, tenv=tenv})
+      fun f({ve, te}, nil) = (ErrorMsg.error 0 "empty declaration list"; {venv=venv, tenv=tenv}) (* NOTE should never occur *)
         | f({ve, te}, dec::nil) = transDec(ve, te, dec)
         | f({ve, te}, dec::decs) =
           let val {venv=venv', tenv=tenv'} = transDec(ve, te, dec)
