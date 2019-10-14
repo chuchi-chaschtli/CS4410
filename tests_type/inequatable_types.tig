@@ -1,0 +1,9 @@
+/* invalid because two distinct record types are not equatable */
+let
+  type rec1 = {x: int, y: int}
+  type rec2 = {x: int, y: int}
+  var coord1:rec1 := rec1 { x=0, y= 0 }
+  var coord2:rec2 := rec2 { x=0, y= 0 }
+in
+  coord1 <> coord2
+end

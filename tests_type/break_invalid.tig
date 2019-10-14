@@ -1,0 +1,7 @@
+/* error: cannot break outside while/for expression */
+let
+  var x := 1
+in
+  break;
+  x
+end
