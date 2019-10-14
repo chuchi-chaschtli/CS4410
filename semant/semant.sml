@@ -341,29 +341,25 @@ struct
           then (ErrorMsg.error pos "multiple matching type names in type declaration sequence"; visited)
           else name::visited
 
-        fun verifyAcyclic({name, ty, pos}, _) =
-          let fun verifyAcyclicSymbols(s, visited) =
-            (case S.look(tenv, s) of
-              SOME (T.NAME(symbol, _)) => if contains(visited, symbol)
-                                          then ErrorMsg.error pos "cyclic mutually recursive types found"
-                                          else verifyAcyclicSymbols(s, symbol::visited)
-             | _ => ())
-          in
-            verifyAcyclicSymbols(name, nil)
-          end
+        fun verifyAcyclicSymbols({name, ty, pos}, visited) =
+          (case S.look(tenv, name) of
+            SOME (T.NAME(symbol, _)) => if contains(visited, symbol)
+                                        then (ErrorMsg.error pos "cyclic mutually recursive types found"; visited)
+                                        else verifyAcyclicSymbols({name=name, ty=ty, pos=pos}, symbol::visited)
+           | _ => visited)
 
         fun dummyTenv ({name, ty, pos}, tenv) = S.enter(tenv, name, T.UNIT)
         val tenv' = foldl dummyTenv tenv typeDecls
         fun transTyDec ({name, ty, pos}, {venv, tenv}) = {venv=venv, tenv=S.enter(tenv, name, transTy(tenv', ty))}
       in
         foldl verifyUnique nil typeDecls;
-        foldl verifyAcyclic () typeDecls;
+        foldl verifyAcyclicSymbols nil typeDecls;
         foldl transTyDec {venv=venv, tenv=tenv} typeDecls
       end
     | transDec (venv, tenv, A.FunctionDec(functionDecls)) =
       let
         fun transparam{name, escape, typ, pos} = case S.look(tenv, typ) of SOME t => {name=name, ty=t}
-        
+
         fun verifyUnique({name, params, body, pos, result}, visited) =
           if contains(visited, name)
           then (ErrorMsg.error pos "multiple matching function names in function declaration sequence"; visited)
