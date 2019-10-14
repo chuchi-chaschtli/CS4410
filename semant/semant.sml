@@ -340,7 +340,14 @@ struct
       let val {exp, ty=tyInit} = transExp(venv, tenv) init
       in
         (case typ
-          of SOME ty =>
+          of SOME (A.RecordTy(fieldList)) =>
+            let val tyResult = transTy(tenv, A.RecordTy(fieldList))
+            in if tyInit = T.NIL
+               then {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = tyResult})}
+               else (checkEqual(tyInit, tyResult, pos);
+                     {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = tyResult})})
+            end
+           | SOME ty =>
              let val tyResult = transTy(tenv, A.NameTy(ty))
              in (checkEqual(tyInit, tyResult, pos);
                  {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = tyResult})})
@@ -350,7 +357,7 @@ struct
     | transDec (venv, tenv, A.TypeDec(typeDecls)) =
       let
         val noneRefs = ref nil
-        fun makeHeaderTenv ({name, ty, pos}, tenv) = 
+        fun makeHeaderTenv ({name, ty, pos}, tenv) =
           (noneRefs := T.NAME(name, ref NONE) :: !noneRefs;
            S.enter(tenv, name, hd(!noneRefs)))
         val dummyTenv = foldl makeHeaderTenv tenv typeDecls
