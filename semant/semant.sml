@@ -120,11 +120,11 @@ struct
   fun transTy (tenv, A.NameTy(symbol, pos)) =
       (case S.look(tenv, symbol)
         of SOME ty => ty
-         | NONE => (ErrorMsg.error pos ("type not found: " ^ S.name(symbol)); T.NIL))
+         | NONE => (ErrorMsg.error pos ("type not found: " ^ S.name(symbol)); T.UNIT))
     | transTy (tenv, A.ArrayTy(symbol, pos)) =
       (case S.look(tenv, symbol)
         of SOME ty => T.ARRAY(ty, ref ())
-         | NONE => (ErrorMsg.error pos ("type not found: " ^ S.name(symbol)); T.NIL))
+         | NONE => (ErrorMsg.error pos ("type not found: " ^ S.name(symbol)); T.UNIT))
     | transTy (tenv, A.RecordTy(fieldList)) =
       T.RECORD(map
                 (fn field => (#name field, transTy(tenv, A.NameTy(#typ field, #pos field))))
@@ -289,9 +289,9 @@ struct
                       checkEqualOrThrow(actual_ty(ty), actual_ty(tyInit), pos);
                       {exp = (), ty = T.ARRAY(ty, unique)})
                    | _ => (ErrorMsg.error pos ("type is not array " ^ S.name(typ));
-                          {exp = (), ty = T.INT}))
+                          {exp = (), ty = T.UNIT}))
               | NONE => (ErrorMsg.error pos ("undefined array type " ^ S.name(typ));
-                         {exp = (), ty = T.INT}))
+                         {exp = (), ty = T.UNIT}))
           end
 
       and trvar (A.SimpleVar(id, pos)) =
@@ -301,9 +301,9 @@ struct
                  | SOME(Env.ReadVarEntry{ty}) =>
                     {exp = (), ty = actual_ty ty}
                  | SOME _ => (ErrorMsg.error pos "environment entry is not a var entry";
-                              {exp = (), ty = T.INT})
+                              {exp = (), ty = T.UNIT})
                  | NONE => (ErrorMsg.error pos ("undefined variable " ^ S.name id);
-                            {exp = (), ty = T.INT}))
+                            {exp = (), ty = T.UNIT}))
         | trvar (A.FieldVar(var, id, pos)) =
           let
             val {exp=expVar, ty=tyVar} = trvar(var)
@@ -319,7 +319,7 @@ struct
               of T.RECORD (fields, unique) =>
                 {exp=(), ty = getFieldTypeWithId(fields, id, pos)}
               | _ => (ErrorMsg.error pos "tried to access record field of object that is not a record";
-                     {exp=(), ty = T.INT}))
+                     {exp=(), ty = T.UNIT}))
           end
         | trvar (A.SubscriptVar(var, exp, pos)) =
           let
@@ -328,7 +328,7 @@ struct
             case tyVar
               of T.ARRAY (ty, unique) => {exp=(), ty=ty}
                | _ => (ErrorMsg.error pos ("Attempted to access a non-array type: " ^ T.toString(tyVar));
-                      {exp=(), ty=T.INT})
+                      {exp=(), ty=T.UNIT})
           end
     in
       trexp
