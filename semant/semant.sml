@@ -174,7 +174,7 @@ struct
                 (let fun verifyFormals(firstFormal::restFormals, firstArg::restArgs) =
                          let val firstArgExp = trexp firstArg
                          in
-                            if (firstFormal = actual_ty(#ty (trexp firstArg)))
+                            if (firstFormal = actual_ty(#ty firstArgExp))
                             then verifyFormals(restFormals, restArgs)
                             else ErrorMsg.error pos ("type mismatch in function params: " ^ T.toString(firstFormal) ^ " and " ^ T.toString(#ty firstArgExp))
                          end
