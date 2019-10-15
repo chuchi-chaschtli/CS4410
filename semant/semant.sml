@@ -436,5 +436,5 @@ struct
       f ({ve=venv, te=tenv}, decs)
     end
 
-  fun transProg exp = (transExp(Env.base_venv, Env.base_tenv); ())
+  fun transProg exp = (transExp(Env.base_venv, Env.base_tenv) exp; ())
 end
