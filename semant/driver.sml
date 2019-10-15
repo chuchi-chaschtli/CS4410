@@ -1,10 +1,10 @@
-structure TypeCheck : sig val check : string -> Types.ty end =
+structure TypeCheck : sig val check : string -> unit end =
 struct
   fun check filename =
     let
       val absyn = Parse.parse filename
-      val {exp = translated, ty = checkedType} = Semant.transProg absyn
+      val out = Semant.transProg absyn
     in
-      checkedType
+      out
     end
 end

@@ -46,29 +46,22 @@ sig
   type venv
   type tenv
   val transTy   :        tenv * A.ty  -> T.ty
-  (* val transVar  : venv * tenv * A.var -> expty *)
   val transDec  : venv * tenv * A.dec -> {venv : venv, tenv : tenv}
   val transDecs : venv * tenv * A.dec list -> {venv : venv, tenv : tenv}
   val transExp  : venv * tenv -> A.exp -> expty
+  val transProg :                A.exp -> unit
 end
 
 
-(* structure Semant :> SEMANTICS = *)
-structure Semant =
+structure Semant :> SEMANTICS =
 struct
   type expty = {exp: Translate.exp, ty: T.ty}
   type venv = Env.enventry S.table
   type tenv = T.ty S.table
 
-  (* val transVar : venv * tenv * A.var -> expty *)
-  (* val transExp : venv * tenv -> A.exp -> expty *)
-  (* val transDec  : venv * tenv * A.dec -> {venv : venv, tenv : tenv} *)
-  (* val transDecs : venv * tenv * A.dec list -> {venv : venv, tenv : tenv} *)
-  (* val transTy  :        tenv * A.ty  -> T.ty *)
-
   (* bogus symbol to indicate whether or not we can break out of an expression.
-  Tiger identifiers do not start with *, so we can safely ensure this will never
-  exist in the actual AST. *)
+     Tiger identifiers do not start with *, so we can safely ensure this will never
+     exist in the actual AST. *)
   val breakable = S.symbol("*breakable")
 
   (* Checks if we can break here, and throws an error if we cannot. *)
@@ -89,11 +82,15 @@ struct
     then ()
     else ErrorMsg.error pos ("expression must be a unit, found: " ^ T.toString(ty) ^ " instead")
 
-  (* Checks if two types are equal, and throws an error if they are not *)
+  (* Checks if two types are equal *)
   fun checkEqual(ty1, ty2, pos) =
-    if ty1 = ty2
+    ty1 = ty2
       orelse (T.toString(ty1) = "RECORD" andalso ty2 = T.NIL)
       orelse (ty1 = T.NIL andalso T.toString(ty2) = "RECORD")
+
+  (* Checks if two types are equal, and throws an error if they are not *)
+  fun checkEqualOrThrow(ty1, ty2, pos) =
+    if checkEqual(ty1, ty2, pos)
     then ()
     else ErrorMsg.error pos ("expression must be two comparable types, found: " ^ T.toString(ty1) ^ ", " ^ T.toString(ty2))
 
@@ -123,11 +120,11 @@ struct
   fun transTy (tenv, A.NameTy(symbol, pos)) =
       (case S.look(tenv, symbol)
         of SOME ty => ty
-         | NONE => (ErrorMsg.error pos ("type not found: " ^ S.name(symbol)); T.NIL))
+         | NONE => (ErrorMsg.error pos ("type not found: " ^ S.name(symbol)); T.UNIT))
     | transTy (tenv, A.ArrayTy(symbol, pos)) =
       (case S.look(tenv, symbol)
         of SOME ty => T.ARRAY(ty, ref ())
-         | NONE => (ErrorMsg.error pos ("type not found: " ^ S.name(symbol)); T.NIL))
+         | NONE => (ErrorMsg.error pos ("type not found: " ^ S.name(symbol)); T.UNIT))
     | transTy (tenv, A.RecordTy(fieldList)) =
       T.RECORD(map
                 (fn field => (#name field, transTy(tenv, A.NameTy(#typ field, #pos field))))
@@ -143,9 +140,9 @@ struct
             fun verifyArithOperands() =
               (checkInt(tyLeft, pos);
                checkInt(tyRight, pos);
-               {exp=((* TODO: do something with expLeft and expRight here? *)), ty=T.INT})
+               {exp=(), ty=T.INT})
             fun verifyEquatableOperands() =
-              (checkEqual(tyLeft, tyRight, pos);
+              (checkEqualOrThrow(tyLeft, tyRight, pos);
                {exp=(), ty=T.INT})
             fun verifyComparableOperands() =
               (if (tyLeft = T.STRING andalso tyRight = T.STRING) orelse (tyLeft = T.INT andalso tyRight = T.INT)
@@ -179,14 +176,17 @@ struct
           (case S.look(venv, func)
               of SOME(Env.FunEntry{formals, result}) =>
                 (let fun verifyFormals(firstFormal::restFormals, firstArg::restArgs) =
-                          if (firstFormal = #ty (trexp firstArg))
-                          then verifyFormals(restFormals, restArgs)
-                          else ErrorMsg.error pos "type mismatch in function params"
-                      | verifyFormals(nil, nil) = ()
-                      | verifyFormals(_, _) = ErrorMsg.error pos "function formals length differs from arg length"
-                in
-                  verifyFormals(formals, args)
-                end;
+                         let val firstArgExp = trexp firstArg
+                         in
+                            if checkEqual(firstFormal, actual_ty(#ty firstArgExp), pos)
+                            then verifyFormals(restFormals, restArgs)
+                            else ErrorMsg.error pos ("type mismatch in function params: " ^ T.toString(firstFormal) ^ " and " ^ T.toString(#ty firstArgExp))
+                         end
+                       | verifyFormals(nil, nil) = ()
+                       | verifyFormals(_, _) = ErrorMsg.error pos "function formals length differs from arg length"
+                 in
+                   verifyFormals(formals, args)
+                 end;
                 {exp = (), ty = result})
               | SOME _ => (ErrorMsg.error pos "environment entry is not a fun entry";
                            {exp = (), ty = T.UNIT})
@@ -204,7 +204,7 @@ struct
                         of SOME ty =>
                             let val {exp = expField, ty = tyField} = trexp(exp)
                             in
-                              if (tyField = ty)
+                              if checkEqual(tyField, ty, pos)
                               then ()
                               else searchFields(rest)
                             end
@@ -230,7 +230,7 @@ struct
                 val {exp=exprExp, ty=exprTy} = trexp exp
                 val {exp=varExp, ty=varTy} = trvar var
               in
-                (checkEqual(exprTy, varTy, pos);
+                (checkEqualOrThrow(exprTy, varTy, pos);
                  {exp = (), ty = T.UNIT})
               end
           else (ErrorMsg.error pos "cannot re-assign to var"; {exp = (), ty = T.UNIT})
@@ -245,10 +245,8 @@ struct
                 let
                   val {exp=expElse, ty=tyElse} = trexp expr
                 in
-                  if tyThen = tyElse
-                  then {exp = (), ty = tyThen}
-                  else (ErrorMsg.error pos ("then type " ^ T.toString(tyThen) ^ " does not match else type " ^ T.toString(tyElse));
-                       {exp = (), ty = tyThen})
+                  (checkEqualOrThrow(tyThen, tyElse, pos);
+                   {exp = (), ty = tyThen})
                 end
               | NONE => (checkUnit(tyThen, pos);
                          {exp = (), ty = T.UNIT}))
@@ -288,12 +286,12 @@ struct
                 (case actual_ty ty
                   of (T.ARRAY(ty, unique)) =>
                      (checkInt(tySize, pos);
-                      checkEqual(actual_ty(ty), actual_ty(tyInit), pos);
+                      checkEqualOrThrow(actual_ty(ty), actual_ty(tyInit), pos);
                       {exp = (), ty = T.ARRAY(ty, unique)})
                    | _ => (ErrorMsg.error pos ("type is not array " ^ S.name(typ));
-                          {exp = (), ty = T.INT}))
+                          {exp = (), ty = T.UNIT}))
               | NONE => (ErrorMsg.error pos ("undefined array type " ^ S.name(typ));
-                         {exp = (), ty = T.INT}))
+                         {exp = (), ty = T.UNIT}))
           end
 
       and trvar (A.SimpleVar(id, pos)) =
@@ -303,9 +301,9 @@ struct
                  | SOME(Env.ReadVarEntry{ty}) =>
                     {exp = (), ty = actual_ty ty}
                  | SOME _ => (ErrorMsg.error pos "environment entry is not a var entry";
-                              {exp = (), ty = T.INT})
+                              {exp = (), ty = T.UNIT})
                  | NONE => (ErrorMsg.error pos ("undefined variable " ^ S.name id);
-                            {exp = (), ty = T.INT}))
+                            {exp = (), ty = T.UNIT}))
         | trvar (A.FieldVar(var, id, pos)) =
           let
             val {exp=expVar, ty=tyVar} = trvar(var)
@@ -321,7 +319,7 @@ struct
               of T.RECORD (fields, unique) =>
                 {exp=(), ty = getFieldTypeWithId(fields, id, pos)}
               | _ => (ErrorMsg.error pos "tried to access record field of object that is not a record";
-                     {exp=(), ty = T.INT}))
+                     {exp=(), ty = T.UNIT}))
           end
         | trvar (A.SubscriptVar(var, exp, pos)) =
           let
@@ -330,7 +328,7 @@ struct
             case tyVar
               of T.ARRAY (ty, unique) => {exp=(), ty=ty}
                | _ => (ErrorMsg.error pos ("Attempted to access a non-array type: " ^ T.toString(tyVar));
-                      {exp=(), ty=T.INT})
+                      {exp=(), ty=T.UNIT})
           end
     in
       trexp
@@ -342,7 +340,7 @@ struct
         (case typ
           of SOME ty =>
              let val tyResult = transTy(tenv, A.NameTy(ty))
-             in (checkEqual(tyInit, tyResult, pos);
+             in (checkEqualOrThrow(tyInit, tyResult, pos);
                  {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = tyResult})})
              end
            | NONE => (if (tyInit = T.NIL)
@@ -350,79 +348,85 @@ struct
                     	else ();
                       {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = tyInit})}))
       end
-    | transDec (venv, tenv, A.TypeDec(typeDecls)) =
-      let
-        val noneRefs = ref nil
-        fun makeHeaderTenv ({name, ty, pos}, tenv) =
-          (noneRefs := T.NAME(name, ref NONE) :: !noneRefs;
-           S.enter(tenv, name, hd(!noneRefs)))
-        val dummyTenv = foldl makeHeaderTenv tenv typeDecls
-        fun transTyDec ({name, ty, pos}, {venv, tenv}) = {venv=venv, tenv=S.enter(tenv, name, transTy(tenv, ty))}
-        val {venv=venv', tenv=tenv'} = foldl transTyDec {venv=venv, tenv=dummyTenv} typeDecls
+    | transDec (venv, tenv, A.TypeDec(typeDecls)) = transTypeDecls(venv, tenv, typeDecls)
+    | transDec (venv, tenv, A.FunctionDec(functionDecls)) = transFuncDecls(venv, tenv, functionDecls)
 
-        fun rewriteRef(T.NAME(symbol, tyRef)) =
-          case S.look(tenv', symbol)
-            of SOME(ty) => (tyRef := SOME(ty); nil)
-             | NONE => (ErrorMsg.error 0 "referenced type not present in type environment"; nil) (* NOTE: should never happen *)
+  and transTypeDecls (venv, tenv, typeDecls) =
+    let
+      val noneRefs = ref nil
 
-        fun verifyUnique({name, ty, pos}, visited) =
-          if contains(visited, name)
-          then (ErrorMsg.error pos "multiple matching type names in type declaration sequence"; visited)
-          else name::visited
+      fun makeHeaderTenv ({name, ty, pos}, tenv) =
+        (noneRefs := T.NAME(name, ref NONE) :: !noneRefs;
+         S.enter(tenv, name, hd(!noneRefs)))
+      val dummyTenv = foldl makeHeaderTenv tenv typeDecls
 
-        fun verifyAcyclicSymbols({name, ty, pos}, visited) =
-          (case S.look(tenv', name) of
-            SOME (T.NAME(symbol, _)) => if contains(visited, symbol)
-                                        then (ErrorMsg.error pos "cyclic mutually recursive types found"; visited)
-                                        else symbol::visited
-           | _ => visited)
+      fun transTyDec ({name, ty, pos}, {venv, tenv}) = {venv=venv, tenv=S.enter(tenv, name, transTy(tenv, ty))}
+      val {venv=venv', tenv=tenv'} = foldl transTyDec {venv=venv, tenv=dummyTenv} typeDecls
 
-      in
-        foldl verifyUnique nil typeDecls;
-        foldl verifyAcyclicSymbols nil typeDecls;
-        map rewriteRef (!noneRefs);
-        {venv=venv', tenv=tenv'}
-      end
-    | transDec (venv, tenv, A.FunctionDec(functionDecls)) =
-      let
-        fun transparam{name, escape, typ, pos} = case S.look(tenv, typ) of SOME t => {name=name, ty=t}
+      fun rewriteRef(T.NAME(symbol, tyRef)) =
+        case S.look(tenv', symbol)
+          of SOME(ty) => (tyRef := SOME(ty); nil)
+           | NONE => (ErrorMsg.error 0 "referenced type not present in type environment"; nil) (* NOTE: should never occur *)
 
-        fun verifyUnique({name, params, body, pos, result}, visited) =
-          if contains(visited, name)
-          then (ErrorMsg.error pos "multiple matching function names in function declaration sequence"; visited)
-          else name::visited
+      fun verifyUnique({name, ty, pos}, visited) =
+        if contains(visited, name)
+        then (ErrorMsg.error pos "multiple matching type names in type declaration sequence"; visited)
+        else name::visited
 
-        fun verifyReturnType({name, params, body, pos, result}, {venv, tenv}) =
-          let val params' = map transparam params
-              fun enterparam ({name, ty}, venv) = S.enter(venv, name, Env.VarEntry{ty=ty})
-          in
-            (case result
-              of SOME(returnTy, returnPos) =>
-                 let val SOME(result_ty) = S.look(tenv, returnTy)
-                     val venv' = S.enter(venv, name, Env.FunEntry{formals = map #ty params', result = result_ty})
-                     val venv'' = foldl enterparam venv' params'
-                     val {exp=funExp, ty=funTy} = transExp(venv'', tenv) body;
-                 in
-                    checkEqual(funTy, result_ty, returnPos);
-                    {venv=venv', tenv=tenv}
-                 end
-               | NONE =>
-                 let val venv' = S.enter(venv, name, Env.FunEntry{formals = map #ty params', result = T.UNIT})
-                     val venv'' = foldl enterparam venv' params'
-                     val {exp=funExp, ty=funTy} = transExp(venv'', tenv) body;
-                 in
-                    checkEqual(funTy, T.UNIT, pos);
-                    {venv=venv', tenv=tenv}
-                 end)
-          end
+      fun verifyAcyclicSymbols({name, ty, pos}, visited) =
+        (case S.look(tenv', name) of
+          SOME (T.NAME(symbol, _)) => if contains(visited, symbol)
+                                      then (ErrorMsg.error pos "cyclic mutually recursive types found"; visited)
+                                      else symbol::visited
+         | _ => visited)
+    in
+      foldl verifyUnique nil typeDecls;
+      foldl verifyAcyclicSymbols nil typeDecls;
+      map rewriteRef (!noneRefs);
+      {venv=venv', tenv=tenv'}
+    end
 
-          fun dummyVenv ({name, params, body, pos, result}, venv) =
-                  S.enter(venv, name, Env.FunEntry{formals= map #ty (map transparam params), result=T.UNIT})
-          val venv' = foldl dummyVenv venv functionDecls
-      in
-        foldl verifyUnique nil functionDecls;
-        foldl verifyReturnType {venv=venv', tenv=tenv} functionDecls
-      end
+  and transFuncDecls (venv, tenv, functionDecls) =
+    let
+      fun transparam{name, escape, typ, pos} = case S.look(tenv, typ) of SOME t => {name=name, ty=t}
+
+      fun verifyUnique({name, params, body, pos, result}, visited) =
+        if contains(visited, name)
+        then (ErrorMsg.error pos "multiple matching function names in function declaration sequence"; visited)
+        else name::visited
+
+      fun verifyReturnType({name, params, body, pos, result}, {venv, tenv}) =
+        let val params' = map transparam params
+            fun enterparam ({name, ty}, venv) = S.enter(venv, name, Env.VarEntry{ty=ty})
+        in
+          (case result
+            of SOME(returnTy, returnPos) =>
+               let val SOME(result_ty) = S.look(tenv, returnTy)
+                   val venv' = S.enter(venv, name, Env.FunEntry{formals = map #ty params', result = result_ty})
+                   val venv'' = foldl enterparam venv' params'
+                   val {exp=funExp, ty=funTy} = transExp(venv'', tenv) body;
+               in
+                  checkEqualOrThrow(funTy, result_ty, returnPos);
+                  {venv=venv', tenv=tenv}
+               end
+             | NONE =>
+               let val venv' = S.enter(venv, name, Env.FunEntry{formals = map #ty params', result = T.UNIT})
+                   val venv'' = foldl enterparam venv' params'
+                   val {exp=funExp, ty=funTy} = transExp(venv'', tenv) body;
+               in
+                  checkEqualOrThrow(funTy, T.UNIT, pos);
+                  {venv=venv', tenv=tenv}
+               end)
+        end
+
+        fun dummyVenv ({name, params, body, pos, result}, venv) =
+                S.enter(venv, name, Env.FunEntry{formals= map #ty (map transparam params), result=T.UNIT})
+        val venv' = foldl dummyVenv venv functionDecls
+    in
+      foldl verifyUnique nil functionDecls;
+      foldl verifyReturnType {venv=venv', tenv=tenv} functionDecls
+    end
+
 
   and transDecs (venv, tenv, decs) =
     let
@@ -435,8 +439,7 @@ struct
           end
     in
       f ({ve=venv, te=tenv}, decs)
-      (* foldl f {ve=venv, te=tenv} decs*)
     end
 
-  fun transProg exp = (transExp(Env.base_venv, Env.base_tenv) exp)
+  fun transProg exp = (transExp(Env.base_venv, Env.base_tenv) exp; ())
 end
