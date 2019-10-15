@@ -77,3 +77,9 @@ allowing `nil` and `Record` _types_ be considered equal (the literal `nil` will
  an error, yet is annotated with `NOTE should never occur`. The reason for this
  is that the cases that are provided are ruled out by our Grammar, however we
  prefer the safety of the SML compiler indicating that we have full case analysis.
+
+## Testing
+
+We tested our code against the test cases provided by Appel (`tests/`), alongside
+our own tests for some special cases in isolation / not covered in the other test
+folder (`tests_type`).
