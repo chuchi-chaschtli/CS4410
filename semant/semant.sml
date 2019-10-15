@@ -82,11 +82,15 @@ struct
     then ()
     else ErrorMsg.error pos ("expression must be a unit, found: " ^ T.toString(ty) ^ " instead")
 
-  (* Checks if two types are equal, and throws an error if they are not *)
+  (* Checks if two types are equal *)
   fun checkEqual(ty1, ty2, pos) =
-    if ty1 = ty2
+    ty1 = ty2
       orelse (T.toString(ty1) = "RECORD" andalso ty2 = T.NIL)
       orelse (ty1 = T.NIL andalso T.toString(ty2) = "RECORD")
+
+  (* Checks if two types are equal, and throws an error if they are not *)
+  fun checkEqualOrThrow(ty1, ty2, pos) =
+    if checkEqual(ty1, ty2, pos)
     then ()
     else ErrorMsg.error pos ("expression must be two comparable types, found: " ^ T.toString(ty1) ^ ", " ^ T.toString(ty2))
 
@@ -138,7 +142,7 @@ struct
                checkInt(tyRight, pos);
                {exp=(), ty=T.INT})
             fun verifyEquatableOperands() =
-              (checkEqual(tyLeft, tyRight, pos);
+              (checkEqualOrThrow(tyLeft, tyRight, pos);
                {exp=(), ty=T.INT})
             fun verifyComparableOperands() =
               (if (tyLeft = T.STRING andalso tyRight = T.STRING) orelse (tyLeft = T.INT andalso tyRight = T.INT)
@@ -174,7 +178,7 @@ struct
                 (let fun verifyFormals(firstFormal::restFormals, firstArg::restArgs) =
                          let val firstArgExp = trexp firstArg
                          in
-                            if (firstFormal = actual_ty(#ty firstArgExp))
+                            if firstFormal = actual_ty(#ty firstArgExp))
                             then verifyFormals(restFormals, restArgs)
                             else ErrorMsg.error pos ("type mismatch in function params: " ^ T.toString(firstFormal) ^ " and " ^ T.toString(#ty firstArgExp))
                          end
@@ -200,7 +204,7 @@ struct
                         of SOME ty =>
                             let val {exp = expField, ty = tyField} = trexp(exp)
                             in
-                              if (tyField = ty)
+                              if checkEqual(tyField, ty, pos)
                               then ()
                               else searchFields(rest)
                             end
@@ -226,7 +230,7 @@ struct
                 val {exp=exprExp, ty=exprTy} = trexp exp
                 val {exp=varExp, ty=varTy} = trvar var
               in
-                (checkEqual(exprTy, varTy, pos);
+                (checkEqualOrThrow(exprTy, varTy, pos);
                  {exp = (), ty = T.UNIT})
               end
           else (ErrorMsg.error pos "cannot re-assign to var"; {exp = (), ty = T.UNIT})
@@ -241,7 +245,7 @@ struct
                 let
                   val {exp=expElse, ty=tyElse} = trexp expr
                 in
-                  (checkEqual(tyThen, tyElse, pos);
+                  (checkEqualOrThrow(tyThen, tyElse, pos);
                    {exp = (), ty = tyThen})
                 end
               | NONE => (checkUnit(tyThen, pos);
@@ -282,7 +286,7 @@ struct
                 (case actual_ty ty
                   of (T.ARRAY(ty, unique)) =>
                      (checkInt(tySize, pos);
-                      checkEqual(actual_ty(ty), actual_ty(tyInit), pos);
+                      checkEqualOrThrow(actual_ty(ty), actual_ty(tyInit), pos);
                       {exp = (), ty = T.ARRAY(ty, unique)})
                    | _ => (ErrorMsg.error pos ("type is not array " ^ S.name(typ));
                           {exp = (), ty = T.INT}))
@@ -336,7 +340,7 @@ struct
         (case typ
           of SOME ty =>
              let val tyResult = transTy(tenv, A.NameTy(ty))
-             in (checkEqual(tyInit, tyResult, pos);
+             in (checkEqualOrThrow(tyInit, tyResult, pos);
                  {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = tyResult})})
              end
            | NONE => (if (tyInit = T.NIL)
@@ -402,7 +406,7 @@ struct
                    val venv'' = foldl enterparam venv' params'
                    val {exp=funExp, ty=funTy} = transExp(venv'', tenv) body;
                in
-                  checkEqual(funTy, result_ty, returnPos);
+                  checkEqualOrThrow(funTy, result_ty, returnPos);
                   {venv=venv', tenv=tenv}
                end
              | NONE =>
@@ -410,7 +414,7 @@ struct
                    val venv'' = foldl enterparam venv' params'
                    val {exp=funExp, ty=funTy} = transExp(venv'', tenv) body;
                in
-                  checkEqual(funTy, T.UNIT, pos);
+                  checkEqualOrThrow(funTy, T.UNIT, pos);
                   {venv=venv', tenv=tenv}
                end)
         end
