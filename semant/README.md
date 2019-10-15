@@ -47,6 +47,12 @@ type definition for a given user-defined type. If we come across the same symbol
 more than once in a chain of Name types, we know that we've come across a loop,
 otherwise we can continue on in our list of type definitions.
 
+Note that this algorithm runs in `O(n^2)` due to relying on `contains`, however
+the method that Prof. Shivers described in class (based on the maximal length of
+a non-looping recursive type declaration chain) _also_ runs in `O(n^2)`, not to
+mention that in the context of our compiler we are dealing with relatively small
+values for `n`, where `n` is the number of consecutive type declarations.
+
 ### Mutually Recursive Functions
 
 Since function headers are required to provide their parameter and return types,
