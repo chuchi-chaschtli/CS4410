@@ -172,7 +172,7 @@ struct
           (case S.look(venv, func)
               of SOME(Env.FunEntry{formals, result}) =>
                 (let fun verifyFormals(firstFormal::restFormals, firstArg::restArgs) =
-                          if (firstFormal = #ty (trexp firstArg))
+                          if (firstFormal = actual_ty(#ty (trexp firstArg)))
                           then verifyFormals(restFormals, restArgs)
                           else ErrorMsg.error pos "type mismatch in function params"
                       | verifyFormals(nil, nil) = ()
