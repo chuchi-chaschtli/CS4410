@@ -46,29 +46,22 @@ sig
   type venv
   type tenv
   val transTy   :        tenv * A.ty  -> T.ty
-  (* val transVar  : venv * tenv * A.var -> expty *)
   val transDec  : venv * tenv * A.dec -> {venv : venv, tenv : tenv}
   val transDecs : venv * tenv * A.dec list -> {venv : venv, tenv : tenv}
   val transExp  : venv * tenv -> A.exp -> expty
+  val transProg :                A.exp -> unit
 end
 
 
-(* structure Semant :> SEMANTICS = *)
-structure Semant =
+structure Semant :> SEMANTICS =
 struct
   type expty = {exp: Translate.exp, ty: T.ty}
   type venv = Env.enventry S.table
   type tenv = T.ty S.table
 
-  (* val transVar : venv * tenv * A.var -> expty *)
-  (* val transExp : venv * tenv -> A.exp -> expty *)
-  (* val transDec  : venv * tenv * A.dec -> {venv : venv, tenv : tenv} *)
-  (* val transDecs : venv * tenv * A.dec list -> {venv : venv, tenv : tenv} *)
-  (* val transTy  :        tenv * A.ty  -> T.ty *)
-
   (* bogus symbol to indicate whether or not we can break out of an expression.
-  Tiger identifiers do not start with *, so we can safely ensure this will never
-  exist in the actual AST. *)
+     Tiger identifiers do not start with *, so we can safely ensure this will never
+     exist in the actual AST. *)
   val breakable = S.symbol("*breakable")
 
   (* Checks if we can break here, and throws an error if we cannot. *)
@@ -143,7 +136,7 @@ struct
             fun verifyArithOperands() =
               (checkInt(tyLeft, pos);
                checkInt(tyRight, pos);
-               {exp=((* TODO: do something with expLeft and expRight here? *)), ty=T.INT})
+               {exp=(), ty=T.INT})
             fun verifyEquatableOperands() =
               (checkEqual(tyLeft, tyRight, pos);
                {exp=(), ty=T.INT})
@@ -369,7 +362,6 @@ struct
         case S.look(tenv', symbol)
           of SOME(ty) => (tyRef := SOME(ty); nil)
            | NONE => (ErrorMsg.error 0 "referenced type not present in type environment"; nil) (* NOTE: should never occur *)
-           | _ => nil
 
       fun verifyUnique({name, ty, pos}, visited) =
         if contains(visited, name)
@@ -442,8 +434,7 @@ struct
           end
     in
       f ({ve=venv, te=tenv}, decs)
-      (* foldl f {ve=venv, te=tenv} decs*)
     end
 
-  fun transProg exp = (transExp(Env.base_venv, Env.base_tenv) exp)
+  fun transProg exp = (transExp(Env.base_venv, Env.base_tenv); ())
 end
