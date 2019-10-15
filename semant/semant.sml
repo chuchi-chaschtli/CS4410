@@ -92,6 +92,8 @@ struct
   (* Checks if two types are equal, and throws an error if they are not *)
   fun checkEqual(ty1, ty2, pos) =
     if ty1 = ty2
+      orelse (T.toString(ty1) = "RECORD" andalso ty2 = T.NIL)
+      orelse (ty1 = T.NIL andalso T.toString(ty2) = "RECORD")
     then ()
     else ErrorMsg.error pos ("expression must be two comparable types, found: " ^ T.toString(ty1) ^ ", " ^ T.toString(ty2))
 
@@ -228,10 +230,8 @@ struct
                 val {exp=exprExp, ty=exprTy} = trexp exp
                 val {exp=varExp, ty=varTy} = trvar var
               in
-                if exprTy = varTy
-                then {exp = (), ty = T.UNIT}
-                else (ErrorMsg.error pos "mismatching types within assignment";
-                      {exp = (), ty = T.UNIT})
+                (checkEqual(exprTy, varTy, pos);
+                 {exp = (), ty = T.UNIT})
               end
           else (ErrorMsg.error pos "cannot re-assign to var"; {exp = (), ty = T.UNIT})
         | trexp (A.IfExp{test, then', else', pos}) =
@@ -345,12 +345,15 @@ struct
              in (checkEqual(tyInit, tyResult, pos);
                  {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = tyResult})})
              end
-           | NONE => {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = tyInit})})
+           | NONE => (if (tyInit = T.NIL)
+                      then (ErrorMsg.error pos "Cannot assign expression to nil")
+                    	else ();
+                      {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = tyInit})}))
       end
     | transDec (venv, tenv, A.TypeDec(typeDecls)) =
       let
         val noneRefs = ref nil
-        fun makeHeaderTenv ({name, ty, pos}, tenv) = 
+        fun makeHeaderTenv ({name, ty, pos}, tenv) =
           (noneRefs := T.NAME(name, ref NONE) :: !noneRefs;
            S.enter(tenv, name, hd(!noneRefs)))
         val dummyTenv = foldl makeHeaderTenv tenv typeDecls
