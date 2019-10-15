@@ -4,3 +4,5 @@ Team: Anand Kumar (akumar) + David Reed (reedda)
 
 See `README.md` under child folders for more granular information:
 - `lexer/`
+- `parser/`
+- `semant`
