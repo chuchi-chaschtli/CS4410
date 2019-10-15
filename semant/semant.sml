@@ -350,79 +350,86 @@ struct
                     	else ();
                       {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{ty = tyInit})}))
       end
-    | transDec (venv, tenv, A.TypeDec(typeDecls)) =
-      let
-        val noneRefs = ref nil
-        fun makeHeaderTenv ({name, ty, pos}, tenv) =
-          (noneRefs := T.NAME(name, ref NONE) :: !noneRefs;
-           S.enter(tenv, name, hd(!noneRefs)))
-        val dummyTenv = foldl makeHeaderTenv tenv typeDecls
-        fun transTyDec ({name, ty, pos}, {venv, tenv}) = {venv=venv, tenv=S.enter(tenv, name, transTy(tenv, ty))}
-        val {venv=venv', tenv=tenv'} = foldl transTyDec {venv=venv, tenv=dummyTenv} typeDecls
+    | transDec (venv, tenv, A.TypeDec(typeDecls)) = transTypeDecls(venv, tenv, typeDecls)
+    | transDec (venv, tenv, A.FunctionDec(functionDecls)) = transFuncDecls(venv, tenv, functionDecls)
 
-        fun rewriteRef(T.NAME(symbol, tyRef)) =
-          case S.look(tenv', symbol)
-            of SOME(ty) => (tyRef := SOME(ty); nil)
-             | NONE => (ErrorMsg.error 0 "referenced type not present in type environment"; nil) (* NOTE: should never happen *)
+  and transTypeDecls (venv, tenv, typeDecls) =
+    let
+      val noneRefs = ref nil
 
-        fun verifyUnique({name, ty, pos}, visited) =
-          if contains(visited, name)
-          then (ErrorMsg.error pos "multiple matching type names in type declaration sequence"; visited)
-          else name::visited
+      fun makeHeaderTenv ({name, ty, pos}, tenv) =
+        (noneRefs := T.NAME(name, ref NONE) :: !noneRefs;
+         S.enter(tenv, name, hd(!noneRefs)))
+      val dummyTenv = foldl makeHeaderTenv tenv typeDecls
 
-        fun verifyAcyclicSymbols({name, ty, pos}, visited) =
-          (case S.look(tenv', name) of
-            SOME (T.NAME(symbol, _)) => if contains(visited, symbol)
-                                        then (ErrorMsg.error pos "cyclic mutually recursive types found"; visited)
-                                        else symbol::visited
-           | _ => visited)
+      fun transTyDec ({name, ty, pos}, {venv, tenv}) = {venv=venv, tenv=S.enter(tenv, name, transTy(tenv, ty))}
+      val {venv=venv', tenv=tenv'} = foldl transTyDec {venv=venv, tenv=dummyTenv} typeDecls
 
-      in
-        foldl verifyUnique nil typeDecls;
-        foldl verifyAcyclicSymbols nil typeDecls;
-        map rewriteRef (!noneRefs);
-        {venv=venv', tenv=tenv'}
-      end
-    | transDec (venv, tenv, A.FunctionDec(functionDecls)) =
-      let
-        fun transparam{name, escape, typ, pos} = case S.look(tenv, typ) of SOME t => {name=name, ty=t}
+      fun rewriteRef(T.NAME(symbol, tyRef)) =
+        case S.look(tenv', symbol)
+          of SOME(ty) => (tyRef := SOME(ty); nil)
+           | NONE => (ErrorMsg.error 0 "referenced type not present in type environment"; nil) (* NOTE: should never occur *)
+           | _ => nil
 
-        fun verifyUnique({name, params, body, pos, result}, visited) =
-          if contains(visited, name)
-          then (ErrorMsg.error pos "multiple matching function names in function declaration sequence"; visited)
-          else name::visited
+      fun verifyUnique({name, ty, pos}, visited) =
+        if contains(visited, name)
+        then (ErrorMsg.error pos "multiple matching type names in type declaration sequence"; visited)
+        else name::visited
 
-        fun verifyReturnType({name, params, body, pos, result}, {venv, tenv}) =
-          let val params' = map transparam params
-              fun enterparam ({name, ty}, venv) = S.enter(venv, name, Env.VarEntry{ty=ty})
-          in
-            (case result
-              of SOME(returnTy, returnPos) =>
-                 let val SOME(result_ty) = S.look(tenv, returnTy)
-                     val venv' = S.enter(venv, name, Env.FunEntry{formals = map #ty params', result = result_ty})
-                     val venv'' = foldl enterparam venv' params'
-                     val {exp=funExp, ty=funTy} = transExp(venv'', tenv) body;
-                 in
-                    checkEqual(funTy, result_ty, returnPos);
-                    {venv=venv', tenv=tenv}
-                 end
-               | NONE =>
-                 let val venv' = S.enter(venv, name, Env.FunEntry{formals = map #ty params', result = T.UNIT})
-                     val venv'' = foldl enterparam venv' params'
-                     val {exp=funExp, ty=funTy} = transExp(venv'', tenv) body;
-                 in
-                    checkEqual(funTy, T.UNIT, pos);
-                    {venv=venv', tenv=tenv}
-                 end)
-          end
+      fun verifyAcyclicSymbols({name, ty, pos}, visited) =
+        (case S.look(tenv', name) of
+          SOME (T.NAME(symbol, _)) => if contains(visited, symbol)
+                                      then (ErrorMsg.error pos "cyclic mutually recursive types found"; visited)
+                                      else symbol::visited
+         | _ => visited)
+    in
+      foldl verifyUnique nil typeDecls;
+      foldl verifyAcyclicSymbols nil typeDecls;
+      map rewriteRef (!noneRefs);
+      {venv=venv', tenv=tenv'}
+    end
 
-          fun dummyVenv ({name, params, body, pos, result}, venv) =
-                  S.enter(venv, name, Env.FunEntry{formals= map #ty (map transparam params), result=T.UNIT})
-          val venv' = foldl dummyVenv venv functionDecls
-      in
-        foldl verifyUnique nil functionDecls;
-        foldl verifyReturnType {venv=venv', tenv=tenv} functionDecls
-      end
+  and transFuncDecls (venv, tenv, functionDecls) =
+    let
+      fun transparam{name, escape, typ, pos} = case S.look(tenv, typ) of SOME t => {name=name, ty=t}
+
+      fun verifyUnique({name, params, body, pos, result}, visited) =
+        if contains(visited, name)
+        then (ErrorMsg.error pos "multiple matching function names in function declaration sequence"; visited)
+        else name::visited
+
+      fun verifyReturnType({name, params, body, pos, result}, {venv, tenv}) =
+        let val params' = map transparam params
+            fun enterparam ({name, ty}, venv) = S.enter(venv, name, Env.VarEntry{ty=ty})
+        in
+          (case result
+            of SOME(returnTy, returnPos) =>
+               let val SOME(result_ty) = S.look(tenv, returnTy)
+                   val venv' = S.enter(venv, name, Env.FunEntry{formals = map #ty params', result = result_ty})
+                   val venv'' = foldl enterparam venv' params'
+                   val {exp=funExp, ty=funTy} = transExp(venv'', tenv) body;
+               in
+                  checkEqual(funTy, result_ty, returnPos);
+                  {venv=venv', tenv=tenv}
+               end
+             | NONE =>
+               let val venv' = S.enter(venv, name, Env.FunEntry{formals = map #ty params', result = T.UNIT})
+                   val venv'' = foldl enterparam venv' params'
+                   val {exp=funExp, ty=funTy} = transExp(venv'', tenv) body;
+               in
+                  checkEqual(funTy, T.UNIT, pos);
+                  {venv=venv', tenv=tenv}
+               end)
+        end
+
+        fun dummyVenv ({name, params, body, pos, result}, venv) =
+                S.enter(venv, name, Env.FunEntry{formals= map #ty (map transparam params), result=T.UNIT})
+        val venv' = foldl dummyVenv venv functionDecls
+    in
+      foldl verifyUnique nil functionDecls;
+      foldl verifyReturnType {venv=venv', tenv=tenv} functionDecls
+    end
+
 
   and transDecs (venv, tenv, decs) =
     let
