@@ -238,10 +238,8 @@ struct
                 let
                   val {exp=expElse, ty=tyElse} = trexp expr
                 in
-                  if tyThen = tyElse
-                  then {exp = (), ty = tyThen}
-                  else (ErrorMsg.error pos ("then type " ^ T.toString(tyThen) ^ " does not match else type " ^ T.toString(tyElse));
-                       {exp = (), ty = tyThen})
+                  (checkEqual(tyThen, tyElse, pos);
+                   {exp = (), ty = tyThen})
                 end
               | NONE => (checkUnit(tyThen, pos);
                          {exp = (), ty = T.UNIT}))
