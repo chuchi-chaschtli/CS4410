@@ -172,14 +172,17 @@ struct
           (case S.look(venv, func)
               of SOME(Env.FunEntry{formals, result}) =>
                 (let fun verifyFormals(firstFormal::restFormals, firstArg::restArgs) =
-                          if (firstFormal = actual_ty(#ty (trexp firstArg)))
-                          then verifyFormals(restFormals, restArgs)
-                          else ErrorMsg.error pos "type mismatch in function params"
-                      | verifyFormals(nil, nil) = ()
-                      | verifyFormals(_, _) = ErrorMsg.error pos "function formals length differs from arg length"
-                in
-                  verifyFormals(formals, args)
-                end;
+                         let val firstArgExp = trexp firstArg
+                         in
+                            if (firstFormal = actual_ty(#ty (trexp firstArg)))
+                            then verifyFormals(restFormals, restArgs)
+                            else ErrorMsg.error pos ("type mismatch in function params: " ^ T.toString(firstFormal) ^ " and " ^ T.toString(#ty firstArgExp))
+                         end
+                       | verifyFormals(nil, nil) = ()
+                       | verifyFormals(_, _) = ErrorMsg.error pos "function formals length differs from arg length"
+                 in
+                   verifyFormals(formals, args)
+                 end;
                 {exp = (), ty = result})
               | SOME _ => (ErrorMsg.error pos "environment entry is not a fun entry";
                            {exp = (), ty = T.UNIT})
