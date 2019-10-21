@@ -1,0 +1,13 @@
+structure FindEscape: sig val findEscape: Absyn.exp -> unit
+		      end =
+
+struct
+type depth = int
+type escEnv = (depth * bool ref) Symbol.table
+
+fun traverseVar(env, d, s: Absyn.var) : unit = ...
+and traverseExp(env, d, s: Absyn.exp) : unit = ...
+and traverseDecs(env, d, s: Absyn.dec list) : escEnv = ...
+fun findEscape(prog: Absyn.exp) : unit = ...
+
+end
