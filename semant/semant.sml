@@ -400,67 +400,71 @@ struct
   (* TODO TODO TODO Most of our Translate usage should come from here *)
   and transFuncDecls (venv, tenv, level, {name, params, body, pos, result}::functionDecls) =
     let
-      val newlabel = Temp.namedlabel(Symbol.name(name))
+      val newlabel = Temp.newlabel()
       val escapeList = map (fn {name, escape, typ, pos} => !escape) params
       val newlevel = Translate.newLevel{parent=level, name=newlabel, formals=escapeList}
 
-      fun transparam{name, escape, typ, pos} = case S.look(tenv, typ) of SOME t => {name=name, escape=(!escape), ty=t}
+       fun transparam{name, escape, typ, pos} = case S.look(tenv, typ) of SOME t => {name=name, escape=(!escape), ty=t}
+       fun verifyReturnType({venv, tenv}) =
+       let
+         val params' = map transparam params
+         fun enterparam ({name, escape, ty}, venv) = let
+                                               (* TODO this is probably wrong *)
+                                               val access = Translate.allocLocal newlevel escape
+                                             in
+                                               S.enter(venv, name, Env.VarEntry{access=access, ty=ty})
+                                             end
+         in
+         (case result
+           of SOME(returnTy, returnPos) => let
+                                             val SOME(result_ty) = S.look(tenv, returnTy)
+                                             (* TODO edit funEntry based on escapes? *)
+                                             val funEntry = Env.FunEntry{level = newlevel,
+                                                                         label = newlabel,
+                                                                         formals = map #ty params', result = result_ty}
+                                             val venv' = S.enter(venv, name, funEntry)
+                                             val venv'' = foldl enterparam venv' params' (* TODO need to incorporate level here *)
+                                             val {exp=funExp, ty=funTy} = transExp(venv'', tenv, newlevel) body;
+                                           in
+                                             checkEqualOrThrow(funTy, result_ty, returnPos);
+                                             {venv=venv', tenv=tenv}
+                                           end
+            | NONE => let
+                        (* TODO edit funEntry *)
+                        val funEntry = Env.FunEntry{level = newlevel,
+                                                    label = newlabel,
+                                                    formals = map #ty params', result = T.UNIT}
+                        val venv' = S.enter(venv, name, funEntry)
+                        val venv'' = foldl enterparam venv' params'
+                        val {exp=funExp, ty=funTy} = transExp(venv'', tenv, newlevel) body; (* TODO *)
+                      in
+                        checkEqualOrThrow(funTy, T.UNIT, pos);
+                        {venv=venv', tenv=tenv}
+                      end)
+         end
 
-      fun verifyReturnType({venv, tenv}) =
-        let
-          val paramsAndFormals = ListPair.zip(params, Translate.formals newlevel)
-          val params' = map (fn (param, access) =>
-                              let
-                                val {name=name, escape=escape, ty=ty} = transparam param
-                              in
-                                 {name=name,ty=ty,access=access}
-                              end)
-                            paramsAndFormals
-          fun enterparam ({name, ty, access}, venv) = S.enter(venv, name, Env.VarEntry{access=access, ty=ty})
-          val resultTy =
-            (case result
-              of SOME(returnTy, returnPos) =>
-                let val result_ty = S.look(tenv, returnTy)
-                in
-                  (case result_ty
-                    of SOME t => t
-                     | NONE => (ErrorMsg.error returnPos "type not found"; T.UNIT))
-                end
-               | NONE => T.UNIT)
+       fun verifyUnique({name, params, body, pos, result}, visited) =
+         if contains(visited, name)
+         then (ErrorMsg.error pos "multiple matching function names in function declaration sequence"; visited)
+         else name::visited
 
-          val funEntry = Env.FunEntry{level = newlevel,
-                                      label = newlabel,
-                                      formals = map #ty params', result = resultTy}
-          val venv' = S.enter(venv, name, funEntry)
-          val venv'' = foldl enterparam venv' params'
-          val {exp=funExp, ty=funTy} = transExp(venv'', tenv, newlevel) body; (* TODO *)
-        in
-          (checkEqualOrThrow(funTy, resultTy, pos);
-           {venv=venv', tenv=tenv})
-        end
-
-        fun verifyUnique({name, params, body, pos, result}, visited) =
-          if contains(visited, name)
-          then (ErrorMsg.error pos "multiple matching function names in function declaration sequence"; visited)
-          else name::visited
-
-        fun dummyVenv ({name, params, body, pos, result}, venv) =
-                let
-                  (* TODO *)
-                  val funEntry = Env.FunEntry{level = level,
-                                              label = Temp.namedlabel(Symbol.name(name)),
-                                              formals= map #ty (map transparam params), result=T.UNIT}
-                in
-                  S.enter(venv, name, funEntry)
-                end
-        val venv' = foldl dummyVenv venv functionDecls
-        val {venv=venv'', tenv=tenv} = verifyReturnType{venv=venv', tenv=tenv}
-    in
-      foldl verifyUnique nil functionDecls;
-      if functionDecls = nil
-      then {venv=venv'', tenv=tenv}
-      else transFuncDecls(venv'', tenv, level, functionDecls)
-    end
+       fun dummyVenv ({name, params, body, pos, result}, venv) =
+               let
+                 (* TODO *)
+                 val funEntry = Env.FunEntry{level = level,
+                                             label = Temp.namedlabel(Symbol.name(name)),
+                                             formals= map #ty (map transparam params), result=T.UNIT}
+               in
+                 S.enter(venv, name, funEntry)
+               end
+       val venv' = foldl dummyVenv venv functionDecls
+       val {venv=venv'', tenv=tenv} = verifyReturnType{venv=venv', tenv=tenv}
+     in
+       foldl verifyUnique nil functionDecls;
+       if functionDecls = nil
+       then {venv=venv'', tenv=tenv}
+       else transFuncDecls(venv'', tenv, level, functionDecls)
+     end
 
   (* TODO All of these declarations occur on the same symantic level *)
   and transDecs (venv, tenv, level, decs) =
@@ -479,9 +483,9 @@ struct
   fun transProg exp =
     let
       val mainLevel = Translate.newLevel{parent=Translate.outermost, name=Temp.newlabel(), formals=[]}
+      val _ = FindEscape.findEscape(exp)
+      val {exp, ty} = transExp(Env.base_venv, Env.base_tenv, mainLevel) exp
     in
-      (FindEscape.findEscape(exp);
-       transExp(Env.base_venv, Env.base_tenv, mainLevel) exp;
-       ())
+      exp
     end
 end
