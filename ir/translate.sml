@@ -22,16 +22,14 @@ struct
   val outermost = GLOBAL
 
   fun newLevel {parent=parent, name=name, formals=formals} =
-    (* TODO why do we append true here? *)
-    LEVEL{frame=F.newFrame({name=name, formals=[true]@formals}), parent=parent}
+    LEVEL{frame=F.newFrame({name=name, formals=true::formals}), parent=parent}
 
   fun formals level =
     (case level
       of LEVEL {frame, parent} => let
-                                    fun wrap (lvl) = (fn f_access => (lvl, f_access))
+                                    val formals = F.formals frame
                                   in
-                                    (* TODO Need to convert to match this map signature *)
-                                    nil (* map( wrap(parent), F.formals(frame) ) *)
+                                    map (fn access => (level, access)) formals
                                   end
        | GLOBAL => nil)
 
