@@ -399,31 +399,27 @@ struct
     end
 
   (* TODO TODO TODO Most of our Translate usage should come from here *)
-  and transFuncDecls (venv, tenv, level, functionDecls) =
+  and transFuncDecls (venv, tenv, level, {name, params, body, pos, result}::functionDecls) =
     let
+      val newlabel = Temp.namedlabel(Symbol.name(name))
       fun newLevel(name, params) = let val escapeList = map (fn {name, escape, typ, pos} => !escape) params
                                    in
-                                     Translate.newLevel{parent=level, name=Temp.namedlabel(name), formals=escapeList}
+                                     Translate.newLevel{parent=level, name=newlabel, formals=escapeList}
                                    end
 
-      fun transparam{name, escape, typ, pos} = case S.look(tenv, typ) of SOME t => {name=name, escape=escape, ty=t}
+      val newlevel = newLevel(name, params)
 
-      fun verifyUnique({name, params, body, pos, result}, visited) =
-        if contains(visited, name)
-        then (ErrorMsg.error pos "multiple matching function names in function declaration sequence"; visited)
-        else name::visited
+      fun transparam{name, escape, typ, pos} = case S.look(tenv, typ) of SOME t => {name=name, escape=(!escape), ty=t}
 
-      fun verifyReturnType({name, params, body, pos, result}, {venv, tenv}) =
+      fun verifyReturnType({venv, tenv}) =
         let 
           val params' = map transparam params
           fun enterparam ({name, escape, ty}, venv) = let
-                                                (* TODO this is wrong -- should use func level below *)
-                                                val access = Translate.allocLocal level escape
+                                                (* TODO this is probably wrong *)
+                                                val access = Translate.allocLocal newlevel escape
                                               in
                                                 S.enter(venv, name, Env.VarEntry{access=access, ty=ty})
                                               end
-          val newlevel = newLevel(name, params)
-          val newlabel = Temp.namedlabel(name)
         in
           (case result
             of SOME(returnTy, returnPos) => let
@@ -453,19 +449,27 @@ struct
                        end)
         end
 
+        fun verifyUnique({name, params, body, pos, result}, visited) =
+          if contains(visited, name)
+          then (ErrorMsg.error pos "multiple matching function names in function declaration sequence"; visited)
+          else name::visited
+
         fun dummyVenv ({name, params, body, pos, result}, venv) =
                 let
                   (* TODO *)
                   val funEntry = Env.FunEntry{level = level,
-                                              label = Temp.namedlabel(name),
+                                              label = Temp.namedlabel(Symbol.name(name)),
                                               formals= map #ty (map transparam params), result=T.UNIT}
                 in
                   S.enter(venv, name, funEntry)
                 end
         val venv' = foldl dummyVenv venv functionDecls
+        val {venv=venv'', tenv=tenv} = verifyReturnType{venv=venv', tenv=tenv}
     in
       foldl verifyUnique nil functionDecls;
-      foldl verifyReturnType {venv=venv', tenv=tenv} functionDecls
+      if functionDecls = nil
+      then {venv=venv'', tenv=tenv}
+      else transFuncDecls(venv'', tenv, level, functionDecls)
     end
 
   (* TODO All of these declarations occur on the same symantic level *)
@@ -483,7 +487,11 @@ struct
     end
 
   fun transProg exp = 
-    (FindEscape.findEscape(exp);
-     transExp(Env.base_venv, Env.base_tenv, Translate.outermost) exp;
-     ())
+    let
+      val mainLevel = Translate.newLevel{parent=Translate.outermost, name=Temp.newlabel(), formals=[]}
+    in
+      (FindEscape.findEscape(exp);
+       transExp(Env.base_venv, Env.base_tenv, mainLevel) exp;
+       ())
+    end
 end
