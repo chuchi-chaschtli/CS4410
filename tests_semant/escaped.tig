@@ -1,0 +1,8 @@
+/* Test that a function with more than 4 parameters gets processed correctly */
+let
+  var x := 3
+  function f(a:int):int =
+    a + x
+in
+  f(1)
+end

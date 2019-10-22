@@ -1,0 +1,7 @@
+/* Test that a function with more than 4 parameters gets processed correctly */
+let
+  function f(a:int, b:int, c:string, d:int, e:int):int=
+    (a + b + d + e)
+in
+  f(1, 2, "three", 4, 5)
+end
