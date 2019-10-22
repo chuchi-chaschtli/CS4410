@@ -182,7 +182,6 @@ struct
           (case S.look(venv, func)
               of SOME(Env.FunEntry{level, label, formals, result}) =>
                 (let fun verifyFormals(firstFormal::restFormals, firstArg::restArgs) =
-                         (* TODO do we need to pass in level here?*)
                          let val firstArgExp = trexp firstArg
                          in
                             if checkEqual(firstFormal, actual_ty(#ty firstArgExp), pos)

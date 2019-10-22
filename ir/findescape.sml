@@ -8,16 +8,16 @@ struct
   val emptyEnv = Symbol.empty
 
     (* For a simple variable, check whether the depths match *)
-  fun traverseVar(env, d, Absyn.SimpleVar(id, pos)) = 
+  fun traverseVar(env, d, Absyn.SimpleVar(id, pos)) =
         (case Symbol.look(env, id)
          of SOME(depth, escape) => (if not(d = depth)
                                     then (escape := true; ())
                                     else ())
-          | _ => ()) (* TODO error? *)
+          | _ => ()) (* We don't need to error here; undeclared variables are caught via typechecker *)
     (* In field, we only need to check var (TODO: verify?) *)
     | traverseVar(env, d, Absyn.FieldVar(var, id, pos)) = (traverseVar(env, d, var))
     (* In subscript, we can recursively traverse exp and check against var *)
-    | traverseVar(env, d, Absyn.SubscriptVar(var, exp, pos)) = 
+    | traverseVar(env, d, Absyn.SubscriptVar(var, exp, pos)) =
         (traverseVar(env, d, var);
          traverseExp(env, d) exp)
 
@@ -27,7 +27,7 @@ struct
         | trexp(Absyn.IntExp i) = ()
         | trexp(Absyn.StringExp(str, pos)) = ()
         | trexp(Absyn.BreakExp pos) = ()
-        | trexp(Absyn.VarExp(var)) = (traverseVar(env, d, var)) 
+        | trexp(Absyn.VarExp(var)) = (traverseVar(env, d, var))
         | trexp(Absyn.CallExp{func, args, pos}) = (map trexp args; ())
         | trexp(Absyn.OpExp{left, oper, right, pos}) =
             (trexp left;
@@ -55,7 +55,7 @@ struct
              trexp hi;
              let
                val env'=Symbol.enter(env, var, (d, escape))
-             in 
+             in
                traverseExp(env', d) body
              end)
         | trexp(Absyn.LetExp{decs, body, pos}) =
@@ -71,11 +71,11 @@ struct
         trexp
       end
 
-  and traverseDecs(env, d, decs: Absyn.dec list) : escEnv = 
+  and traverseDecs(env, d, decs: Absyn.dec list) : escEnv =
     let
       fun f(env, d, dec::nil) = traverseDec(env, d, dec)
         | f(env, d, dec::decs) =
-          let 
+          let
             val env' = traverseDec(env, d, dec)
           in
             f(env', d, decs)

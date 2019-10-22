@@ -14,19 +14,24 @@ struct
   type frame = {name: Temp.label, frameOffset: int ref, formals: access list}
 
   val wordLenBytes = 4
+  val numDedicatedArgRegisters = 4
 
   fun newFrame {name, formals} =
     let
+      val registersTaken = ref 0
       val paramIndex = ref 1
       fun getParamOffset() =
         let val tmp = !paramIndex
-        in 
+        in
           paramIndex := tmp+1;
           tmp * wordLenBytes
         end
-      val formals' = map (fn escape => if escape
-                                       then InFrame (getParamOffset())
-                                       else InReg   (Temp.newtemp())) formals
+      fun allocateFormal escape =
+        if escape orelse !registersTaken >= numDedicatedArgRegisters
+        then InFrame (getParamOffset())
+        else (registersTaken := !registersTaken + 1;
+              InReg   (Temp.newtemp()))
+      val formals' = map allocateFormal formals
     in
        (* TODO I'm not sure if `ref 0` is what we need here,
           however I'm not sure the alternative.
@@ -36,13 +41,12 @@ struct
 
   fun allocLocal (frame:frame) escape =
     let
-      val {name=name, frameOffset=offset, formals=formals} = frame (* TODO: Do we need name/formals? *)
-      val updatedOffset = !offset - wordLenBytes
+      val offset = (#frameOffset frame)
     in
-      offset := updatedOffset;
+      offset := !offset - wordLenBytes;
       if escape
       then InReg   (Temp.newtemp())
-      else InFrame (updatedOffset)
+      else InFrame (!offset)
     end
 
   fun name (frame:frame) = (#name frame)
