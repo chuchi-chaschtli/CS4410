@@ -52,11 +52,11 @@ sig
   type expty
   type venv
   type tenv
-  val transTy   :        tenv * A.ty  -> T.ty
-  val transDec  : venv * tenv * A.dec -> {venv : venv, tenv : tenv}
-  val transDecs : venv * tenv * A.dec list -> {venv : venv, tenv : tenv}
-  val transExp  : venv * tenv -> A.exp -> expty
-  val transProg :                A.exp -> unit
+  val transTy   :        tenv                   * A.ty       -> T.ty
+  val transDec  : venv * tenv * Translate.level * A.dec      -> {venv : venv, tenv : tenv}
+  val transDecs : venv * tenv * Translate.level * A.dec list -> {venv : venv, tenv : tenv}
+  val transExp  : venv * tenv * Translate.level -> A.exp -> expty
+  val transProg : A.exp -> unit
 end
 
 
@@ -138,7 +138,7 @@ struct
                 fieldList,
               ref ())
 
-  fun transExp(venv, tenv) =
+  fun transExp(venv, tenv, level) =
     let
       fun trexp (A.OpExp{left, oper, right, pos}) =
           let
@@ -170,10 +170,9 @@ struct
                | A.NeqOp    => verifyEquatableOperands()
           end
         | trexp (A.LetExp{decs, body, pos}) =
-            let val {venv = venv', tenv = tenv'} =
-                transDecs(venv, tenv, decs)
+            let val {venv = venv', tenv = tenv'} = transDecs(venv, tenv, level, decs)
             in
-              transExp(venv', tenv') body
+              transExp(venv', tenv', level) body (* TODO *)
             end
         | trexp (A.VarExp(var)) = trvar(var)
         | trexp (A.NilExp) = {exp = (), ty = T.NIL}
@@ -183,6 +182,7 @@ struct
           (case S.look(venv, func)
               of SOME(Env.FunEntry{level, label, formals, result}) =>
                 (let fun verifyFormals(firstFormal::restFormals, firstArg::restArgs) =
+                         (* TODO do we need to pass in level here?*)
                          let val firstArgExp = trexp firstArg
                          in
                             if checkEqual(firstFormal, actual_ty(#ty firstArgExp), pos)
@@ -262,7 +262,7 @@ struct
           let
             val {exp=expTest, ty=tyTest} = trexp test
             val tenvUpdated = S.enter(tenv, breakable, T.UNIT)
-            val {exp=expBody, ty=tyBody} = (transExp(venv, tenvUpdated) body)
+            val {exp=expBody, ty=tyBody} = (transExp(venv, tenvUpdated, level) body) (* TODO *)
           in
             checkInt(tyTest, pos);
             checkUnit(tyBody, pos);
@@ -273,10 +273,10 @@ struct
             val {exp=loExp, ty=tyLo} = trexp lo
             val {exp=hiExp, ty=tyHi} = trexp hi
             (* TODO change access values based on escape *)
-            val access = Translate.allocLocal Translate.outermost (!escape)
+            val access = Translate.allocLocal level (!escape)
             val venvUpdated = S.enter(venv, var, Env.ReadVarEntry{access=access, ty=T.INT})
             val tenvUpdated = S.enter(tenv, breakable, T.UNIT)
-            val {exp=updatedExp, ty=updatedTy} = (transExp(venvUpdated, tenvUpdated) body)
+            val {exp=updatedExp, ty=updatedTy} = (transExp(venvUpdated, tenvUpdated, level) body) (* TODO *)
           in
             checkInt(tyLo, pos);
             checkInt(tyHi, pos);
@@ -343,11 +343,10 @@ struct
       trexp
     end
 
-  and transDec (venv, tenv, A.VarDec{name, escape, typ, init, pos}) =
+  and transDec (venv, tenv, level, A.VarDec{name, escape, typ, init, pos}) =
       let
-        val {exp, ty=tyInit} = transExp(venv, tenv) init
-        (* TODO change access values based on escape *)
-        val access = Translate.allocLocal Translate.outermost (!escape)
+        val {exp, ty=tyInit} = transExp(venv, tenv, level) init
+        val access = Translate.allocLocal level (!escape) (* TODO *)
       in
         (case typ
           of SOME ty =>
@@ -361,8 +360,8 @@ struct
                       else ();
                       {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{access = access, ty = tyInit})}))
       end
-    | transDec (venv, tenv, A.TypeDec(typeDecls)) = transTypeDecls(venv, tenv, typeDecls)
-    | transDec (venv, tenv, A.FunctionDec(functionDecls)) = transFuncDecls(venv, tenv, functionDecls)
+    | transDec (venv, tenv, level, A.TypeDec(typeDecls)) = transTypeDecls(venv, tenv, typeDecls)
+    | transDec (venv, tenv, level, A.FunctionDec(functionDecls)) = transFuncDecls(venv, tenv, level, functionDecls)
 
   and transTypeDecls (venv, tenv, typeDecls) =
     let
@@ -399,9 +398,15 @@ struct
       {venv=venv', tenv=tenv'}
     end
 
-  and transFuncDecls (venv, tenv, functionDecls) =
+  (* TODO TODO TODO Most of our Translate usage should come from here *)
+  and transFuncDecls (venv, tenv, level, functionDecls) =
     let
-      fun transparam{name, escape, typ, pos} = case S.look(tenv, typ) of SOME t => {name=name, ty=t}
+      fun newLevel(name, params) = let val escapeList = map (fn {name, escape, typ, pos} => !escape) params
+                                   in
+                                     Translate.newLevel{parent=level, name=Temp.namedlabel(name), formals=escapeList}
+                                   end
+
+      fun transparam{name, escape, typ, pos} = case S.look(tenv, typ) of SOME t => {name=name, escape=escape, ty=t}
 
       fun verifyUnique({name, params, body, pos, result}, visited) =
         if contains(visited, name)
@@ -411,9 +416,9 @@ struct
       fun verifyReturnType({name, params, body, pos, result}, {venv, tenv}) =
         let 
           val params' = map transparam params
-          fun enterparam ({name, ty}, venv) = let
-                                                (* TODO get escape from transparam *)
-                                                val access = Translate.allocLocal Translate.outermost true
+          fun enterparam ({name, escape, ty}, venv) = let
+                                                (* TODO this is wrong -- should use func level below *)
+                                                val access = Translate.allocLocal level escape
                                               in
                                                 S.enter(venv, name, Env.VarEntry{access=access, ty=ty})
                                               end
@@ -422,24 +427,26 @@ struct
             of SOME(returnTy, returnPos) => let
                                               val SOME(result_ty) = S.look(tenv, returnTy)
                                               (* TODO edit funEntry based on escapes? *)
-                                              val funEntry = Env.FunEntry{level = Translate.outermost,
-                                                                          label = Temp.newlabel(),
+                                              val newlevel = newLevel(name, params)
+                                              val funEntry = Env.FunEntry{level = newlevel,
+                                                                          label = Temp.namedlabel(name),
                                                                           formals = map #ty params', result = result_ty}
                                               val venv' = S.enter(venv, name, funEntry)
-                                              val venv'' = foldl enterparam venv' params'
-                                              val {exp=funExp, ty=funTy} = transExp(venv'', tenv) body;
+                                              val venv'' = foldl enterparam venv' params' (* TODO need to incorporate level here *)
+                                              val {exp=funExp, ty=funTy} = transExp(venv'', tenv, newlevel) body;
                                             in
                                               checkEqualOrThrow(funTy, result_ty, returnPos);
                                               {venv=venv', tenv=tenv}
                                             end
              | NONE => let 
                          (* TODO edit funEntry *)
-                         val funEntry = Env.FunEntry{level = Translate.outermost,
-                                                     label = Temp.newlabel(),
+                         val newlevel = newLevel(name, params)
+                         val funEntry = Env.FunEntry{level = newlevel,
+                                                     label = Temp.namedlabel(name),
                                                      formals = map #ty params', result = T.UNIT}
                          val venv' = S.enter(venv, name, funEntry)
                          val venv'' = foldl enterparam venv' params'
-                         val {exp=funExp, ty=funTy} = transExp(venv'', tenv) body;
+                         val {exp=funExp, ty=funTy} = transExp(venv'', tenv, newlevel) body; (* TODO *)
                        in
                          checkEqualOrThrow(funTy, T.UNIT, pos);
                          {venv=venv', tenv=tenv}
@@ -449,8 +456,9 @@ struct
         fun dummyVenv ({name, params, body, pos, result}, venv) =
                 let
                   (* TODO *)
-                  val funEntry = Env.FunEntry{level = Translate.outermost,
-                                              label = Temp.newlabel(),
+                  val newlevel = newLevel(name, params)
+                  val funEntry = Env.FunEntry{level = newlevel,
+                                              label = Temp.namedlabel(name),
                                               formals= map #ty (map transparam params), result=T.UNIT}
                 in
                   S.enter(venv, name, funEntry)
@@ -461,13 +469,13 @@ struct
       foldl verifyReturnType {venv=venv', tenv=tenv} functionDecls
     end
 
-
-  and transDecs (venv, tenv, decs) =
+  (* TODO All of these declarations occur on the same symantic level *)
+  and transDecs (venv, tenv, level, decs) =
     let
       fun f({ve, te}, nil) = (ErrorMsg.error 0 "empty declaration list"; {venv=venv, tenv=tenv}) (* NOTE should never occur *)
-        | f({ve, te}, dec::nil) = transDec(ve, te, dec)
+        | f({ve, te}, dec::nil) = transDec(ve, te, level, dec)
         | f({ve, te}, dec::decs) =
-          let val {venv=venv', tenv=tenv'} = transDec(ve, te, dec)
+          let val {venv=venv', tenv=tenv'} = transDec(ve, te, level, dec)
           in
             f({ve=venv', te=tenv'}, decs)
           end
@@ -477,6 +485,6 @@ struct
 
   fun transProg exp = 
     (FindEscape.findEscape(exp);
-     transExp(Env.base_venv, Env.base_tenv) exp;
+     transExp(Env.base_venv, Env.base_tenv, Translate.outermost) exp;
      ())
 end
