@@ -10,7 +10,7 @@ struct
     (* For a simple variable, check whether the depths match *)
   fun traverseVar(env, d, Absyn.SimpleVar(id, pos)) =
         (case Symbol.look(env, id)
-         of SOME(depth, escape) => (if not(d = depth)
+         of SOME(depth, escape) => (if d > depth
                                     then (escape := true; ())
                                     else ())
           | _ => ()) (* We don't need to error here; undeclared variables are caught via typechecker *)
@@ -85,7 +85,7 @@ struct
         let
           fun traverseFunctionDec(env, d, {name, params, body, pos, result}) =
             let
-              fun traverseField({name, escape, typ, pos}, env) = (escape := false; Symbol.enter(env, name, (d, escape)))
+              fun traverseField({name, escape, typ, pos}, env) = (escape := false; Symbol.enter(env, name, (d+1, escape)))
               val env' = foldl traverseField env params
             in
               traverseExp(env', d+1) body;
