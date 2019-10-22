@@ -17,8 +17,7 @@ translate.sml
 temp.sml
 
 semant.sml
-
-../semant/driver.sml
+driver.sml
 
 $/smlnj-lib.cm
 $/ml-yacc-lib.cm

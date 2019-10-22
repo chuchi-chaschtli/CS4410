@@ -422,9 +422,9 @@ struct
             of SOME(returnTy, returnPos) => let
                                               val SOME(result_ty) = S.look(tenv, returnTy)
                                               (* TODO edit funEntry based on escapes? *)
-                                              (* val funEntry = Env.FunEntry{level = Translate.outermost,
+                                              val funEntry = Env.FunEntry{level = Translate.outermost,
                                                                           label = Temp.newlabel(),
-                                                                          formals = map #ty params', result = result_ty} *)
+                                                                          formals = map #ty params', result = result_ty}
                                               val venv' = S.enter(venv, name, funEntry)
                                               val venv'' = foldl enterparam venv' params'
                                               val {exp=funExp, ty=funTy} = transExp(venv'', tenv) body;
@@ -434,9 +434,9 @@ struct
                                             end
              | NONE => let 
                          (* TODO edit funEntry *)
-                         (* val funEntry = Env.FunEntry{level = Translate.outermost,
+                         val funEntry = Env.FunEntry{level = Translate.outermost,
                                                      label = Temp.newlabel(),
-                                                     formals = map #ty params', result = T.UNIT} *)
+                                                     formals = map #ty params', result = T.UNIT}
                          val venv' = S.enter(venv, name, funEntry)
                          val venv'' = foldl enterparam venv' params'
                          val {exp=funExp, ty=funTy} = transExp(venv'', tenv) body;
