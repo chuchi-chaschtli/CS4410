@@ -41,13 +41,12 @@ struct
 
   fun allocLocal (frame:frame) escape =
     let
-      val {name=name, frameOffset=offset, formals=formals} = frame (* TODO: Do we need name/formals? *)
-      val updatedOffset = !offset - wordLenBytes
+      val offset = (#frameOffset frame)
     in
-      offset := updatedOffset;
+      offset := !offset - wordLenBytes;
       if escape
       then InReg   (Temp.newtemp())
-      else InFrame (updatedOffset)
+      else InFrame (!offset)
     end
 
   fun name (frame:frame) = (#name frame)
