@@ -8,7 +8,7 @@ Group is
 ../parser/parse.sml
 ../parser/tiger.lex
 ../parser/tiger.grm
-
+../parser/prabsyn.sml
 
 mipsframe.sml
 findescape.sml
