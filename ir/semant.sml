@@ -456,8 +456,7 @@ struct
         fun dummyVenv ({name, params, body, pos, result}, venv) =
                 let
                   (* TODO *)
-                  val newlevel = newLevel(name, params)
-                  val funEntry = Env.FunEntry{level = newlevel,
+                  val funEntry = Env.FunEntry{level = level,
                                               label = Temp.namedlabel(name),
                                               formals= map #ty (map transparam params), result=T.UNIT}
                 in
