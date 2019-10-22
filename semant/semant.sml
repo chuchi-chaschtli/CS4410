@@ -421,7 +421,7 @@ struct
               end
              | NONE => T.UNIT)
 
-      fun dummyVenv ({name, params, body, pos, result}, venv) =
+      fun buildBaseVenv ({name, params, body, pos, result}, venv) =
         let
           val escapeList = map (fn {name, escape, typ, pos} => !escape) params
           val newlevel = Translate.newLevel{parent=level, name=Temp.newlabel(), formals=escapeList}
@@ -432,12 +432,12 @@ struct
         in
           S.enter(venv, name, funEntry)
         end
-      val venv' = foldl dummyVenv venv functionDecls
+      val dummyVenv = foldl buildBaseVenv venv functionDecls
 
       fun verifyReturnType({name, params, body, pos, result}, {venv, tenv}) =
         let
           val newlevel =
-            (case S.look(venv', name)
+            (case S.look(dummyVenv, name)
               of SOME (Env.FunEntry{level, label, formals, result}) => level
                  | _ => (ErrorMsg.error pos "function not found"; level)) (* Error should not occur! *)
           val paramsAndFormals = ListPair.zip(params, Translate.formals newlevel)
@@ -450,17 +450,17 @@ struct
                             paramsAndFormals
           fun enterparam ({name, ty, access}, venv) =
             S.enter(venv, name, Env.VarEntry{access=access, ty=ty})
-          val venv'' = S.enter(venv, name, Env.FunEntry{formals = map #ty params', result = resultTy(result), level = newlevel, label = Temp.newlabel()})
-          val venv''' = foldl enterparam venv'' params'
-          val {exp=funExp, ty=funTy} = transExp(venv''', tenv, newlevel) body
+          val venvAndFunEntry = S.enter(venv, name, Env.FunEntry{formals = map #ty params', result = resultTy(result), level = newlevel, label = Temp.newlabel()})
+          val returnVenv = foldl enterparam venvAndFunEntry params'
+          val {exp=funExp, ty=funTy} = transExp(returnVenv, tenv, newlevel) body
         in
           checkEqualOrThrow(funTy, resultTy(result), pos);
-          {venv=venv', tenv=tenv}
+          {venv=venvAndFunEntry, tenv=tenv}
         end
-        
+
     in
       foldl verifyUnique nil functionDecls;
-      foldl verifyReturnType {venv=venv', tenv=tenv} functionDecls
+      foldl verifyReturnType {venv=dummyVenv, tenv=tenv} functionDecls
     end
 
   (* TODO All of these declarations occur on the same symantic level *)
