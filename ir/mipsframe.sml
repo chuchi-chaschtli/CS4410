@@ -28,6 +28,9 @@ struct
                                        then InFrame (getParamOffset())
                                        else InReg   (Temp.newtemp())) formals
     in
+       (* TODO I'm not sure if `ref 0` is what we need here,
+          however I'm not sure the alternative.
+          Global var for frame count? *)
        {name=name, frameOffset=(ref 0), formals=formals'}
     end
 
