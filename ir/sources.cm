@@ -9,14 +9,14 @@ Group is
 ../parser/tiger.lex
 ../parser/tiger.grm
 
-../semant/types.sml
 
 mipsframe.sml
 findescape.sml
 translate.sml
 temp.sml
 
-semant.sml
+../semant/types.sml
+../semant/semant.sml
 driver.sml
 
 $/smlnj-lib.cm
