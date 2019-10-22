@@ -422,14 +422,15 @@ struct
                                               in
                                                 S.enter(venv, name, Env.VarEntry{access=access, ty=ty})
                                               end
+          val newlevel = newLevel(name, params)
+          val newlabel = Temp.namedlabel(name)
         in
           (case result
             of SOME(returnTy, returnPos) => let
                                               val SOME(result_ty) = S.look(tenv, returnTy)
                                               (* TODO edit funEntry based on escapes? *)
-                                              val newlevel = newLevel(name, params)
                                               val funEntry = Env.FunEntry{level = newlevel,
-                                                                          label = Temp.namedlabel(name),
+                                                                          label = newlabel,
                                                                           formals = map #ty params', result = result_ty}
                                               val venv' = S.enter(venv, name, funEntry)
                                               val venv'' = foldl enterparam venv' params' (* TODO need to incorporate level here *)
@@ -440,9 +441,8 @@ struct
                                             end
              | NONE => let 
                          (* TODO edit funEntry *)
-                         val newlevel = newLevel(name, params)
                          val funEntry = Env.FunEntry{level = newlevel,
-                                                     label = Temp.namedlabel(name),
+                                                     label = newlabel,
                                                      formals = map #ty params', result = T.UNIT}
                          val venv' = S.enter(venv, name, funEntry)
                          val venv'' = foldl enterparam venv' params'
