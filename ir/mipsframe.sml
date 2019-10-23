@@ -27,10 +27,10 @@ struct
           tmp * wordLenBytes
         end
       fun allocateFormal escape =
-        if escape orelse !registersTaken >= numDedicatedArgRegisters
-        then InFrame (getParamOffset())
-        else (registersTaken := !registersTaken + 1;
-              InReg   (Temp.newtemp()))
+        (registersTaken := Int.min(!registersTaken + 1, numDedicatedArgRegisters + 1);
+          if escape orelse !registersTaken > numDedicatedArgRegisters
+          then InFrame (getParamOffset())
+          else InReg   (Temp.newtemp()))
       val formals' = map allocateFormal formals
     in
        (* TODO I'm not sure if `ref 0` is what we need here,
