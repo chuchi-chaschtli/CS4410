@@ -480,7 +480,6 @@ struct
       val _ = FindEscape.findEscape(absyn)
       val {exp, ty} = transExp(Env.base_venv, Env.base_tenv, mainLevel) absyn
     in
-      PrintAbsyn.print(TextIO.stdOut, absyn);
       exp
     end
 end
