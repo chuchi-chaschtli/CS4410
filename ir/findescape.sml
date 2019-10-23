@@ -14,7 +14,7 @@ struct
                                         then (escape := true; ())
                                         else ())
           | _ => ()) (* We don't need to error here; undeclared variables are caught via typechecker *)
-    (* In field, we only need to check var (TODO: verify?) *)
+    (* In field, we only need to check var *)
     | traverseVar(env, d, Absyn.FieldVar(var, id, pos)) = (traverseVar(env, d, var))
     (* In subscript, we can recursively traverse exp and check against var *)
     | traverseVar(env, d, Absyn.SubscriptVar(var, exp, pos)) =
@@ -105,7 +105,7 @@ struct
         | traverseDec (env, d, Absyn.TypeDec(typeDecs)) = traverseTypeDecs(env, d, typeDecs)
         | traverseDec (env, d, Absyn.FunctionDec(functionDecs)) = traverseFunctionDecs(env, d, functionDecs)
 
-      and traverseTypeDecs(env, d, typeDecs) = env (* TODO Do we need to traverse types? *)
+      and traverseTypeDecs(env, d, typeDecs) = env
 
     in
       f (env, d, decs)

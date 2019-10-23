@@ -35,7 +35,6 @@ struct
 
   (* Alocate local access for a given level *)
   fun allocLocal level escape =
-    (* TODO Include case analysis for GLOBAL *)
     (case level
       of LEVEL {frame, parent} => let val f_access = F.allocLocal frame escape
                                   in
