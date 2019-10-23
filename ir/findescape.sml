@@ -10,9 +10,9 @@ struct
     (* For a simple variable, check whether the depths match *)
   fun traverseVar(env, d, Absyn.SimpleVar(id, pos)) =
         (case Symbol.look(env, id)
-         of SOME(depth, escape) => (if d > depth
-                                    then (escape := true; ())
-                                    else ())
+         of SOME(def_depth, escape) => (if d > def_depth
+                                        then (escape := true; ())
+                                        else ())
           | _ => ()) (* We don't need to error here; undeclared variables are caught via typechecker *)
     (* In field, we only need to check var (TODO: verify?) *)
     | traverseVar(env, d, Absyn.FieldVar(var, id, pos)) = (traverseVar(env, d, var))
@@ -28,7 +28,7 @@ struct
         | trexp(Absyn.StringExp(str, pos)) = ()
         | trexp(Absyn.BreakExp pos) = ()
         | trexp(Absyn.VarExp(var)) = (traverseVar(env, d, var))
-        | trexp(Absyn.CallExp{func, args, pos}) = (map trexp args; ())
+        | trexp(Absyn.CallExp{func, args, pos}) = (map (traverseExp(env, d+1)) args; ())
         | trexp(Absyn.OpExp{left, oper, right, pos}) =
             (trexp left;
              trexp right)

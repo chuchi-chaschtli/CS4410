@@ -477,12 +477,13 @@ struct
       f ({ve=venv, te=tenv}, decs)
     end
 
-  fun transProg exp =
+  fun transProg absyn =
     let
       val mainLevel = Translate.newLevel{parent=Translate.outermost, name=Temp.newlabel(), formals=[]}
-      val _ = FindEscape.findEscape(exp)
-      val {exp, ty} = transExp(Env.base_venv, Env.base_tenv, mainLevel) exp
+      val _ = FindEscape.findEscape(absyn)
+      val {exp, ty} = transExp(Env.base_venv, Env.base_tenv, mainLevel) absyn
     in
+      PrintAbsyn.print(TextIO.stdOut, absyn);
       exp
     end
 end
