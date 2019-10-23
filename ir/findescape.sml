@@ -73,7 +73,7 @@ struct
 
   and traverseDecs(env, d, decs: Absyn.dec list) : escEnv =
     let
-      fun f(env, d, dec::nil) = traverseDec(env, d, dec)
+      fun f(env, d, nil) = env
         | f(env, d, dec::decs) =
           let
             val env' = traverseDec(env, d, dec)
@@ -93,7 +93,7 @@ struct
             end
         in
           (case functionDecs
-           of dec::nil => traverseFunctionDec(env, d, dec)
+           of nil => env
             | dec::decs => let
                              val env' = traverseFunctionDec(env, d, dec)
                            in
