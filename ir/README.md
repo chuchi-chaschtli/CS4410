@@ -2,13 +2,19 @@
 ## Team: Anand Kumar (akumar) + David Reed (reedda)
 
 ---
+How to Run the Frame Analyzer:
+
+`sml -m sources.cm` **within** the `/ir` directory
+
+Once in the SML REPL, use `Analysis.check "filename"` on any Tiger file.
+
+---
 
 ## References
 
-We found these documents helpful in our implementation of the type-checker.
-* https://www.cs.princeton.edu/~appel/modern/ml/ml-yacc/manual.html
-* http://www.cs.columbia.edu/~sedwards/classes/2002/w4115/tiger.pdf
-* https://cs.nyu.edu/courses/fall13/CSCI-GA.2130-001/tiger-spec.pdf
+We found these documents helpful in our implementation of the frame analyzer.
+* http://sml-family.org/Basis/list-pair.html
+* http://sml-family.org/Basis/integer.html
 * Textbook
 
 ---
@@ -41,6 +47,14 @@ whether or not the previous 4 were register-allocated.
 
 ## Stylistic Choices
 
+### Datatypes & Definitions
+The level datatype can be broken specifically into two cases:
+* What we called `GLOBAL`, which represents the outermost level containing functionality like built-in functions
+* And 'usable' `LEVEL`s, which represent levels in the program execution with a linked parent level.
+
+Our FindEscape definition skeleton is analagous to the skeleton for the Semant file. This highlights that while we
+are preparing to work with the IR, we are still in a state where we are mutating on the AST and producing a tree.
+
 ### Code for Impossible Errors
 
 See previous `README.md` (`semant`). We have not added any superfluous error cases,
@@ -52,4 +66,3 @@ We tested our code against the test cases provided by Appel (`tests/`), alongsid
 our own tests for some special cases in isolation / not covered in the other test
 folder (`tests_semant`).  We also ran the tests we had written for our previous
 type-checker (`tests_type`), to validate that our functionality remains consistent.
-
