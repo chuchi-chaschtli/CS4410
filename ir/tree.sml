@@ -60,6 +60,6 @@ struct
     and relop = EQ | NE | LT | GT | LE | GE
               | ULT | ULE | UGT | UGE
 
-    val notRel = fn relop_a => EQ (* TODO - implement *)
-    val commute = fn relop_a => EQ (* TODO - implement *)
+    val notRel = EQ (* TODO - implement ... I couldn't find any information in the book, maybe it's just the opposite of each case? EQ = NE, etc?*)
+    val commute = EQ (* TODO - implement ... I couldn't find any information in the book, maybe it's just commutation? EQ => EQ, UGT => ULT, etc?*)
 end
