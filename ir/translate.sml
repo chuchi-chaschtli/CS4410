@@ -20,6 +20,8 @@ struct
   type access = level * F.access
 
   val outermost = GLOBAL
+  val zero = Tree.CONST 0
+  val one = Tree.CONST 1
 
   fun newLevel {parent=parent, name=name, formals=formals} =
     LEVEL{frame=F.newFrame({name=name, formals=true::formals}), parent=parent}
@@ -40,4 +42,31 @@ struct
                                   in
                                     (level, f_access)
                                   end)
+
+  fun unEx (Ex e) = e
+    | unEx (Cx genstm) =
+			let
+				val r = Temp.newtemp()
+				val t = Temp.newlabel()
+        val f = Temp.newlabel()
+			in
+				Tree.ESEQ(Tree.SEQ[Tree.MOVE(Tree.TEMPLOC r, one),
+							genstm(t,f),
+							Tree.LABEL f,
+							Tree.MOVE(Tree.TEMPLOC r, zero),
+							Tree.LABEL t],
+						Tree.TEMP r)
+			end
+    | unEx (Nx s) = Tree.ESEQ(s, zero)
+
+  fun unCx (Cx c)    = c
+    | unCx (Ex zero) = (fn(tlabel, flabel) => Tree.JUMP(Tree.NAME(flabel), [flabel]))
+    | unCx (Ex one)  = (fn(tlabel, flabel) => Tree.JUMP(Tree.NAME(tlabel), [tlabel]))
+    | unCx (Ex e)    = (fn(tlabel, flabel) => Tree.CJUMP(Tree.EQ, one, e, tlabel, flabel))
+    | unCx (Nx _)    = (ErrorMsg.error 0 "Cannot process no-result on conditional";
+                        fn (a, b) => Tree.LABEL(Temp.newlabel()))
+
+  fun unNx (Ex e) = Tree.EXP(e)
+    | unNx (Nx n) = n
+    | unNx (c)    = unNx(Ex(unEx(c)))
 end
