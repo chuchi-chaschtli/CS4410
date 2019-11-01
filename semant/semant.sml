@@ -1,14 +1,15 @@
 structure A = Absyn
 structure T = Types
 structure S = Symbol
+structure IR = Translate
 
 signature ENV =
 sig
   type access
 
-  datatype enventry = VarEntry     of {access: Translate.access, ty: T.ty}
-                    | ReadVarEntry of {access: Translate.access, ty: T.ty}
-                    | FunEntry     of {level: Translate.level,
+  datatype enventry = VarEntry     of {access: IR.access, ty: T.ty}
+                    | ReadVarEntry of {access: IR.access, ty: T.ty}
+                    | FunEntry     of {level: IR.level,
                                        label: Temp.label,
                                        formals: T.ty list, result : T.ty}
 
@@ -21,9 +22,9 @@ structure Env :> ENV =
 struct
   type access = unit
 
-  datatype enventry = VarEntry     of {access: Translate.access, ty: T.ty}
-                    | ReadVarEntry of {access: Translate.access, ty: T.ty}
-                    | FunEntry     of {level: Translate.level,
+  datatype enventry = VarEntry     of {access: IR.access, ty: T.ty}
+                    | ReadVarEntry of {access: IR.access, ty: T.ty}
+                    | FunEntry     of {level: IR.level,
                                        label: Temp.label,
                                        formals: T.ty list, result: T.ty}
 
@@ -31,7 +32,7 @@ struct
 
   val base_tenv = foldl populateEnvironment S.empty [("string", T.STRING), ("int", T.INT)]
 
-  fun globalFunEntry (formals, result) = FunEntry{level = Translate.outermost,
+  fun globalFunEntry (formals, result) = FunEntry{level = IR.outermost,
                                                   label = Temp.newlabel(),
                                                   formals = formals, result = result}
 
@@ -52,17 +53,17 @@ sig
   type expty
   type venv
   type tenv
-  val transTy   :        tenv                   * A.ty       -> T.ty
-  val transDec  : venv * tenv * Translate.level * A.dec      -> {venv : venv, tenv : tenv}
-  val transDecs : venv * tenv * Translate.level * A.dec list -> {venv : venv, tenv : tenv}
-  val transExp  : venv * tenv * Translate.level -> A.exp -> expty
+  val transTy   :        tenv            * A.ty       -> T.ty
+  val transDec  : venv * tenv * IR.level * A.dec      -> {venv : venv, tenv : tenv}
+  val transDecs : venv * tenv * IR.level * A.dec list -> {venv : venv, tenv : tenv}
+  val transExp  : venv * tenv * IR.level              -> A.exp -> expty
   val transProg : A.exp -> unit
 end
 
 
 structure Semant :> SEMANTICS =
 struct
-  type expty = {exp: Translate.exp, ty: T.ty}
+  type expty = {exp: IR.exp, ty: T.ty}
   type venv = Env.enventry S.table
   type tenv = T.ty S.table
 
@@ -147,15 +148,15 @@ struct
             fun verifyArithOperands() =
               (checkInt(tyLeft, pos);
                checkInt(tyRight, pos);
-               {exp=Tree.TODO, ty=T.INT})
+               {exp=IR.ex(Tree.TODO), ty=T.INT})
             fun verifyEquatableOperands() =
               (checkEqualOrThrow(tyLeft, tyRight, pos);
-               {exp=Tree.TODO, ty=T.INT})
+               {exp=IR.ex(Tree.TODO), ty=T.INT})
             fun verifyComparableOperands() =
               (if (tyLeft = T.STRING andalso tyRight = T.STRING) orelse (tyLeft = T.INT andalso tyRight = T.INT)
                then ()
                else ErrorMsg.error pos "comparable types must be string or int";
-                    {exp=Tree.TODO, ty=T.INT})
+                    {exp=IR.ex(Tree.TODO), ty=T.INT})
           in
             case oper
               of A.PlusOp   => verifyArithOperands()
@@ -175,9 +176,9 @@ struct
               transExp(venv', tenv', level) body
             end
         | trexp (A.VarExp(var)) = trvar(var)
-        | trexp (A.NilExp) = {exp = Tree.TODO, ty = T.NIL}
-        | trexp (A.IntExp(n)) = {exp = Tree.TODO, ty = T.INT}
-        | trexp (A.StringExp(str, posn)) = {exp = Tree.TODO, ty = T.STRING}
+        | trexp (A.NilExp) = {exp = IR.ex(Tree.TODO), ty = T.NIL}
+        | trexp (A.IntExp(n)) = {exp = IR.ex(Tree.TODO), ty = T.INT}
+        | trexp (A.StringExp(str, posn)) = {exp = IR.ex(Tree.TODO), ty = T.STRING}
         | trexp (A.CallExp{func, args, pos}) =
           (case S.look(venv, func)
               of SOME(Env.FunEntry{level, label, formals, result}) =>
@@ -193,11 +194,11 @@ struct
                  in
                    verifyFormals(formals, args)
                  end;
-                {exp = Tree.TODO, ty = result})
+                {exp = IR.ex(Tree.TODO), ty = result})
               | SOME _ => (ErrorMsg.error pos "environment entry is not a fun entry";
-                           {exp = Tree.TODO, ty = T.UNIT})
+                           {exp = IR.ex(Tree.TODO), ty = T.UNIT})
               | NONE => (ErrorMsg.error pos ("undefined function " ^ S.name(func));
-                         {exp = Tree.TODO, ty = T.UNIT}))
+                         {exp = IR.ex(Tree.TODO), ty = T.UNIT}))
         | trexp (A.RecordExp{fields, typ, pos}) =
           (case S.look(tenv, typ)
             of SOME (T.RECORD(fieldList, unique)) =>
@@ -218,12 +219,12 @@ struct
                    | searchFields(nil) = ()
               in
                 (searchFields fields;
-                 {exp = Tree.TODO, ty = T.RECORD(fieldList, unique)})
+                 {exp = IR.ex(Tree.TODO), ty = T.RECORD(fieldList, unique)})
               end
             | _ => (ErrorMsg.error pos "record type was undeclared";
-                       {exp=Tree.TODO, ty=T.UNIT}))
+                       {exp=IR.ex(Tree.TODO), ty=T.UNIT}))
         | trexp (A.SeqExp(exprs)) =
-          let fun verifyExprs nil = ({exp = Tree.TODO, ty = T.UNIT})
+          let fun verifyExprs nil = ({exp = IR.ex(Tree.TODO), ty = T.UNIT})
                 | verifyExprs ((expr, pos)::nil) = (trexp expr)
                 | verifyExprs ((expr, pos)::rest) = (trexp expr; verifyExprs(rest))
           in
@@ -237,9 +238,9 @@ struct
                 val {exp=varExp, ty=varTy} = trvar var
               in
                 (checkEqualOrThrow(exprTy, varTy, pos);
-                 {exp = Tree.TODO, ty = T.UNIT})
+                 {exp = IR.ex(Tree.TODO), ty = T.UNIT})
               end
-          else (ErrorMsg.error pos "cannot re-assign to var"; {exp = Tree.TODO, ty = T.UNIT})
+          else (ErrorMsg.error pos "cannot re-assign to var"; {exp = IR.ex(Tree.TODO), ty = T.UNIT})
         | trexp (A.IfExp{test, then', else', pos}) =
           let
             val {exp=expTest, ty=tyTest} = trexp test
@@ -252,10 +253,10 @@ struct
                   val {exp=expElse, ty=tyElse} = trexp expr
                 in
                   (checkEqualOrThrow(tyThen, tyElse, pos);
-                   {exp = Tree.TODO, ty = tyThen})
+                   {exp = IR.ex(Tree.TODO), ty = tyThen})
                 end
               | NONE => (checkUnit(tyThen, pos);
-                         {exp = Tree.TODO, ty = T.UNIT}))
+                         {exp = IR.ex(Tree.TODO), ty = T.UNIT}))
           end
         | trexp (A.WhileExp{test, body, pos}) =
           let
@@ -265,13 +266,13 @@ struct
           in
             checkInt(tyTest, pos);
             checkUnit(tyBody, pos);
-            {exp = Tree.TODO, ty = T.UNIT}
+            {exp = IR.ex(Tree.TODO), ty = T.UNIT}
           end
         | trexp (A.ForExp{var, escape, lo, hi, body, pos}) =
           let
             val {exp=loExp, ty=tyLo} = trexp lo
             val {exp=hiExp, ty=tyHi} = trexp hi
-            val access = Translate.allocLocal level (!escape)
+            val access = IR.allocLocal level (!escape)
             val venvUpdated = S.enter(venv, var, Env.ReadVarEntry{access=access, ty=T.INT})
             val tenvUpdated = S.enter(tenv, breakable, T.UNIT)
             val {exp=updatedExp, ty=updatedTy} = (transExp(venvUpdated, tenvUpdated, level) body)
@@ -279,9 +280,9 @@ struct
             checkInt(tyLo, pos);
             checkInt(tyHi, pos);
             checkUnit(updatedTy, pos);
-            {exp=Tree.TODO, ty=T.UNIT}
+            {exp=IR.ex(Tree.TODO), ty=T.UNIT}
           end
-        | trexp (A.BreakExp(pos)) = (checkCanBreak(tenv, pos); {exp = Tree.TODO, ty =  T.UNIT})
+        | trexp (A.BreakExp(pos)) = (checkCanBreak(tenv, pos); {exp = IR.ex(Tree.TODO), ty =  T.UNIT})
         | trexp (A.ArrayExp{typ, size, init, pos}) =
           let
             val binding = S.look(tenv, typ)
@@ -294,23 +295,23 @@ struct
                   of (T.ARRAY(ty, unique)) =>
                      (checkInt(tySize, pos);
                       checkEqualOrThrow(actual_ty(ty), actual_ty(tyInit), pos);
-                      {exp = Tree.TODO, ty = T.ARRAY(ty, unique)})
+                      {exp = IR.ex(Tree.TODO), ty = T.ARRAY(ty, unique)})
                    | _ => (ErrorMsg.error pos ("type is not array " ^ S.name(typ));
-                          {exp = Tree.TODO, ty = T.UNIT}))
+                          {exp = IR.ex(Tree.TODO), ty = T.UNIT}))
               | NONE => (ErrorMsg.error pos ("undefined array type " ^ S.name(typ));
-                         {exp = Tree.TODO, ty = T.UNIT}))
+                         {exp = IR.ex(Tree.TODO), ty = T.UNIT}))
           end
 
       and trvar (A.SimpleVar(id, pos)) =
             (case S.look(venv, id)
                 of SOME(Env.VarEntry{access, ty}) =>
-                   {exp = Tree.TODO, ty = actual_ty ty}
+                   {exp = IR.ex(Tree.TODO), ty = actual_ty ty}
                  | SOME(Env.ReadVarEntry{access, ty}) =>
-                    {exp = Tree.TODO, ty = actual_ty ty}
+                    {exp = IR.ex(Tree.TODO), ty = actual_ty ty}
                  | SOME _ => (ErrorMsg.error pos "environment entry is not a var entry";
-                              {exp = Tree.TODO, ty = T.UNIT})
+                              {exp = IR.ex(Tree.TODO), ty = T.UNIT})
                  | NONE => (ErrorMsg.error pos ("undefined variable " ^ S.name id);
-                            {exp = Tree.TODO, ty = T.UNIT}))
+                            {exp = IR.ex(Tree.TODO), ty = T.UNIT}))
         | trvar (A.FieldVar(var, id, pos)) =
           let
             val {exp=expVar, ty=tyVar} = trvar(var)
@@ -324,18 +325,18 @@ struct
           in
             (case tyVar
               of T.RECORD (fields, unique) =>
-                {exp=Tree.TODO, ty = getFieldTypeWithId(fields, id, pos)}
+                {exp=IR.ex(Tree.TODO), ty = getFieldTypeWithId(fields, id, pos)}
               | _ => (ErrorMsg.error pos "tried to access record field of object that is not a record";
-                     {exp=Tree.TODO, ty = T.UNIT}))
+                     {exp=IR.ex(Tree.TODO), ty = T.UNIT}))
           end
         | trvar (A.SubscriptVar(var, exp, pos)) =
           let
             val {exp=expVar, ty=tyVar} = trvar(var)
           in
             case tyVar
-              of T.ARRAY (ty, unique) => {exp=Tree.TODO, ty=ty}
+              of T.ARRAY (ty, unique) => {exp=IR.ex(Tree.TODO), ty=ty}
                | _ => (ErrorMsg.error pos ("Attempted to access a non-array type: " ^ T.toString(tyVar));
-                      {exp=Tree.TODO, ty=T.UNIT})
+                      {exp=IR.ex(Tree.TODO), ty=T.UNIT})
           end
     in
       trexp
@@ -344,7 +345,7 @@ struct
   and transDec (venv, tenv, level, A.VarDec{name, escape, typ, init, pos}) =
       let
         val {exp, ty=tyInit} = transExp(venv, tenv, level) init
-        val access = Translate.allocLocal level (!escape)
+        val access = IR.allocLocal level (!escape)
       in
         (case typ
           of SOME ty =>
@@ -422,7 +423,7 @@ struct
       fun buildBaseVenv ({name, params, body, pos, result}, venv) =
         let
           val escapeList = map (fn {name, escape, typ, pos} => !escape) params
-          val newlevel = Translate.newLevel{parent=level, name=Temp.newlabel(), formals=escapeList}
+          val newlevel = IR.newLevel{parent=level, name=Temp.newlabel(), formals=escapeList}
           val funEntry = Env.FunEntry{level = newlevel,
                                       label = Temp.newlabel(),
                                       formals= map #ty (map transparam params),
@@ -438,7 +439,7 @@ struct
             (case S.look(dummyVenv, name)
               of SOME (Env.FunEntry{level, label, formals, result}) => level
                  | _ => (ErrorMsg.error pos "function not found"; level)) (* Error should not occur! *)
-          val paramsAndFormals = ListPair.zip(params, Translate.formals newlevel)
+          val paramsAndFormals = ListPair.zip(params, IR.formals newlevel)
           val params' = map (fn (param, access) =>
                               let
                                 val {name=name, ty=ty} = transparam param
@@ -476,7 +477,7 @@ struct
 
   fun transProg absyn =
     let
-      val mainLevel = Translate.newLevel{parent=Translate.outermost, name=Temp.newlabel(), formals=[]}
+      val mainLevel = IR.newLevel{parent=IR.outermost, name=Temp.newlabel(), formals=[]}
       val _ = FindEscape.findEscape(absyn)
       val {exp, ty} = transExp(Env.base_venv, Env.base_tenv, mainLevel) absyn
     in
