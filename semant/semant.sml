@@ -145,10 +145,10 @@ struct
           let
             val {exp=expLeft, ty=tyLeft} = trexp left
             val {exp=expRight, ty=tyRight} = trexp right
-            fun verifyArithOperands() =
+            fun verifyArithOperands(binop) =
               (checkInt(tyLeft, pos);
                checkInt(tyRight, pos);
-               {exp=IR.ex(Tree.TODO), ty=T.INT})
+               {exp=IR.ex(Tree.BINOP(binop, IR.unEx(expLeft), IR.unEx(expRight))), ty=T.INT})
             fun verifyEquatableOperands() =
               (checkEqualOrThrow(tyLeft, tyRight, pos);
                {exp=IR.ex(Tree.TODO), ty=T.INT})
@@ -159,10 +159,10 @@ struct
                     {exp=IR.ex(Tree.TODO), ty=T.INT})
           in
             case oper
-              of A.PlusOp   => verifyArithOperands()
-               | A.MinusOp  => verifyArithOperands()
-               | A.TimesOp  => verifyArithOperands()
-               | A.DivideOp => verifyArithOperands()
+              of A.PlusOp   => verifyArithOperands(IR.PLUS)
+               | A.MinusOp  => verifyArithOperands(IR.MINUS)
+               | A.TimesOp  => verifyArithOperands(IR.MUL)
+               | A.DivideOp => verifyArithOperands(IR.DIV)
                | A.LtOp     => verifyComparableOperands()
                | A.LeOp     => verifyComparableOperands()
                | A.GtOp     => verifyComparableOperands()
