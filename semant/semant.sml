@@ -177,7 +177,7 @@ struct
             end
         | trexp (A.VarExp(var)) = trvar(var)
         | trexp (A.NilExp) = {exp = IR.ex(Tree.TODO), ty = T.NIL}
-        | trexp (A.IntExp(n)) = {exp = IR.ex(Tree.TODO), ty = T.INT}
+        | trexp (A.IntExp(n)) = {exp = IR.ex(Tree.CONST n), ty = T.INT}
         | trexp (A.StringExp(str, posn)) = {exp = IR.ex(Tree.TODO), ty = T.STRING}
         | trexp (A.CallExp{func, args, pos}) =
           (case S.look(venv, func)
