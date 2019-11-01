@@ -19,6 +19,10 @@ struct
                  | GLOBAL (* base-case being the top level *)
   type access = level * F.access
 
+  datatype exp = Ex of Tree.exp
+               | Nx of Tree.stm
+               | Cx of Temp.label * Temp.label -> Tree.stm
+
   val outermost = GLOBAL
   val zero = Tree.CONST 0
   val one = Tree.CONST 1
