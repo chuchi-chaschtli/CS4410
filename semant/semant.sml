@@ -149,26 +149,26 @@ struct
               (checkInt(tyLeft, pos);
                checkInt(tyRight, pos);
                {exp=IR.Ex(Tree.BINOP(binop, IR.unEx(expLeft), IR.unEx(expRight))), ty=T.INT})
-            fun verifyEquatableOperands() =
+            fun verifyEquatableOperands(relop) =
               (checkEqualOrThrow(tyLeft, tyRight, pos);
-               {exp=IR.Ex(Tree.TODO), ty=T.INT})
-            fun verifyComparableOperands() =
-              (if (tyLeft = T.STRING andalso tyRight = T.STRING) orelse (tyLeft = T.INT andalso tyRight = T.INT)
-               then ()
-               else ErrorMsg.error pos "comparable types must be string or int";
-                    {exp=IR.Ex(Tree.TODO), ty=T.INT})
+               {exp=IR.Cx(fn (t, f) => Tree.CJUMP(relop, IR.unEx(expLeft), IR.unEx(expRight), t, f)), ty=T.INT})
+            fun verifyComparableOperands(relop) =
+              ((if (tyLeft = T.STRING andalso tyRight = T.STRING) orelse (tyLeft = T.INT andalso tyRight = T.INT)
+                then ()
+                else ErrorMsg.error pos "comparable types must be string or int");
+               {exp=IR.Cx(fn (t, f) => Tree.CJUMP(relop, IR.unEx(expLeft), IR.unEx(expRight), t, f)), ty=T.INT})
           in
             case oper
-              of A.PlusOp   => verifyArithOperands(IR.PLUS)
-               | A.MinusOp  => verifyArithOperands(IR.MINUS)
-               | A.TimesOp  => verifyArithOperands(IR.MUL)
-               | A.DivideOp => verifyArithOperands(IR.DIV)
-               | A.LtOp     => verifyComparableOperands()
-               | A.LeOp     => verifyComparableOperands()
-               | A.GtOp     => verifyComparableOperands()
-               | A.GeOp     => verifyComparableOperands()
-               | A.EqOp     => verifyEquatableOperands()
-               | A.NeqOp    => verifyEquatableOperands()
+              of A.PlusOp   => verifyArithOperands(Tree.PLUS)
+               | A.MinusOp  => verifyArithOperands(Tree.MINUS)
+               | A.TimesOp  => verifyArithOperands(Tree.MUL)
+               | A.DivideOp => verifyArithOperands(Tree.DIV)
+               | A.LtOp     => verifyComparableOperands(Tree.LT)
+               | A.LeOp     => verifyComparableOperands(Tree.LE)
+               | A.GtOp     => verifyComparableOperands(Tree.GT)
+               | A.GeOp     => verifyComparableOperands(Tree.GE)
+               | A.EqOp     => verifyEquatableOperands(Tree.EQ)
+               | A.NeqOp    => verifyEquatableOperands(Tree.NE)
           end
         | trexp (A.LetExp{decs, body, pos}) =
             let val {venv = venv', tenv = tenv'} = transDecs(venv, tenv, level, decs)
