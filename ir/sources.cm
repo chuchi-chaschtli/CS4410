@@ -10,6 +10,7 @@ Group is
 ../parser/tiger.grm
 ../parser/prabsyn.sml
 
+tree.sml
 mipsframe.sml
 findescape.sml
 translate.sml

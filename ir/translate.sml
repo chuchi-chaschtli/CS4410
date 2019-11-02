@@ -19,6 +19,10 @@ struct
                  | GLOBAL (* base-case being the top level *)
   type access = level * F.access
 
+  datatype exp = Ex of Tree.exp
+               | Nx of Tree.stm
+               | Cx of Temp.label * Temp.label -> Tree.stm
+
   val outermost = GLOBAL
   val zero = Tree.CONST 0
   val one = Tree.CONST 1
@@ -50,12 +54,21 @@ struct
 				val t = Temp.newlabel()
         val f = Temp.newlabel()
 			in
-				Tree.ESEQ(Tree.SEQ[Tree.MOVE(Tree.TEMPLOC r, one),
-							genstm(t,f),
-							Tree.LABEL f,
-							Tree.MOVE(Tree.TEMPLOC r, zero),
-							Tree.LABEL t],
-						Tree.TEMP r)
+        Tree.ESEQ(
+          Tree.SEQ(
+            Tree.MOVE(Tree.TEMPLOC r, one),
+            Tree.SEQ(
+              genstm(t,f),
+              Tree.SEQ(
+                Tree.LABEL f,
+                Tree.SEQ(
+                  Tree.MOVE(Tree.TEMPLOC r, zero),
+                  Tree.LABEL t
+                )
+              )
+            )
+          ),
+					Tree.TEMP r)
 			end
     | unEx (Nx s) = Tree.ESEQ(s, zero)
 
@@ -69,4 +82,35 @@ struct
   fun unNx (Ex e) = Tree.EXP(e)
     | unNx (Nx n) = n
     | unNx (c)    = unNx(Ex(unEx(c)))
+
+  (* Converts a temp or memory expression to a location to be used for moves *)
+  fun locFromExp (Tree.TEMP t) = Tree.TEMPLOC t
+    | locFromExp (Tree.MEM  e) = Tree.MEMLOC e
+    | locFromExp Tree.TODO     = (ErrorMsg.error 0 "TODO found"; Tree.TEMPLOC(Temp.newtemp()))
+    | locFromExp _             = (ErrorMsg.error 0 "Unable to perform conversion"; Tree.TEMPLOC(Temp.newtemp()))
+
+  fun translateWhile(test, body, breakTmp) =
+    let val testTmp = Temp.newlabel()
+        val bodyTmp = Temp.newlabel()
+    in
+      Nx(
+        Tree.SEQ(
+          Tree.LABEL testTmp,
+          Tree.SEQ(
+            unCx test (bodyTmp, breakTmp),
+            Tree.SEQ(
+              Tree.LABEL bodyTmp,
+              Tree.SEQ(
+                unNx body,
+                Tree.SEQ(
+                  Tree.JUMP (Tree.NAME testTmp, [testTmp]),
+                  Tree.LABEL breakTmp
+                )
+              )
+            )
+          )
+        ))
+    end
+
+  fun translateAssign(v, e) = Nx (Tree.MOVE (locFromExp (unEx v), unEx e))
 end

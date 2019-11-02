@@ -17,6 +17,7 @@ sig
             | NAME of label
             | CONST of int
             | CALL of exp * exp list
+            | TODO
 
     and loc = TEMPLOC of Temp.temp
             | MEMLOC of exp
@@ -50,6 +51,7 @@ struct
             | NAME of label
             | CONST of int
             | CALL of exp * exp list
+            | TODO
 
     and loc = TEMPLOC of Temp.temp
             | MEMLOC of exp
@@ -60,6 +62,6 @@ struct
     and relop = EQ | NE | LT | GT | LE | GE
               | ULT | ULE | UGT | UGE
 
-    val notRel = EQ (* TODO - implement ... I couldn't find any information in the book, maybe it's just the opposite of each case? EQ = NE, etc?*)
-    val commute = EQ (* TODO - implement ... I couldn't find any information in the book, maybe it's just commutation? EQ => EQ, UGT => ULT, etc?*)
+    val notRel = fn relop => EQ (* TODO - implement ... I couldn't find any information in the book, maybe it's just the opposite of each case? EQ = NE, etc?*)
+    val commute = fn relop => EQ (* TODO - implement ... I couldn't find any information in the book, maybe it's just commutation? EQ => EQ, UGT => ULT, etc?*)
 end
