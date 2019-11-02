@@ -9,11 +9,8 @@ fun printtree (outstream, s0) =
   fun indent 0 = ()
     | indent i = (say " "; indent(i-1))
 
-  fun stm(Tree.SEQ(stmlist),d) =
-          (indent d;
-          sayln "SEQ(";
-          foldl (fn (a, b) => (stm(a,d+1); sayln ","; ())) () stmlist;
-          say ")")
+  fun stm(T.SEQ(a, b), d) =
+        (indent d; sayln "SEQ("; stm(a,d+1); sayln ","; stm(b,d+1); say ")")
     | stm(Tree.LABEL lab, d) = (indent d; say "LABEL "; say (Symbol.name lab))
     | stm(Tree.JUMP (e,_), d) =  (indent d; sayln "JUMP("; exp(e,d+1); say ")")
     | stm(Tree.CJUMP(r,a,b,t,f),d) = (indent d; say "CJUMP(";
