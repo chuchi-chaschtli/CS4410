@@ -73,4 +73,12 @@ struct
   fun unNx (Ex e) = Tree.EXP(e)
     | unNx (Nx n) = n
     | unNx (c)    = unNx(Ex(unEx(c)))
+
+  (* Converts a temp or memory expression to a location to be used for moves *)
+  fun locFromExp (Tree.TEMP t) = Tree.TEMPLOC t
+    | locFromExp (Tree.MEM  e) = Tree.MEMLOC e
+    | locFromExp Tree.TODO     = (ErrorMsg.error 0 "TODO found"; Tree.TEMPLOC(Temp.newtemp()))
+    | locFromExp _             = (ErrorMsg.error 0 "Unable to perform conversion"; Tree.TEMPLOC(Temp.newtemp()))
+
+  fun translateAssign(v, e) = Nx (Tree.MOVE (locFromExp (unEx v), unEx e))
 end

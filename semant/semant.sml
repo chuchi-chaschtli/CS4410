@@ -238,7 +238,7 @@ struct
                 val {exp=varExp, ty=varTy} = trvar var
               in
                 (checkEqualOrThrow(exprTy, varTy, pos);
-                 {exp = IR.Ex(Tree.TODO), ty = T.UNIT})
+                 {exp = IR.translateAssign(varExp, exprExp), ty = T.UNIT})
               end
           else (ErrorMsg.error pos "cannot re-assign to var"; {exp = IR.Ex(Tree.TODO), ty = T.UNIT})
         | trexp (A.IfExp{test, then', else', pos}) =
