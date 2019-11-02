@@ -176,7 +176,7 @@ struct
               transExp(venv', tenv', level) body
             end
         | trexp (A.VarExp(var)) = trvar(var)
-        | trexp (A.NilExp) = {exp = IR.Ex(Tree.TODO), ty = T.NIL}
+        | trexp (A.NilExp) = {exp = IR.Ex(IR.zero), ty = T.NIL}
         | trexp (A.IntExp(n)) = {exp = IR.Ex(Tree.CONST n), ty = T.INT}
         | trexp (A.StringExp(str, posn)) = {exp = IR.Ex(Tree.TODO), ty = T.STRING}
         | trexp (A.CallExp{func, args, pos}) =
