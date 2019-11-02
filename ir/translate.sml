@@ -80,5 +80,18 @@ struct
     | locFromExp Tree.TODO     = (ErrorMsg.error 0 "TODO found"; Tree.TEMPLOC(Temp.newtemp()))
     | locFromExp _             = (ErrorMsg.error 0 "Unable to perform conversion"; Tree.TEMPLOC(Temp.newtemp()))
 
+  fun translateWhile(test, body, breakTmp) =
+    let val testTmp = Temp.newlabel()
+        val bodyTmp = Temp.newlabel()
+    in Nx (Tree.SEQ [
+        Tree.LABEL testTmp,
+        unCx test (bodyTmp, breakTmp),
+        Tree.LABEL bodyTmp,
+        unNx body,
+        Tree.JUMP (Tree.NAME testTmp, [testTmp]),
+        Tree.LABEL breakTmp
+      ])
+    end
+
   fun translateAssign(v, e) = Nx (Tree.MOVE (locFromExp (unEx v), unEx e))
 end

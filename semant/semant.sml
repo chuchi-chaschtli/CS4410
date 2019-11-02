@@ -263,10 +263,11 @@ struct
             val {exp=expTest, ty=tyTest} = trexp test
             val tenvUpdated = S.enter(tenv, breakable, T.UNIT)
             val {exp=expBody, ty=tyBody} = (transExp(venv, tenvUpdated, level) body)
+            val breakLabel = Temp.newlabel() (* TODO: Maybe a better way to do translation without adding label here?? *)
           in
             checkInt(tyTest, pos);
             checkUnit(tyBody, pos);
-            {exp = IR.Ex(Tree.TODO), ty = T.UNIT}
+            {exp = IR.translateWhile(expTest, expBody, breakLabel), ty = T.UNIT}
           end
         | trexp (A.ForExp{var, escape, lo, hi, body, pos}) =
           let
