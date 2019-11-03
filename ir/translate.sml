@@ -33,7 +33,8 @@ sig
     val translateFieldVar     : exp * int -> exp
     val translateSubscriptVar : exp * exp -> exp
 
-    val translateVarDec : access * exp -> exp
+    val translateVarDec : access   * exp -> exp
+    val translateLet    : exp list * exp -> exp
 
     val todo: unit -> exp
 
@@ -287,6 +288,12 @@ struct
     end
 
   fun translateVarDec((level, access), valExp) = (Nx(Tree.MOVE(F.exp(access)(Tree.TEMP(F.FP)), unEx valExp)))
+
+  fun translateLet(assignments, body) =
+    let val assignments' = map unNx assignments
+    in
+      Ex (Tree.ESEQ(buildSeq(assignments'), unEx body))
+    end
 
   fun todo() = Ex (Tree.TODO)
 end
