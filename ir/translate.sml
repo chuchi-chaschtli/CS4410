@@ -22,14 +22,22 @@ sig
     val translateArith  : Absyn.oper * exp * exp -> exp
     val translateRelop  : Absyn.oper * exp * exp -> exp
     val translateWhile  : exp * exp * Tree.label -> exp
+    val translateBreak  : Tree.label             -> exp
     val translateIf     : exp * exp * exp        -> exp
     val translateAssign : exp * exp              -> exp
+    val translateCall   : level * level * Tree.label * exp list -> exp
+
+    val translateFieldVar     : exp * int -> exp
+    val translateSubscriptVar : exp * exp -> exp
 
     val todo: unit -> exp
 
     val unEx : exp -> Tree.exp
     val unNx : exp -> Tree.stm
     val unCx : exp -> Temp.label * Temp.label -> Tree.stm
+
+    val procEntryExit : {level: level, body: exp} -> unit
+    val getResult : unit -> F.frag list
 end
 
 structure Translate : TRANSLATE =
@@ -46,6 +54,10 @@ struct
   val outermost = GLOBAL
   val zero = Tree.CONST 0
   val one = Tree.CONST 1
+  val word = Tree.CONST(F.wordSize)
+
+  fun procEntryExit({level: level, body: exp}) = () (* TODO call procEntryExit1 and procEntryExit3 *)
+  fun getResult() = nil (* TODO ref to frag list within Translate*)
 
   fun newLevel {parent=parent, name=name, formals=formals} =
     LEVEL{frame=F.newFrame({name=name, formals=true::formals}), parent=parent}
@@ -75,9 +87,9 @@ struct
   declaration level, or error otherwise *)
   fun traverseStaticLinks(dec, use) =
     if use = dec
-    then Tree.TEMP(Temp.newtemp()) (* TODO: replace with frame pointer *)
+    then Tree.TEMP(F.FP)
     else case use
-      of LEVEL {frame, parent} => Tree.MEM (traverseStaticLinks(dec, parent))
+      of LEVEL {frame, parent} => Tree.MEM (traverseStaticLinks(dec, parent)) (* NOTE our static link offset is 0 *)
        | GLOBAL => (ErrorMsg.error 0 "Cannot find any static links"; Tree.TODO)
 
   fun unEx (Ex e) = e
@@ -99,14 +111,14 @@ struct
 			end
     | unEx (Nx s) = Tree.ESEQ(s, zero)
 
-  fun unCx (Cx c)    = c
-    | unCx (Ex e)    = (if e = zero
-                        then (fn(tlabel, flabel) => Tree.JUMP(Tree.NAME(flabel), [flabel]))
-                        else if e = one
-                             then fn(tlabel, flabel) => Tree.JUMP(Tree.NAME(tlabel), [tlabel])
-                             else fn(tlabel, flabel) => Tree.CJUMP(Tree.EQ, one, e, tlabel, flabel))
-    | unCx (Nx _)    = (ErrorMsg.error 0 "Cannot process no-result on conditional";
-                        fn (a, b) => Tree.LABEL(Temp.newlabel()))
+  fun unCx (Cx c) = c
+    | unCx (Ex e) = (if e = zero
+                     then (fn(tlabel, flabel) => Tree.JUMP(Tree.NAME(flabel), [flabel]))
+                     else if e = one
+                          then fn(tlabel, flabel) => Tree.JUMP(Tree.NAME(tlabel), [tlabel])
+                          else fn(tlabel, flabel) => Tree.CJUMP(Tree.EQ, one, e, tlabel, flabel))
+    | unCx (Nx _) = (ErrorMsg.error 0 "Cannot process no-result on conditional";
+                     fn (a, b) => Tree.LABEL(Temp.newlabel()))
 
   fun unNx (Ex e) = Tree.EXP(e)
     | unNx (Nx n) = n
@@ -163,6 +175,8 @@ struct
         ]))
     end
 
+  fun translateBreak breakTmp = Nx(Tree.JUMP (Tree.NAME breakTmp, breakTmp::nil))
+
   (*
           CJMP TEST then else
     then: THEN
@@ -194,6 +208,29 @@ struct
     end
 
   fun translateAssign(v, e) = Nx (Tree.MOVE (locFromExp (unEx v), unEx e))
+
+  fun translateCall(dec, call, label, args) =
+    case dec
+      of GLOBAL => Ex (Tree.TEMP(F.FP))
+       | LEVEL {frame, parent} =>
+        let val link = traverseStaticLinks(parent, call)
+            val processedArgs = map unEx args
+        in Ex (Tree.CALL (Tree.NAME label, link::processedArgs))
+        end
+
+  fun calculateAddress(ex, index) =
+    Tree.BINOP(Tree.PLUS, ex, Tree.BINOP(Tree.MUL, index, word))
+
+  fun translateFieldVar(name, element) =
+    Ex(Tree.MEM(calculateAddress(unEx name, Tree.CONST(element))))
+
+  fun translateSubscriptVar(array, index) =
+    let val tmp = Temp.newtemp()
+    in
+      Ex(Tree.ESEQ(
+          Tree.MOVE(Tree.TEMPLOC(tmp), calculateAddress(unEx array, unEx index)),
+          Tree.MEM(Tree.TEMP(tmp))))
+    end
 
   fun todo() = Ex (Tree.TODO)
 end

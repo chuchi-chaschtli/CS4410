@@ -56,7 +56,7 @@ sig
   val transDec  : venv * tenv * IR.level * A.dec      * Temp.label -> {venv : venv, tenv : tenv}
   val transDecs : venv * tenv * IR.level * A.dec list * Temp.label -> {venv : venv, tenv : tenv}
   val transExp  : venv * tenv * IR.level              * Temp.label -> A.exp -> expty
-  val transProg : A.exp -> Tree.exp
+  val transProg : A.exp -> Tree.exp (* TODO should return frag list *)
 end
 
 
@@ -181,20 +181,20 @@ struct
         | trexp (A.StringExp(str, posn)) = {exp = IR.todo(), ty = T.STRING}
         | trexp (A.CallExp{func, args, pos}) =
           (case S.look(venv, func)
-              of SOME(Env.FunEntry{level, label, formals, result}) =>
+              of SOME(Env.FunEntry{level=declevel, label, formals, result}) =>
                 (let fun verifyFormals(firstFormal::restFormals, firstArg::restArgs) =
-                         let val firstArgExp = trexp firstArg
+                         let val {exp=firstArgExp, ty=firstArgTy} = trexp firstArg
                          in
-                            if checkEqual(firstFormal, actual_ty(#ty firstArgExp), pos)
-                            then verifyFormals(restFormals, restArgs)
-                            else ErrorMsg.error pos ("type mismatch in function params: " ^ T.toString(firstFormal) ^ " and " ^ T.toString(#ty firstArgExp))
+                            if checkEqual(firstFormal, actual_ty firstArgTy, pos)
+                            then firstArgExp::verifyFormals(restFormals, restArgs)
+                            else (ErrorMsg.error pos ("type mismatch in function params: " ^ T.toString(firstFormal) ^ " and " ^ T.toString(firstArgTy)); nil)
                          end
-                       | verifyFormals(nil, nil) = ()
-                       | verifyFormals(_, _) = ErrorMsg.error pos "function formals length differs from arg length"
+                       | verifyFormals(nil, nil) = nil
+                       | verifyFormals(_, _) = (ErrorMsg.error pos "function formals length differs from arg length"; nil)
+                    val argList = verifyFormals(formals, args)
                  in
-                   verifyFormals(formals, args)
-                 end;
-                {exp = IR.todo(), ty = result})
+                   {exp = IR.translateCall(declevel, level, label, argList), ty = result}
+                 end)
               | SOME _ => (ErrorMsg.error pos "environment entry is not a fun entry";
                            {exp = IR.todo(), ty = T.UNIT})
               | NONE => (ErrorMsg.error pos ("undefined function " ^ S.name(func));
@@ -284,7 +284,7 @@ struct
             checkUnit(updatedTy, pos);
             {exp=IR.todo(), ty=T.UNIT}
           end
-        | trexp (A.BreakExp(pos)) = (checkCanBreak(tenv, pos); {exp = IR.todo(), ty = T.UNIT})
+        | trexp (A.BreakExp(pos)) = (checkCanBreak(tenv, pos); {exp = IR.translateBreak(label), ty = T.UNIT})
         | trexp (A.ArrayExp{typ, size, init, pos}) =
           let
             val binding = S.look(tenv, typ)
@@ -317,26 +317,29 @@ struct
         | trvar (A.FieldVar(var, id, pos)) =
           let
             val {exp=expVar, ty=tyVar} = trvar(var)
-            fun getFieldTypeWithId (nil, id, pos) =
+            fun getFieldTypeWithId (nil, id, pos, index) =
                 (ErrorMsg.error pos ("record does not have field with id: " ^ S.name id);
-                T.UNIT)
-              | getFieldTypeWithId ((name, ty)::rest, id, pos) =
+                (T.UNIT, index))
+              | getFieldTypeWithId ((name, ty)::rest, id, pos, index) =
                 if (name = id)
-                then ty
-                else getFieldTypeWithId(rest, id, pos)
+                then (ty, index)
+                else getFieldTypeWithId(rest, id, pos, index + 1)
           in
             (case tyVar
               of T.RECORD (fields, unique) =>
-                {exp=IR.todo(), ty = getFieldTypeWithId(fields, id, pos)}
+                let val (ty, index) = getFieldTypeWithId(fields, id, pos, 0)
+                in {exp=IR.translateFieldVar(expVar, index), ty=ty}
+                end
               | _ => (ErrorMsg.error pos "tried to access record field of object that is not a record";
                      {exp=IR.todo(), ty = T.UNIT}))
           end
         | trvar (A.SubscriptVar(var, exp, pos)) =
           let
             val {exp=expVar, ty=tyVar} = trvar(var)
+            val {exp=expSub, ty=tySub} = trexp(exp)
           in
             case tyVar
-              of T.ARRAY (ty, unique) => {exp=IR.todo(), ty=ty}
+              of T.ARRAY (ty, unique) => {exp=IR.translateSubscriptVar(expVar, expSub), ty=ty}
                | _ => (ErrorMsg.error pos ("Attempted to access a non-array type: " ^ T.toString(tyVar));
                       {exp=IR.todo(), ty=T.UNIT})
           end

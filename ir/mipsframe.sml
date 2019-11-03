@@ -2,11 +2,18 @@ signature FRAME =
 sig
   type access
   type frame
+  val FP: Temp.temp
+  val RV: Temp.temp
+  val wordSize: int
   val newFrame : {name: Temp.label, formals: bool list} -> frame
   val name: frame -> Temp.label
   val formals : frame -> access list
   val allocLocal : frame -> bool -> access
   val externalCall: string * Tree.exp list -> Tree.exp
+
+  type frag
+  val procEntryExit1 : frame * Tree.stm -> Tree.stm
+  val procEntryExit3 : frame * Tree.stm -> Tree.stm
 end
 
 structure MipsFrame : FRAME =
@@ -14,8 +21,16 @@ struct
   datatype access = InFrame of int | InReg of Temp.temp
   type frame = {name: Temp.label, frameOffset: int ref, formals: access list}
 
-  val wordLenBytes = 4
+  datatype frag = PROC of {body: Tree.stm, frame: frame}
+                | STRING of Temp.label * string
+
+  val FP = Temp.newtemp()
+  val RV = Temp.newtemp()
+  val wordSize = 4
   val numDedicatedArgRegisters = 4
+
+  fun procEntryExit1(frame, stmt) = stmt (* TODO stub for assignment 5 *)
+  fun procEntryExit3(frame, stmt) = stmt (* TODO *)
 
   fun newFrame {name, formals} =
     let
@@ -25,7 +40,7 @@ struct
         let val tmp = !paramIndex
         in
           paramIndex := tmp+1;
-          tmp * wordLenBytes
+          tmp * wordSize
         end
       fun allocateFormal escape =
         (registersTaken := Int.min(!registersTaken + 1, numDedicatedArgRegisters + 1);
@@ -44,7 +59,7 @@ struct
     let
       val offset = (#frameOffset frame)
     in
-      offset := !offset - wordLenBytes;
+      offset := !offset - wordSize;
       if escape
       then InReg   (Temp.newtemp())
       else InFrame (!offset)
