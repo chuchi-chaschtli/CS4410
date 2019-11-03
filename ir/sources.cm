@@ -18,6 +18,8 @@ temp.sml
 
 ../semant/types.sml
 ../semant/semant.sml
+
+printtree.sml
 driver.sml
 
 $/smlnj-lib.cm
