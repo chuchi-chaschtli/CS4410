@@ -54,9 +54,9 @@ sig
   type venv
   type tenv
   val transTy   :        tenv            * A.ty       -> T.ty
-  val transDec  : venv * tenv * IR.level * A.dec      -> {venv : venv, tenv : tenv}
-  val transDecs : venv * tenv * IR.level * A.dec list -> {venv : venv, tenv : tenv}
-  val transExp  : venv * tenv * IR.level              -> A.exp -> expty
+  val transDec  : venv * tenv * IR.level * A.dec      * Temp.label -> {venv : venv, tenv : tenv}
+  val transDecs : venv * tenv * IR.level * A.dec list * Temp.label -> {venv : venv, tenv : tenv}
+  val transExp  : venv * tenv * IR.level              * Temp.label -> A.exp -> expty
   val transProg : A.exp -> unit
 end
 
@@ -139,7 +139,7 @@ struct
                 fieldList,
               ref ())
 
-  fun transExp(venv, tenv, level) =
+  fun transExp(venv, tenv, level, label) =
     let
       fun trexp (A.OpExp{left, oper, right, pos}) =
           let
@@ -171,9 +171,9 @@ struct
                | A.NeqOp    => verifyEquatableOperands(Tree.NE)
           end
         | trexp (A.LetExp{decs, body, pos}) =
-            let val {venv = venv', tenv = tenv'} = transDecs(venv, tenv, level, decs)
+            let val {venv = venv', tenv = tenv'} = transDecs(venv, tenv, level, decs, label)
             in
-              transExp(venv', tenv', level) body
+              transExp(venv', tenv', level, label) body
             end
         | trexp (A.VarExp(var)) = trvar(var)
         | trexp (A.NilExp) = {exp = IR.Ex(IR.zero), ty = T.NIL}
@@ -262,8 +262,8 @@ struct
           let
             val {exp=expTest, ty=tyTest} = trexp test
             val tenvUpdated = S.enter(tenv, breakable, T.UNIT)
-            val {exp=expBody, ty=tyBody} = (transExp(venv, tenvUpdated, level) body)
             val breakLabel = Temp.newlabel() (* TODO: Maybe a better way to do translation without adding label here?? *)
+            val {exp=expBody, ty=tyBody} = (transExp(venv, tenvUpdated, level, breakLabel) body)
           in
             checkInt(tyTest, pos);
             checkUnit(tyBody, pos);
@@ -276,14 +276,15 @@ struct
             val access = IR.allocLocal level (!escape)
             val venvUpdated = S.enter(venv, var, Env.ReadVarEntry{access=access, ty=T.INT})
             val tenvUpdated = S.enter(tenv, breakable, T.UNIT)
-            val {exp=updatedExp, ty=updatedTy} = (transExp(venvUpdated, tenvUpdated, level) body)
+            val breakLabel = Temp.newlabel() (* TODO: Maybe a better way to do translation without adding label here?? *)
+            val {exp=updatedExp, ty=updatedTy} = (transExp(venvUpdated, tenvUpdated, level, breakLabel) body)
           in
             checkInt(tyLo, pos);
             checkInt(tyHi, pos);
             checkUnit(updatedTy, pos);
             {exp=IR.Ex(Tree.TODO), ty=T.UNIT}
           end
-        | trexp (A.BreakExp(pos)) = (checkCanBreak(tenv, pos); {exp = IR.Ex(Tree.TODO), ty =  T.UNIT})
+        | trexp (A.BreakExp(pos)) = (checkCanBreak(label, pos); {exp = IR.Ex(Tree.TODO), ty = T.UNIT})
         | trexp (A.ArrayExp{typ, size, init, pos}) =
           let
             val binding = S.look(tenv, typ)
@@ -343,9 +344,9 @@ struct
       trexp
     end
 
-  and transDec (venv, tenv, level, A.VarDec{name, escape, typ, init, pos}) =
+  and transDec (venv, tenv, level, A.VarDec{name, escape, typ, init, pos}, label) =
       let
-        val {exp, ty=tyInit} = transExp(venv, tenv, level) init
+        val {exp, ty=tyInit} = transExp(venv, tenv, level, label) init
         val access = IR.allocLocal level (!escape)
       in
         (case typ
@@ -360,8 +361,8 @@ struct
                       else ();
                       {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{access = access, ty = tyInit})}))
       end
-    | transDec (venv, tenv, level, A.TypeDec(typeDecls)) = transTypeDecls(venv, tenv, typeDecls)
-    | transDec (venv, tenv, level, A.FunctionDec(functionDecls)) = transFuncDecls(venv, tenv, level, functionDecls)
+    | transDec (venv, tenv, level, A.TypeDec(typeDecls), label) = transTypeDecls(venv, tenv, typeDecls)
+    | transDec (venv, tenv, level, A.FunctionDec(functionDecls), label) = transFuncDecls(venv, tenv, level, functionDecls, label)
 
   and transTypeDecls (venv, tenv, typeDecls) =
     let
@@ -398,7 +399,7 @@ struct
       {venv=venv', tenv=tenv'}
     end
 
-  and transFuncDecls (venv, tenv, level, functionDecls) =
+  and transFuncDecls (venv, tenv, level, functionDecls, label) =
     let
       fun transparam{name, escape, typ, pos} =
         (case S.look(tenv, typ)
@@ -452,7 +453,7 @@ struct
             S.enter(venv, name, Env.VarEntry{access=access, ty=ty})
           val venvAndFunEntry = S.enter(venv, name, Env.FunEntry{formals = map #ty params', result = resultTy(result), level = newlevel, label = Temp.newlabel()})
           val returnVenv = foldl enterparam venvAndFunEntry params'
-          val {exp=funExp, ty=funTy} = transExp(returnVenv, tenv, newlevel) body
+          val {exp=funExp, ty=funTy} = transExp(returnVenv, tenv, newlevel, label) body
         in
           checkEqualOrThrow(funTy, resultTy(result), pos);
           {venv=venvAndFunEntry, tenv=tenv}
@@ -463,12 +464,12 @@ struct
       foldl verifyReturnType {venv=dummyVenv, tenv=tenv} functionDecls
     end
 
-  and transDecs (venv, tenv, level, decs) =
+  and transDecs (venv, tenv, level, decs, label) =
     let
       fun f({ve, te}, nil) = (ErrorMsg.error 0 "empty declaration list"; {venv=venv, tenv=tenv}) (* NOTE should never occur *)
-        | f({ve, te}, dec::nil) = transDec(ve, te, level, dec)
+        | f({ve, te}, dec::nil) = transDec(ve, te, level, dec, label)
         | f({ve, te}, dec::decs) =
-          let val {venv=venv', tenv=tenv'} = transDec(ve, te, level, dec)
+          let val {venv=venv', tenv=tenv'} = transDec(ve, te, level, dec, label)
           in
             f({ve=venv', te=tenv'}, decs)
           end
@@ -478,9 +479,10 @@ struct
 
   fun transProg absyn =
     let
-      val mainLevel = IR.newLevel{parent=IR.outermost, name=Temp.newlabel(), formals=[]}
+      val outerLabel = Temp.newlabel()
+      val mainLevel = IR.newLevel{parent=IR.outermost, name=outerLabel, formals=[]}
       val _ = FindEscape.findEscape(absyn)
-      val {exp, ty} = transExp(Env.base_venv, Env.base_tenv, mainLevel) absyn
+      val {exp, ty} = transExp(Env.base_venv, Env.base_tenv, mainLevel, outerLabel) absyn
     in
       exp
     end
