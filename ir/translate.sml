@@ -89,7 +89,7 @@ struct
     if use = dec
     then Tree.TEMP(F.FP)
     else case use
-      of LEVEL {frame, parent} => Tree.MEM (traverseStaticLinks(dec, parent))
+      of LEVEL {frame, parent} => Tree.MEM (traverseStaticLinks(dec, parent)) (* NOTE our static link offset is 0 *)
        | GLOBAL => (ErrorMsg.error 0 "Cannot find any static links"; Tree.TODO)
 
   fun unEx (Ex e) = e
