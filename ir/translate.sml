@@ -51,6 +51,15 @@ struct
   fun buildSeq(first::nil) = first
     | buildSeq(first::rest) = Tree.SEQ(first, buildSeq rest)
 
+  (* chases static links by recursing up the usage level until we reach the
+  declaration level, or error otherwise *)
+  fun traverseStaticLinks(dec, use) =
+    if use = dec
+    then Tree.TEMP(Temp.newtemp()) (* TODO: replace with frame pointer *)
+    else case use
+      of LEVEL {frame, parent} => Tree.MEM (traverseStaticLinks(dec, parent))
+       | GLOBAL => (ErrorMsg.error 0 "Cannot find any static links"; Tree.TODO)
+
   fun unEx (Ex e) = e
     | unEx (Cx genstm) =
 			let
