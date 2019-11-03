@@ -21,6 +21,7 @@ sig
     val translateNil    : unit -> exp
     val translateArith  : Absyn.oper * exp * exp -> exp
     val translateRelop  : Absyn.oper * exp * exp -> exp
+    val translateFor    : exp * bool ref * exp * exp * exp * Temp.label -> exp
     val translateWhile  : exp * exp * Tree.label -> exp
     val translateBreak  : Tree.label             -> exp
     val translateIf     : exp * exp * exp        -> exp
@@ -154,6 +155,40 @@ struct
 
   fun translateRelop(oper, left, right) =
     Cx (fn (t, f) => Tree.CJUMP(convertRelop oper, unEx left, unEx right, t, f))
+
+  (*
+    init: var <- lo
+          CJUMP (<= var hi) body break
+    body: BODY
+          CJUMP (< var hi) loop break
+    loop: var <- var + 1
+          JMP body
+    break:
+  *)
+  fun translateFor(var, escape, lo, hi, body, breakTmp) =
+    let
+      val var = unEx var
+      val hi = unEx hi
+      val bodyTmp = Temp.newlabel()
+      val loopTmp = Temp.newlabel()
+      val initialSeqs = [
+        Tree.MOVE(locFromExp var, unEx lo),
+        Tree.CJUMP(Tree.LE, var, hi, bodyTmp, breakTmp)
+      ]
+      val bodySeqs = [
+        Tree.LABEL(bodyTmp),
+        unNx body,
+        Tree.CJUMP(Tree.LT, var, hi, loopTmp, breakTmp)
+      ]
+      val loopSeqs = [
+        Tree.LABEL(loopTmp),
+        Tree.MOVE(locFromExp var, Tree.BINOP(Tree.PLUS, var, one)),
+        Tree.JUMP(Tree.NAME(bodyTmp), bodyTmp::nil),
+        Tree.LABEL(breakTmp)
+      ]
+    in
+      Nx(buildSeq(initialSeqs @ bodySeqs @ loopSeqs))
+    end
 
   (*
     test: CJMP TEST body break

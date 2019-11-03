@@ -282,7 +282,7 @@ struct
             checkInt(tyLo, pos);
             checkInt(tyHi, pos);
             checkUnit(updatedTy, pos);
-            {exp=IR.todo(), ty=T.UNIT}
+            {exp=IR.translateFor(IR.translateSimpleVar(access, level), escape, loExp, hiExp, updatedExp, label), ty=T.UNIT}
           end
         | trexp (A.BreakExp(pos)) = (checkCanBreak(tenv, pos); {exp = IR.translateBreak(label), ty = T.UNIT})
         | trexp (A.ArrayExp{typ, size, init, pos}) =
