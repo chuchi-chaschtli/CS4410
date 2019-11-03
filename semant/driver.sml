@@ -1,4 +1,4 @@
-structure TypeCheck : sig val check : string -> unit end =
+structure TypeCheck : sig val check : string -> Tree.exp end =
 struct
   fun check filename =
     let
