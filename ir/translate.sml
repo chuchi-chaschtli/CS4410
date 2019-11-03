@@ -286,18 +286,7 @@ struct
           Tree.MEM(Tree.TEMP(tmp))))
     end
 
-  (* NOTE/TODO: Assume that all local variables are stack-allocated *)
-  fun translateVarDec(frameOffset, exp) = (
-    Nx(
-      Tree.MOVE(
-        Tree.MEMLOC(
-          Tree.BINOP(
-            Tree.PLUS,
-            Tree.TEMP(F.FP),
-            Tree.CONST(frameOffset)
-          )
-        ),
-      unEx exp)))
+  fun translateVarDec((level, access), valExp) = (Nx(Tree.MOVE(F.exp(access)(F.FP), unEx valExp)))
 
   fun todo() = Ex (Tree.TODO)
 end
