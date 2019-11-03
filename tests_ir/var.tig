@@ -1,0 +1,6 @@
+/* Simple variable declaration */
+let
+  var x := 7
+in
+  x
+end

@@ -1,0 +1,8 @@
+/* Simple variable declarations */
+let
+  var x := 7
+  var y := 3
+in
+  x;
+  y
+end
