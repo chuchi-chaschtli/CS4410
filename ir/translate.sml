@@ -2,7 +2,9 @@ structure F = Frame
 
 signature TRANSLATE =
 sig
-    type exp
+    datatype exp = Ex of Tree.exp
+                 | Nx of Tree.stm
+                 | Cx of Temp.label * Temp.label -> Tree.stm
     type level
     type access (* Not same as Frame.access *)
 
@@ -10,6 +12,17 @@ sig
     val newLevel : {parent:level, name:Temp.label, formals: bool list} -> level
     val formals: level -> access list
     val allocLocal: level -> bool -> access
+
+    val zero : Tree.exp
+    val one : Tree.exp
+
+    val translateWhile  : exp * exp * Tree.label -> exp
+    val translateIf     : exp * exp * exp        -> exp
+    val translateAssign : exp * exp              -> exp
+
+    val unEx : exp -> Tree.exp
+    val unNx : exp -> Tree.stm
+    val unCx : exp -> Temp.label * Temp.label -> Tree.stm
 end
 
 structure Translate : TRANSLATE =
@@ -80,9 +93,11 @@ struct
     | unEx (Nx s) = Tree.ESEQ(s, zero)
 
   fun unCx (Cx c)    = c
-    | unCx (Ex zero) = (fn(tlabel, flabel) => Tree.JUMP(Tree.NAME(flabel), [flabel]))
-    | unCx (Ex one)  = (fn(tlabel, flabel) => Tree.JUMP(Tree.NAME(tlabel), [tlabel]))
-    | unCx (Ex e)    = (fn(tlabel, flabel) => Tree.CJUMP(Tree.EQ, one, e, tlabel, flabel))
+    | unCx (Ex e)    = (if e = zero
+                        then (fn(tlabel, flabel) => Tree.JUMP(Tree.NAME(flabel), [flabel]))
+                        else if e = one
+                             then (fn(tlabel, flabel) => Tree.JUMP(Tree.NAME(tlabel), [tlabel]))
+                             else fn(tlabel, flabel) => Tree.CJUMP(Tree.EQ, one, e, tlabel, flabel))
     | unCx (Nx _)    = (ErrorMsg.error 0 "Cannot process no-result on conditional";
                         fn (a, b) => Tree.LABEL(Temp.newlabel()))
 
@@ -96,6 +111,12 @@ struct
     | locFromExp Tree.TODO     = (ErrorMsg.error 0 "TODO found"; Tree.TEMPLOC(Temp.newtemp()))
     | locFromExp _             = (ErrorMsg.error 0 "Unable to perform conversion"; Tree.TEMPLOC(Temp.newtemp()))
 
+  (*
+    test: CJMP TEST body break
+    body: BODY
+          JMP test
+    break:
+  *)
   fun translateWhile(test, body, breakTmp) =
     let val testTmp = Temp.newlabel()
         val bodyTmp = Temp.newlabel()
@@ -109,6 +130,43 @@ struct
           Tree.JUMP (Tree.NAME testTmp, [testTmp]),
           Tree.LABEL breakTmp
         ]))
+    end
+
+  (*
+          CJMP TEST then else
+    then: THEN
+          JMP done
+    else: ELSE
+    done:
+  *)
+  (* TODO should this be returning Nx? "if" should return a value IIRC *)
+  fun translateIf(test, thenExp, elseExp) = 
+    let
+      val thenTmp = Temp.newlabel()
+      val elseTmp = Temp.newlabel()
+      val doneTmp = Temp.newlabel()
+    in
+      Nx(
+        Tree.SEQ(
+          unCx test (thenTmp, elseTmp),
+          Tree.SEQ(
+            Tree.LABEL thenTmp,
+            Tree.SEQ(
+              unNx thenExp,
+              Tree.SEQ(
+                Tree.JUMP (Tree.NAME doneTmp, [doneTmp]),
+                Tree.SEQ(
+                  Tree.LABEL elseTmp,
+                  Tree.SEQ(
+                    unNx elseExp,
+                    Tree.LABEL doneTmp
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
     end
 
   fun translateAssign(v, e) = Nx (Tree.MOVE (locFromExp (unEx v), unEx e))

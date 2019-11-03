@@ -3,6 +3,11 @@
 
 ---
 
+## Update November 3rd
+
+As of Nov 3rd, this folder's driver is not functional, thanks to reliance on IR
+package files.
+
 ## References
 
 We found these documents helpful in our implementation of the type-checker.

@@ -57,7 +57,7 @@ sig
   val transDec  : venv * tenv * IR.level * A.dec      * Temp.label -> {venv : venv, tenv : tenv}
   val transDecs : venv * tenv * IR.level * A.dec list * Temp.label -> {venv : venv, tenv : tenv}
   val transExp  : venv * tenv * IR.level              * Temp.label -> A.exp -> expty
-  val transProg : A.exp -> unit
+  val transProg : A.exp -> Tree.exp
 end
 
 
@@ -253,10 +253,10 @@ struct
                   val {exp=expElse, ty=tyElse} = trexp expr
                 in
                   (checkEqualOrThrow(tyThen, tyElse, pos);
-                   {exp = IR.Ex(Tree.TODO), ty = tyThen})
+                   {exp = IR.translateIf(expTest, expBody, expElse), ty = tyThen})
                 end
               | NONE => (checkUnit(tyThen, pos);
-                         {exp = IR.Ex(Tree.TODO), ty = T.UNIT}))
+                         {exp = IR.translateIf(expTest, expBody, IR.Ex(Tree.TODO)), ty = T.UNIT}))
           end
         | trexp (A.WhileExp{test, body, pos}) =
           let
@@ -484,6 +484,6 @@ struct
       val _ = FindEscape.findEscape(absyn)
       val {exp, ty} = transExp(Env.base_venv, Env.base_tenv, mainLevel, outerLabel) absyn
     in
-      exp
+      IR.unEx(exp)
     end
 end
