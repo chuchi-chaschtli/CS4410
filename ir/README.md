@@ -1,8 +1,8 @@
-# CS 4410 Frame Analysis
+# CS 4410 Frame Analysis & Translation
 ## Team: Anand Kumar (akumar) + David Reed (reedda)
 
 ---
-How to Run the Frame Analyzer:
+How to Run the Frame Analyzer / IR Translator:
 
 `sml -m sources.cm` **within** the `/ir` directory
 
@@ -12,12 +12,45 @@ Once in the SML REPL, use `Analysis.check "filename"` on any Tiger file.
 
 ## References
 
-We found these documents helpful in our implementation of the frame analyzer.
+We found these documents helpful in our implementation
 * http://sml-family.org/Basis/list-pair.html
 * http://sml-family.org/Basis/integer.html
 * Textbook
 
 ---
+
+# IR Translator
+
+## Implementation Decisions
+
+Listed below are the interesting cases for our IR translation.
+
+### If
+
+`if TEST then THEN else ELSE`:
+
+```
+      CJMP TEST then else
+then: THEN
+      JMP done
+else: ELSE
+done:
+```
+
+### While
+
+`while TEST do BODY`:
+
+```
+test: CJMP TEST body break
+body: BODY
+      JMP test
+break:
+```
+
+---
+
+# Frame Analyzer
 
 ## Implementation Decisions
 

@@ -1,4 +1,4 @@
-structure Analysis : sig val check : string -> unit end =
+structure Analysis : sig val check : string -> Tree.exp end =
 struct
   fun check filename =
     let
