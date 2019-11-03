@@ -15,8 +15,6 @@ sig
   val externalCall: string * Tree.exp list -> Tree.exp
   val exp: access -> Tree.exp -> Tree.exp
 
-  val localVarAccess : access -> Tree.exp
-
   type frag
   val procEntryExit1 : frame * Tree.stm -> Tree.stm
   val procEntryExit3 : frame * Tree.stm -> Tree.stm
