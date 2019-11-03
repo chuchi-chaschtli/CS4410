@@ -56,7 +56,7 @@ sig
   val transDec  : venv * tenv * IR.level * A.dec      * Temp.label -> {venv : venv, tenv : tenv}
   val transDecs : venv * tenv * IR.level * A.dec list * Temp.label -> {venv : venv, tenv : tenv}
   val transExp  : venv * tenv * IR.level              * Temp.label -> A.exp -> expty
-  val transProg : A.exp -> Tree.exp
+  val transProg : A.exp -> Tree.exp (* TODO should return frag list *)
 end
 
 

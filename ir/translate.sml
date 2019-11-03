@@ -32,6 +32,9 @@ sig
     val unEx : exp -> Tree.exp
     val unNx : exp -> Tree.stm
     val unCx : exp -> Temp.label * Temp.label -> Tree.stm
+
+    val procEntryExit : {level: level, body: exp} -> unit
+    val getResult : unit -> F.frag list
 end
 
 structure Translate : TRANSLATE =
@@ -48,6 +51,9 @@ struct
   val outermost = GLOBAL
   val zero = Tree.CONST 0
   val one = Tree.CONST 1
+
+  fun procEntryExit({level: level, body: exp}) = () (* TODO call procEntryExit1 and procEntryExit3 *)
+  fun getResult() = nil (* TODO ref to frag list within Translate*)
 
   fun newLevel {parent=parent, name=name, formals=formals} =
     LEVEL{frame=F.newFrame({name=name, formals=true::formals}), parent=parent}

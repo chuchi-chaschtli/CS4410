@@ -10,6 +10,10 @@ sig
   val formals : frame -> access list
   val allocLocal : frame -> bool -> access
   val externalCall: string * Tree.exp list -> Tree.exp
+
+  type frag
+  val procEntryExit1 : frame * Tree.stm -> Tree.stm
+  val procEntryExit3 : frame * Tree.stm -> Tree.stm
 end
 
 structure MipsFrame : FRAME =
@@ -17,10 +21,16 @@ struct
   datatype access = InFrame of int | InReg of Temp.temp
   type frame = {name: Temp.label, frameOffset: int ref, formals: access list}
 
+  datatype frag = PROC of {body: Tree.stm, frame: frame}
+                | STRING of Temp.label * string
+
   val FP = Temp.newtemp()
   val RV = Temp.newtemp()
   val wordSize = 4
   val numDedicatedArgRegisters = 4
+
+  fun procEntryExit1(frame, stmt) = stmt (* TODO stub for assignment 5 *)
+  fun procEntryExit3(frame, stmt) = stmt (* TODO *)
 
   fun newFrame {name, formals} =
     let
