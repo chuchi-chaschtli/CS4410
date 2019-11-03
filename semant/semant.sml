@@ -285,7 +285,7 @@ struct
             checkUnit(updatedTy, pos);
             {exp=IR.Ex(Tree.TODO), ty=T.UNIT}
           end
-        | trexp (A.BreakExp(pos)) = (checkCanBreak(label, pos); {exp = IR.Ex(Tree.TODO), ty = T.UNIT})
+        | trexp (A.BreakExp(pos)) = (checkCanBreak(tenv, pos); {exp = IR.translateBreak(label), ty = T.UNIT})
         | trexp (A.ArrayExp{typ, size, init, pos}) =
           let
             val binding = S.look(tenv, typ)

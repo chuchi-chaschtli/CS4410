@@ -17,6 +17,7 @@ sig
     val one : Tree.exp
 
     val translateWhile  : exp * exp * Tree.label -> exp
+    val translateBreak  : Tree.label             -> exp
     val translateIf     : exp * exp * exp        -> exp
     val translateAssign : exp * exp              -> exp
     val translateCall   : level * level * Tree.label * exp list -> exp
@@ -132,6 +133,8 @@ struct
           Tree.LABEL breakTmp
         ]))
     end
+
+  fun translateBreak breakTmp = Nx(Tree.JUMP (Tree.NAME breakTmp, breakTmp::nil))
 
   (*
           CJMP TEST then else
