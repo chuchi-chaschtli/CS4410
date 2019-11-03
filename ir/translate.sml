@@ -96,7 +96,7 @@ struct
     | unCx (Ex e)    = (if e = zero
                         then (fn(tlabel, flabel) => Tree.JUMP(Tree.NAME(flabel), [flabel]))
                         else if e = one
-                             then (fn(tlabel, flabel) => Tree.JUMP(Tree.NAME(tlabel), [tlabel]))
+                             then fn(tlabel, flabel) => Tree.JUMP(Tree.NAME(tlabel), [tlabel])
                              else fn(tlabel, flabel) => Tree.CJUMP(Tree.EQ, one, e, tlabel, flabel))
     | unCx (Nx _)    = (ErrorMsg.error 0 "Cannot process no-result on conditional";
                         fn (a, b) => Tree.LABEL(Temp.newlabel()))
@@ -144,29 +144,22 @@ struct
     let
       val thenTmp = Temp.newlabel()
       val elseTmp = Temp.newlabel()
-      val doneTmp = Temp.newlabel()
+      val resultTmp = Temp.newlabel()
+      val jumpTmp = 
     in
-      Nx(
-        Tree.SEQ(
-          unCx test (thenTmp, elseTmp),
-          Tree.SEQ(
-            Tree.LABEL thenTmp,
-            Tree.SEQ(
-              unNx thenExp,
-              Tree.SEQ(
-                Tree.JUMP (Tree.NAME doneTmp, [doneTmp]),
-                Tree.SEQ(
-                  Tree.LABEL elseTmp,
-                  Tree.SEQ(
-                    unNx elseExp,
-                    Tree.LABEL doneTmp
-                  )
-                )
-              )
-            )
-          )
-        )
+    Ex(
+      Tree.ESEQ(
+        buildSeq([
+          unCx testExp (thenTmp, elseTmp),
+          Tree.LABEL(thenTmp),
+          Tree.MOVE(Tree.TEMPLOC(doneTmp), unEx thenExp),
+          Tree.JUMP(Tree.NAME(joinTmp), [joinTmp]),
+          Tree.LABEL(elseTmp),
+          Tree.MOVE(Tree.TEMPLOC(doneTmp), unEx elseExp),
+          Tree.JUMP(Tree.NAME(joinTmp), [join])),
+        Tree.TEMP(doneTmp)
       )
+    )
     end
 
   fun translateAssign(v, e) = Nx (Tree.MOVE (locFromExp (unEx v), unEx e))
