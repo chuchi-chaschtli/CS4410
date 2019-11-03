@@ -49,7 +49,7 @@ struct
 
   (* Builds a SEQ from a list of expressions as a convenience function *)
   fun buildSeq(first::nil) = first
-    | buildSeq(first::rest) = Tree.SEQ(first, buildSeqs rest)
+    | buildSeq(first::rest) = Tree.SEQ(first, buildSeq rest)
 
   fun unEx (Ex e) = e
     | unEx (Cx genstm) =
