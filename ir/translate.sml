@@ -1,3 +1,4 @@
+structure A = Absyn
 structure F = Frame
 
 signature TRANSLATE =
@@ -16,9 +17,15 @@ sig
     val zero : Tree.exp
     val one : Tree.exp
 
+    val translateInt    : int -> exp
+    val translateNil    : unit -> exp
+    val translateArith  : Absyn.oper * exp * exp -> exp
+    val translateRelop  : Absyn.oper * exp * exp -> exp
     val translateWhile  : exp * exp * Tree.label -> exp
     val translateIf     : exp * exp * exp        -> exp
     val translateAssign : exp * exp              -> exp
+
+    val todo: unit -> exp
 
     val unEx : exp -> Tree.exp
     val unNx : exp -> Tree.stm
@@ -105,11 +112,35 @@ struct
     | unNx (Nx n) = n
     | unNx (c)    = unNx(Ex(unEx(c)))
 
+  fun convertBinop A.PlusOp = Tree.PLUS
+    | convertBinop A.MinusOp = Tree.MINUS
+    | convertBinop A.TimesOp = Tree.MUL
+    | convertBinop A.DivideOp = Tree.DIV
+    | convertBinop _ = (ErrorMsg.error 0 "Unsupported binop conversion"; Tree.DIV)
+
+  fun convertRelop A.LtOp = Tree.LT
+    | convertRelop A.LeOp = Tree.LE
+    | convertRelop A.GtOp = Tree.GT
+    | convertRelop A.GeOp = Tree.GE
+    | convertRelop A.EqOp = Tree.EQ
+    | convertRelop A.NeqOp = Tree.NE
+    | convertRelop _ = (ErrorMsg.error 0 "Unsupported relop conversion"; Tree.NE)
+
   (* Converts a temp or memory expression to a location to be used for moves *)
   fun locFromExp (Tree.TEMP t) = Tree.TEMPLOC t
     | locFromExp (Tree.MEM  e) = Tree.MEMLOC e
     | locFromExp Tree.TODO     = (ErrorMsg.error 0 "TODO found"; Tree.TEMPLOC(Temp.newtemp()))
     | locFromExp _             = (ErrorMsg.error 0 "Unable to perform conversion"; Tree.TEMPLOC(Temp.newtemp()))
+
+  fun translateInt(n) = Ex (Tree.CONST n)
+
+  fun translateNil() = Ex zero
+
+  fun translateArith(oper, left, right) =
+    Ex (Tree.BINOP (convertBinop oper, unEx left, unEx right))
+
+  fun translateRelop(oper, left, right) =
+    Cx (fn (t, f) => Tree.CJUMP(convertRelop oper, unEx left, unEx right, t, f))
 
   (*
     test: CJMP TEST body break
@@ -140,27 +171,29 @@ struct
     done:
   *)
   (* TODO should this be returning Nx? "if" should return a value IIRC *)
-  fun translateIf(test, thenExp, elseExp) = 
+  fun translateIf(testExp, thenExp, elseExp) =
     let
       val thenTmp = Temp.newlabel()
       val elseTmp = Temp.newlabel()
-      val resultTmp = Temp.newlabel()
-      val jumpTmp = 
+      val resultTmp = Temp.newtemp()
+      val joinTmp = Temp.newlabel()
     in
     Ex(
       Tree.ESEQ(
         buildSeq([
           unCx testExp (thenTmp, elseTmp),
           Tree.LABEL(thenTmp),
-          Tree.MOVE(Tree.TEMPLOC(doneTmp), unEx thenExp),
+          Tree.MOVE(Tree.TEMPLOC(resultTmp), unEx thenExp),
           Tree.JUMP(Tree.NAME(joinTmp), [joinTmp]),
           Tree.LABEL(elseTmp),
-          Tree.MOVE(Tree.TEMPLOC(doneTmp), unEx elseExp),
-          Tree.JUMP(Tree.NAME(joinTmp), [join])),
-        Tree.TEMP(doneTmp)
+          Tree.MOVE(Tree.TEMPLOC(resultTmp), unEx elseExp),
+          Tree.JUMP(Tree.NAME(joinTmp), [joinTmp])]),
+        Tree.TEMP(resultTmp)
       )
     )
     end
 
   fun translateAssign(v, e) = Nx (Tree.MOVE (locFromExp (unEx v), unEx e))
+
+  fun todo() = Ex (Tree.TODO)
 end

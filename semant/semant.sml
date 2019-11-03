@@ -1,4 +1,3 @@
-structure A = Absyn
 structure T = Types
 structure S = Symbol
 structure IR = Translate
@@ -146,30 +145,30 @@ struct
           let
             val {exp=expLeft, ty=tyLeft} = trexp left
             val {exp=expRight, ty=tyRight} = trexp right
-            fun verifyArithOperands(binop) =
+            fun verifyArithOperands() =
               (checkInt(tyLeft, pos);
                checkInt(tyRight, pos);
-               {exp=IR.Ex(Tree.BINOP(binop, IR.unEx(expLeft), IR.unEx(expRight))), ty=T.INT})
-            fun verifyEquatableOperands(relop) =
+               {exp=IR.translateArith(oper, expLeft, expRight), ty=T.INT})
+            fun verifyEquatableOperands() =
               (checkEqualOrThrow(tyLeft, tyRight, pos);
-               {exp=IR.Cx(fn (t, f) => Tree.CJUMP(relop, IR.unEx(expLeft), IR.unEx(expRight), t, f)), ty=T.INT})
+               {exp=IR.translateRelop(oper, expLeft, expRight), ty=T.INT})
             fun verifyComparableOperands(relop) =
               ((if (tyLeft = T.STRING andalso tyRight = T.STRING) orelse (tyLeft = T.INT andalso tyRight = T.INT)
                 then ()
                 else ErrorMsg.error pos "comparable types must be string or int");
-               {exp=IR.Cx(fn (t, f) => Tree.CJUMP(relop, IR.unEx(expLeft), IR.unEx(expRight), t, f)), ty=T.INT})
+               {exp=IR.translateRelop(oper, expLeft, expRight), ty=T.INT})
           in
             case oper
-              of A.PlusOp   => verifyArithOperands(Tree.PLUS)
-               | A.MinusOp  => verifyArithOperands(Tree.MINUS)
-               | A.TimesOp  => verifyArithOperands(Tree.MUL)
-               | A.DivideOp => verifyArithOperands(Tree.DIV)
-               | A.LtOp     => verifyComparableOperands(Tree.LT)
-               | A.LeOp     => verifyComparableOperands(Tree.LE)
-               | A.GtOp     => verifyComparableOperands(Tree.GT)
-               | A.GeOp     => verifyComparableOperands(Tree.GE)
-               | A.EqOp     => verifyEquatableOperands(Tree.EQ)
-               | A.NeqOp    => verifyEquatableOperands(Tree.NE)
+              of A.PlusOp   => verifyArithOperands()
+               | A.MinusOp  => verifyArithOperands()
+               | A.TimesOp  => verifyArithOperands()
+               | A.DivideOp => verifyArithOperands()
+               | A.LtOp     => verifyComparableOperands()
+               | A.LeOp     => verifyComparableOperands()
+               | A.GtOp     => verifyComparableOperands()
+               | A.GeOp     => verifyComparableOperands()
+               | A.EqOp     => verifyEquatableOperands()
+               | A.NeqOp    => verifyEquatableOperands()
           end
         | trexp (A.LetExp{decs, body, pos}) =
             let val {venv = venv', tenv = tenv'} = transDecs(venv, tenv, level, decs, label)
@@ -177,9 +176,9 @@ struct
               transExp(venv', tenv', level, label) body
             end
         | trexp (A.VarExp(var)) = trvar(var)
-        | trexp (A.NilExp) = {exp = IR.Ex(IR.zero), ty = T.NIL}
-        | trexp (A.IntExp(n)) = {exp = IR.Ex(Tree.CONST n), ty = T.INT}
-        | trexp (A.StringExp(str, posn)) = {exp = IR.Ex(Tree.TODO), ty = T.STRING}
+        | trexp (A.NilExp) = {exp = IR.translateNil(), ty = T.NIL}
+        | trexp (A.IntExp(n)) = {exp = IR.translateInt(n), ty = T.INT}
+        | trexp (A.StringExp(str, posn)) = {exp = IR.todo(), ty = T.STRING}
         | trexp (A.CallExp{func, args, pos}) =
           (case S.look(venv, func)
               of SOME(Env.FunEntry{level, label, formals, result}) =>
@@ -195,11 +194,11 @@ struct
                  in
                    verifyFormals(formals, args)
                  end;
-                {exp = IR.Ex(Tree.TODO), ty = result})
+                {exp = IR.todo(), ty = result})
               | SOME _ => (ErrorMsg.error pos "environment entry is not a fun entry";
-                           {exp = IR.Ex(Tree.TODO), ty = T.UNIT})
+                           {exp = IR.todo(), ty = T.UNIT})
               | NONE => (ErrorMsg.error pos ("undefined function " ^ S.name(func));
-                         {exp = IR.Ex(Tree.TODO), ty = T.UNIT}))
+                         {exp = IR.todo(), ty = T.UNIT}))
         | trexp (A.RecordExp{fields, typ, pos}) =
           (case S.look(tenv, typ)
             of SOME (T.RECORD(fieldList, unique)) =>
@@ -220,12 +219,12 @@ struct
                    | searchFields(nil) = ()
               in
                 (searchFields fields;
-                 {exp = IR.Ex(Tree.TODO), ty = T.RECORD(fieldList, unique)})
+                 {exp = IR.todo(), ty = T.RECORD(fieldList, unique)})
               end
             | _ => (ErrorMsg.error pos "record type was undeclared";
-                       {exp=IR.Ex(Tree.TODO), ty=T.UNIT}))
+                       {exp=IR.todo(), ty=T.UNIT}))
         | trexp (A.SeqExp(exprs)) =
-          let fun verifyExprs nil = ({exp = IR.Ex(Tree.TODO), ty = T.UNIT})
+          let fun verifyExprs nil = ({exp = IR.todo(), ty = T.UNIT})
                 | verifyExprs ((expr, pos)::nil) = (trexp expr)
                 | verifyExprs ((expr, pos)::rest) = (trexp expr; verifyExprs(rest))
           in
@@ -241,7 +240,7 @@ struct
                 (checkEqualOrThrow(exprTy, varTy, pos);
                  {exp = IR.translateAssign(varExp, exprExp), ty = T.UNIT})
               end
-          else (ErrorMsg.error pos "cannot re-assign to var"; {exp = IR.Ex(Tree.TODO), ty = T.UNIT})
+          else (ErrorMsg.error pos "cannot re-assign to var"; {exp = IR.todo(), ty = T.UNIT})
         | trexp (A.IfExp{test, then', else', pos}) =
           let
             val {exp=expTest, ty=tyTest} = trexp test
@@ -257,7 +256,7 @@ struct
                    {exp = IR.translateIf(expTest, expBody, expElse), ty = tyThen})
                 end
               | NONE => (checkUnit(tyThen, pos);
-                         {exp = IR.translateIf(expTest, expBody, IR.Ex(Tree.TODO)), ty = T.UNIT}))
+                         {exp = IR.translateIf(expTest, expBody, IR.todo()), ty = T.UNIT}))
           end
         | trexp (A.WhileExp{test, body, pos}) =
           let
@@ -283,9 +282,9 @@ struct
             checkInt(tyLo, pos);
             checkInt(tyHi, pos);
             checkUnit(updatedTy, pos);
-            {exp=IR.Ex(Tree.TODO), ty=T.UNIT}
+            {exp=IR.todo(), ty=T.UNIT}
           end
-        | trexp (A.BreakExp(pos)) = (checkCanBreak(tenv, pos); {exp = IR.Ex(Tree.TODO), ty = T.UNIT})
+        | trexp (A.BreakExp(pos)) = (checkCanBreak(tenv, pos); {exp = IR.todo(), ty = T.UNIT})
         | trexp (A.ArrayExp{typ, size, init, pos}) =
           let
             val binding = S.look(tenv, typ)
@@ -298,23 +297,23 @@ struct
                   of (T.ARRAY(ty, unique)) =>
                      (checkInt(tySize, pos);
                       checkEqualOrThrow(actual_ty(ty), actual_ty(tyInit), pos);
-                      {exp = IR.Ex(Tree.TODO), ty = T.ARRAY(ty, unique)})
+                      {exp = IR.todo(), ty = T.ARRAY(ty, unique)})
                    | _ => (ErrorMsg.error pos ("type is not array " ^ S.name(typ));
-                          {exp = IR.Ex(Tree.TODO), ty = T.UNIT}))
+                          {exp = IR.todo(), ty = T.UNIT}))
               | NONE => (ErrorMsg.error pos ("undefined array type " ^ S.name(typ));
-                         {exp = IR.Ex(Tree.TODO), ty = T.UNIT}))
+                         {exp = IR.todo(), ty = T.UNIT}))
           end
 
       and trvar (A.SimpleVar(id, pos)) =
             (case S.look(venv, id)
                 of SOME(Env.VarEntry{access, ty}) =>
-                   {exp = IR.Ex(Tree.TODO), ty = actual_ty ty}
+                   {exp = IR.todo(), ty = actual_ty ty}
                  | SOME(Env.ReadVarEntry{access, ty}) =>
-                    {exp = IR.Ex(Tree.TODO), ty = actual_ty ty}
+                    {exp = IR.todo(), ty = actual_ty ty}
                  | SOME _ => (ErrorMsg.error pos "environment entry is not a var entry";
-                              {exp = IR.Ex(Tree.TODO), ty = T.UNIT})
+                              {exp = IR.todo(), ty = T.UNIT})
                  | NONE => (ErrorMsg.error pos ("undefined variable " ^ S.name id);
-                            {exp = IR.Ex(Tree.TODO), ty = T.UNIT}))
+                            {exp = IR.todo(), ty = T.UNIT}))
         | trvar (A.FieldVar(var, id, pos)) =
           let
             val {exp=expVar, ty=tyVar} = trvar(var)
@@ -328,18 +327,18 @@ struct
           in
             (case tyVar
               of T.RECORD (fields, unique) =>
-                {exp=IR.Ex(Tree.TODO), ty = getFieldTypeWithId(fields, id, pos)}
+                {exp=IR.todo(), ty = getFieldTypeWithId(fields, id, pos)}
               | _ => (ErrorMsg.error pos "tried to access record field of object that is not a record";
-                     {exp=IR.Ex(Tree.TODO), ty = T.UNIT}))
+                     {exp=IR.todo(), ty = T.UNIT}))
           end
         | trvar (A.SubscriptVar(var, exp, pos)) =
           let
             val {exp=expVar, ty=tyVar} = trvar(var)
           in
             case tyVar
-              of T.ARRAY (ty, unique) => {exp=IR.Ex(Tree.TODO), ty=ty}
+              of T.ARRAY (ty, unique) => {exp=IR.todo(), ty=ty}
                | _ => (ErrorMsg.error pos ("Attempted to access a non-array type: " ^ T.toString(tyVar));
-                      {exp=IR.Ex(Tree.TODO), ty=T.UNIT})
+                      {exp=IR.todo(), ty=T.UNIT})
           end
     in
       trexp
