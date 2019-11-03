@@ -47,6 +47,10 @@ struct
                                     (level, f_access)
                                   end)
 
+  (* Builds a SEQ from a list of expressions as a convenience function *)
+  fun buildSeq(first::nil) = first
+    | buildSeq(first::rest) = Tree.SEQ(first, buildSeqs rest)
+
   fun unEx (Ex e) = e
     | unEx (Cx genstm) =
 			let
@@ -55,19 +59,13 @@ struct
         val f = Temp.newlabel()
 			in
         Tree.ESEQ(
-          Tree.SEQ(
-            Tree.MOVE(Tree.TEMPLOC r, one),
-            Tree.SEQ(
+          buildSeq([
+              Tree.MOVE(Tree.TEMPLOC r, one),
               genstm(t,f),
-              Tree.SEQ(
-                Tree.LABEL f,
-                Tree.SEQ(
-                  Tree.MOVE(Tree.TEMPLOC r, zero),
-                  Tree.LABEL t
-                )
-              )
-            )
-          ),
+              Tree.LABEL f,
+              Tree.MOVE(Tree.TEMPLOC r, zero),
+              Tree.LABEL t
+            ]),
 					Tree.TEMP r)
 			end
     | unEx (Nx s) = Tree.ESEQ(s, zero)
@@ -94,22 +92,14 @@ struct
         val bodyTmp = Temp.newlabel()
     in
       Nx(
-        Tree.SEQ(
+        buildSeq([
           Tree.LABEL testTmp,
-          Tree.SEQ(
-            unCx test (bodyTmp, breakTmp),
-            Tree.SEQ(
-              Tree.LABEL bodyTmp,
-              Tree.SEQ(
-                unNx body,
-                Tree.SEQ(
-                  Tree.JUMP (Tree.NAME testTmp, [testTmp]),
-                  Tree.LABEL breakTmp
-                )
-              )
-            )
-          )
-        ))
+          unCx test (bodyTmp, breakTmp),
+          Tree.LABEL bodyTmp,
+          unNx body,
+          Tree.JUMP (Tree.NAME testTmp, [testTmp]),
+          Tree.LABEL breakTmp
+        ]))
     end
 
   fun translateAssign(v, e) = Nx (Tree.MOVE (locFromExp (unEx v), unEx e))
