@@ -9,7 +9,7 @@ fun printtree (outstream, s0) =
   fun indent 0 = ()
     | indent i = (say " "; indent(i-1))
 
-  fun stm(T.SEQ(a, b), d) =
+  fun stm(Tree.SEQ(a, b), d) =
         (indent d; sayln "SEQ("; stm(a,d+1); sayln ","; stm(b,d+1); say ")")
     | stm(Tree.LABEL lab, d) = (indent d; say "LABEL "; say (Symbol.name lab))
     | stm(Tree.JUMP (e,_), d) =  (indent d; sayln "JUMP("; exp(e,d+1); say ")")
@@ -35,8 +35,8 @@ fun printtree (outstream, s0) =
 			   say ")")
     | exp(Tree.TODO, d) = (indent d; say "TODO!")
 
-  and loc(Tree.TEMPLOC t, d) = (indent d; say "TEMP t"; say(Int.toString t))
-    | loc(Tree.MEMLOC(e),d) = (indent d; sayln "MEM("; exp(e,d+1); say ")")
+  and loc(Tree.TEMP(t), d) = (indent d; say "TEMP t"; say(Int.toString t))
+    | loc(Tree.MEM(e),d) = (indent d; sayln "MEM("; exp(e,d+1); say ")")
 
   and binop Tree.PLUS = say "PLUS"
     | binop Tree.MINUS = say "MINUS"
