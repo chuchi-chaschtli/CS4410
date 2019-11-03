@@ -27,6 +27,9 @@ sig
     val translateAssign : exp * exp              -> exp
     val translateCall   : level * level * Tree.label * exp list -> exp
 
+    val translateFieldVar     : exp * int -> exp
+    val translateSubscriptVar : exp * exp -> exp
+
     val todo: unit -> exp
 
     val unEx : exp -> Tree.exp
@@ -48,6 +51,7 @@ struct
   val outermost = GLOBAL
   val zero = Tree.CONST 0
   val one = Tree.CONST 1
+  val word = Tree.CONST(F.wordSize)
 
   fun newLevel {parent=parent, name=name, formals=formals} =
     LEVEL{frame=F.newFrame({name=name, formals=true::formals}), parent=parent}
@@ -207,6 +211,20 @@ struct
             val processedArgs = map unEx args
         in Ex (Tree.CALL (Tree.NAME label, link::processedArgs))
         end
+
+  fun calculateAddress(ex, index) =
+    Tree.BINOP(Tree.PLUS, ex, Tree.BINOP(Tree.MUL, index, word))
+
+  fun translateFieldVar(name, element) =
+    Ex(Tree.MEM(calculateAddress(unEx name, Tree.CONST(element))))
+
+  fun translateSubscriptVar(array, index) =
+    let val tmp = Temp.newtemp()
+    in
+      Ex(Tree.ESEQ(
+          Tree.MOVE(Tree.TEMPLOC(tmp), calculateAddress(unEx array, unEx index)),
+          Tree.MEM(Tree.TEMP(tmp))))
+    end
 
   fun todo() = Ex (Tree.TODO)
 end

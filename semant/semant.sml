@@ -317,26 +317,29 @@ struct
         | trvar (A.FieldVar(var, id, pos)) =
           let
             val {exp=expVar, ty=tyVar} = trvar(var)
-            fun getFieldTypeWithId (nil, id, pos) =
+            fun getFieldTypeWithId (nil, id, pos, index) =
                 (ErrorMsg.error pos ("record does not have field with id: " ^ S.name id);
-                T.UNIT)
-              | getFieldTypeWithId ((name, ty)::rest, id, pos) =
+                (T.UNIT, index))
+              | getFieldTypeWithId ((name, ty)::rest, id, pos, index) =
                 if (name = id)
-                then ty
-                else getFieldTypeWithId(rest, id, pos)
+                then (ty, index)
+                else getFieldTypeWithId(rest, id, pos, index + 1)
           in
             (case tyVar
               of T.RECORD (fields, unique) =>
-                {exp=IR.todo(), ty = getFieldTypeWithId(fields, id, pos)}
+                let val (ty, index) = getFieldTypeWithId(fields, id, pos, 0)
+                in {exp=IR.translateFieldVar(expVar, index), ty=ty}
+                end
               | _ => (ErrorMsg.error pos "tried to access record field of object that is not a record";
                      {exp=IR.todo(), ty = T.UNIT}))
           end
         | trvar (A.SubscriptVar(var, exp, pos)) =
           let
             val {exp=expVar, ty=tyVar} = trvar(var)
+            val {exp=expSub, ty=tySub} = trexp(exp)
           in
             case tyVar
-              of T.ARRAY (ty, unique) => {exp=IR.todo(), ty=ty}
+              of T.ARRAY (ty, unique) => {exp=IR.translateSubscriptVar(expVar, expSub), ty=ty}
                | _ => (ErrorMsg.error pos ("Attempted to access a non-array type: " ^ T.toString(tyVar));
                       {exp=IR.todo(), ty=T.UNIT})
           end
