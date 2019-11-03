@@ -33,6 +33,8 @@ sig
     val translateFieldVar     : exp * int -> exp
     val translateSubscriptVar : exp * exp -> exp
 
+    val translateVarDec : int * exp -> exp
+
     val todo: unit -> exp
 
     val unEx : exp -> Tree.exp
@@ -283,6 +285,19 @@ struct
           Tree.MOVE(Tree.TEMPLOC(tmp), calculateAddress(unEx array, unEx index)),
           Tree.MEM(Tree.TEMP(tmp))))
     end
+
+  (* NOTE/TODO: Assume that all local variables are stack-allocated *)
+  fun translateVarDec(frameOffset, exp) = (
+    Nx(
+      Tree.MOVE(
+        Tree.MEMLOC(
+          Tree.BINOP(
+            Tree.PLUS,
+            Tree.TEMP(F.FP),
+            Tree.CONST(frameOffset)
+          )
+        ),
+      unEx exp)))
 
   fun todo() = Ex (Tree.TODO)
 end
