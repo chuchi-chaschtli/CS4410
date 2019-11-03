@@ -6,6 +6,7 @@ sig
   val name: frame -> Temp.label
   val formals : frame -> access list
   val allocLocal : frame -> bool -> access
+  val externalCall: string * Tree.exp list -> Tree.exp
 end
 
 structure MipsFrame : FRAME =
@@ -51,6 +52,8 @@ struct
 
   fun name (frame:frame) = (#name frame)
   fun formals (frame:frame) = (#formals frame)
+
+  fun externalCall (s, args) = Tr.CALL(Tr.NAME(Temp.namedlabel s), args)
 end
 
 structure Frame : FRAME = MipsFrame
