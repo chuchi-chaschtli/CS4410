@@ -223,12 +223,21 @@ struct
               end
             | _ => (ErrorMsg.error pos "record type was undeclared";
                        {exp=IR.todo(), ty=T.UNIT}))
+        | trexp (A.SeqExp(nil)) = {exp = IR.todo(), ty = T.UNIT}
+        | trexp (A.SeqExp((expr,pos)::nil)) = trexp expr
         | trexp (A.SeqExp(exprs)) =
-          let fun verifyExprs nil = ({exp = IR.todo(), ty = T.UNIT})
-                | verifyExprs ((expr, pos)::nil) = (trexp expr)
-                | verifyExprs ((expr, pos)::rest) = (trexp expr; verifyExprs(rest))
+          let
+            fun verifyExprs(nil, acc) = {exp=IR.translateNil(), ty = T.UNIT}
+              | verifyExprs((expr, pos)::nil, acc) =
+                let val {exp=exprExp, ty=exprTy} = trexp expr
+                in {exp=IR.translateSeqExp(exprExp::acc), ty = exprTy}
+                end
+              | verifyExprs((expr, pos)::rest, acc) =
+                let val {exp=exprExp, ty=exprTy} = trexp expr
+                in verifyExprs(rest, exprExp::acc)
+                end
           in
-            verifyExprs(exprs)
+            verifyExprs(exprs, nil)
           end
         | trexp (A.AssignExp{var, exp, pos}) =
           if isVarAssignable(var, venv)

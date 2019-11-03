@@ -27,6 +27,7 @@ sig
     val translateIf     : exp * exp * exp        -> exp
     val translateAssign : exp * exp              -> exp
     val translateCall   : level * level * Tree.label * exp list -> exp
+    val translateSeqExp : exp list -> exp
 
     val translateSimpleVar    : access * level -> exp
     val translateFieldVar     : exp * int -> exp
@@ -253,6 +254,18 @@ struct
             val processedArgs = map unEx args
         in Ex (Tree.CALL (Tree.NAME label, link::processedArgs))
         end
+
+  fun translateSeqExp(exps) =
+    let
+      fun helper(nil, nil) = translateNil()
+        | helper(exp::exps, acc) = helper(exps, exp::acc)
+        | helper(nil, acc::accs) =
+          let val stms = map unNx (rev(accs))
+          in Ex (Tree.ESEQ(buildSeq(stms), unEx acc))
+          end
+    in
+      helper(exps, nil)
+    end
 
   fun calculateAddress(ex, index) =
     Tree.BINOP(Tree.PLUS, ex, Tree.BINOP(Tree.MUL, index, word))
