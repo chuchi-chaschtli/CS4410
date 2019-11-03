@@ -73,6 +73,7 @@ struct
   val breakable = S.symbol("*breakable")
 
   (* Checks if we can break here, and throws an error if we cannot. *)
+  (* TODO let's use the label of the nearest BREAK rather than a pinned env var *)
   fun checkCanBreak(tenv, pos) =
     case S.look(tenv, breakable)
       of SOME _ => ()
