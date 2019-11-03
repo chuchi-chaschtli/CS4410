@@ -27,6 +27,7 @@ sig
     val translateAssign : exp * exp              -> exp
     val translateCall   : level * level * Tree.label * exp list -> exp
 
+    val translateSimpleVar    : access * level -> exp
     val translateFieldVar     : exp * int -> exp
     val translateSubscriptVar : exp * exp -> exp
 
@@ -220,6 +221,9 @@ struct
 
   fun calculateAddress(ex, index) =
     Tree.BINOP(Tree.PLUS, ex, Tree.BINOP(Tree.MUL, index, word))
+
+  fun translateSimpleVar ((dec, access), use) =
+    Ex(F.exp access (traverseStaticLinks(dec, use)))
 
   fun translateFieldVar(name, element) =
     Ex(Tree.MEM(calculateAddress(unEx name, Tree.CONST(element))))

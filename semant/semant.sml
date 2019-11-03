@@ -306,10 +306,8 @@ struct
 
       and trvar (A.SimpleVar(id, pos)) =
             (case S.look(venv, id)
-                of SOME(Env.VarEntry{access, ty}) =>
-                   {exp = IR.todo(), ty = actual_ty ty}
-                 | SOME(Env.ReadVarEntry{access, ty}) =>
-                    {exp = IR.todo(), ty = actual_ty ty}
+                of SOME(Env.VarEntry{access, ty} | Env.ReadVarEntry{access, ty}) =>
+                   {exp = IR.translateSimpleVar(access, level), ty = actual_ty ty}
                  | SOME _ => (ErrorMsg.error pos "environment entry is not a var entry";
                               {exp = IR.todo(), ty = T.UNIT})
                  | NONE => (ErrorMsg.error pos ("undefined variable " ^ S.name id);

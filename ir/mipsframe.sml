@@ -2,14 +2,18 @@ signature FRAME =
 sig
   type access
   type frame
+
   val FP: Temp.temp
   val RV: Temp.temp
   val wordSize: int
+
   val newFrame : {name: Temp.label, formals: bool list} -> frame
   val name: frame -> Temp.label
   val formals : frame -> access list
+
   val allocLocal : frame -> bool -> access
   val externalCall: string * Tree.exp list -> Tree.exp
+  val exp: access -> Tree.exp -> Tree.exp
 
   type frag
   val procEntryExit1 : frame * Tree.stm -> Tree.stm
@@ -69,6 +73,11 @@ struct
   fun formals (frame:frame) = (#formals frame)
 
   fun externalCall (s, args) = Tree.CALL(Tree.NAME(Temp.namedlabel s), args)
+
+  fun exp (access) fp =
+    case access
+      of InFrame k => Tree.MEM(Tree.BINOP(Tree.PLUS, fp, Tree.CONST k))
+       | InReg temp => Tree.TEMP temp
 end
 
 structure Frame : FRAME = MipsFrame
