@@ -7,7 +7,7 @@ sig
                  | LABEL of label
                  | JUMP of exp * label list
                  | CJUMP of relop * exp * exp * label * label
-                 | MOVE of loc * exp
+                 | MOVE of exp * exp
                  | EXP of exp
 
     and exp = BINOP of binop * exp * exp
@@ -18,9 +18,6 @@ sig
             | CONST of int
             | CALL of exp * exp list
             | TODO
-
-    and loc = TEMPLOC of Temp.temp
-            | MEMLOC of exp
 
     and binop = PLUS | MINUS | MUL | DIV | AND
               | OR | LSHIFT | RSHIFT | ARSHIFT | XOR
@@ -41,7 +38,7 @@ struct
                  | LABEL of label
                  | JUMP of exp * label list
                  | CJUMP of relop * exp * exp * label * label
-                 | MOVE of loc * exp
+                 | MOVE of exp * exp
                  | EXP of exp
 
     and exp = BINOP of binop * exp * exp

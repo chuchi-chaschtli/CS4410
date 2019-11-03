@@ -59,15 +59,11 @@ struct
        {name=name, frameOffset=(ref 0), formals=formals'}
     end
 
-  fun allocLocal (frame:frame) escape =
-    let
-      val offset = (#frameOffset frame)
-    in
-      offset := !offset - wordSize;
-      if escape
-      then InReg   (Temp.newtemp())
-      else InFrame (!offset)
-    end
+  fun allocLocal {name, frameOffset, formals} escape =
+      (frameOffset := !frameOffset - wordSize;
+       if escape
+       then InReg   (Temp.newtemp())
+       else InFrame (!frameOffset))
 
   fun name (frame:frame) = (#name frame)
   fun formals (frame:frame) = (#formals frame)

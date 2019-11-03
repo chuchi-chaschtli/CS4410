@@ -53,10 +53,10 @@ sig
   type venv
   type tenv
   val transTy   :        tenv            * A.ty       -> T.ty
-  val transDec  : venv * tenv * IR.level * A.dec      * Temp.label -> {venv : venv, tenv : tenv}
-  val transDecs : venv * tenv * IR.level * A.dec list * Temp.label -> {venv : venv, tenv : tenv}
+  val transDec  : venv * tenv * IR.level * A.dec      * Temp.label -> {exps : IR.exp list, venv : venv, tenv : tenv}
+  val transDecs : venv * tenv * IR.level * A.dec list * Temp.label -> {exps : IR.exp list, venv : venv, tenv : tenv}
   val transExp  : venv * tenv * IR.level              * Temp.label -> A.exp -> expty
-  val transProg : A.exp -> Tree.exp (* TODO should return frag list *)
+  val transProg : A.exp -> IR.exp (* TODO should return frag list *)
 end
 
 
@@ -171,9 +171,10 @@ struct
                | A.NeqOp    => verifyEquatableOperands()
           end
         | trexp (A.LetExp{decs, body, pos}) =
-            let val {venv = venv', tenv = tenv'} = transDecs(venv, tenv, level, decs, label)
+            let val {exps=assignExps, venv=venv', tenv=tenv'} = transDecs(venv, tenv, level, decs, label)
+                val {exp=body, ty=ty} = transExp(venv', tenv', level, label) body
             in
-              transExp(venv', tenv', level, label) body
+              {exp=IR.translateLet(assignExps, body), ty=ty}
             end
         | trexp (A.VarExp(var)) = trvar(var)
         | trexp (A.NilExp) = {exp = IR.translateNil(), ty = T.NIL}
@@ -358,18 +359,19 @@ struct
       let
         val {exp, ty=tyInit} = transExp(venv, tenv, level, label) init
         val access = IR.allocLocal level (!escape)
+        val assignExp = IR.translateVarDec(access, exp)
       in
         (case typ
           of SOME ty =>
              let
                val tyResult = transTy(tenv, A.NameTy(ty))
              in (checkEqualOrThrow(tyInit, tyResult, pos);
-                 {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{access = access, ty = tyResult})})
+                {exps=[assignExp], tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{access = access, ty = tyResult})})
              end
            | NONE => (if (tyInit = T.NIL)
                       then (ErrorMsg.error pos "Cannot assign expression to nil")
                       else ();
-                      {tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{access = access, ty = tyInit})}))
+                      {exps=[assignExp], tenv = tenv, venv = S.enter(venv, name, Env.VarEntry{access = access, ty = tyInit})}))
       end
     | transDec (venv, tenv, level, A.TypeDec(typeDecls), label) = transTypeDecls(venv, tenv, typeDecls)
     | transDec (venv, tenv, level, A.FunctionDec(functionDecls), label) = transFuncDecls(venv, tenv, level, functionDecls, label)
@@ -406,9 +408,10 @@ struct
       foldl verifyUnique nil typeDecls;
       foldl verifyAcyclicSymbols nil typeDecls;
       map rewriteRef (!noneRefs);
-      {venv=venv', tenv=tenv'}
+      {exps=nil, venv=venv', tenv=tenv'}
     end
 
+  (* TODO create procedure fragments for func declarations *)
   and transFuncDecls (venv, tenv, level, functionDecls, label) =
     let
       fun transparam{name, escape, typ, pos} =
@@ -468,23 +471,29 @@ struct
           checkEqualOrThrow(funTy, resultTy(result), pos);
           {venv=venvAndFunEntry, tenv=tenv}
         end
-
+        val visitedList = foldl verifyUnique nil functionDecls;
+        val {venv=venv', tenv=tenv'} = foldl verifyReturnType {venv=dummyVenv, tenv=tenv} functionDecls
     in
-      foldl verifyUnique nil functionDecls;
-      foldl verifyReturnType {venv=dummyVenv, tenv=tenv} functionDecls
+      {exps=[], venv=venv', tenv=tenv'}
     end
 
   and transDecs (venv, tenv, level, decs, label) =
     let
-      fun f({ve, te}, nil) = (ErrorMsg.error 0 "empty declaration list"; {venv=venv, tenv=tenv}) (* NOTE should never occur *)
-        | f({ve, te}, dec::nil) = transDec(ve, te, level, dec, label)
-        | f({ve, te}, dec::decs) =
-          let val {venv=venv', tenv=tenv'} = transDec(ve, te, level, dec, label)
+      fun f({el=expList, ve=ve, te=te}, nil) =
+          (ErrorMsg.error 0 "empty declaration list";
+           {exps=expList, venv=venv, tenv=tenv}) (* NOTE should never occur *)
+        | f({el=expList, ve=ve, te=te}, dec::nil) =
+          let val {exps=exps', venv=venv', tenv=tenv'} = transDec(ve, te, level, dec, label)
           in
-            f({ve=venv', te=tenv'}, decs)
+            {exps=expList @ exps', venv=venv', tenv=tenv'}
+          end
+        | f({el=expList, ve=ve, te=te}, dec::decs) =
+          let val {exps=exps', venv=venv', tenv=tenv'} = transDec(ve, te, level, dec, label)
+          in
+            f({el=expList @ exps', ve=venv', te=tenv'}, decs)
           end
     in
-      f ({ve=venv, te=tenv}, decs)
+      f ({el=nil, ve=venv, te=tenv}, decs)
     end
 
   fun transProg absyn =
@@ -494,6 +503,6 @@ struct
       val _ = FindEscape.findEscape(absyn)
       val {exp, ty} = transExp(Env.base_venv, Env.base_tenv, mainLevel, outerLabel) absyn
     in
-      IR.unEx(exp)
+      exp
     end
 end

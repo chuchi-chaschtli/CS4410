@@ -33,6 +33,9 @@ sig
     val translateFieldVar     : exp * int -> exp
     val translateSubscriptVar : exp * exp -> exp
 
+    val translateVarDec : access   * exp -> exp
+    val translateLet    : exp list * exp -> exp
+
     val todo: unit -> exp
 
     val unEx : exp -> Tree.exp
@@ -104,10 +107,10 @@ struct
 			in
         Tree.ESEQ(
           buildSeq([
-              Tree.MOVE(Tree.TEMPLOC r, one),
+              Tree.MOVE(Tree.TEMP r, one),
               genstm(t,f),
               Tree.LABEL f,
-              Tree.MOVE(Tree.TEMPLOC r, zero),
+              Tree.MOVE(Tree.TEMP r, zero),
               Tree.LABEL t
             ]),
 					Tree.TEMP r)
@@ -142,10 +145,10 @@ struct
     | convertRelop _ = (ErrorMsg.error 0 "Unsupported relop conversion"; Tree.NE)
 
   (* Converts a temp or memory expression to a location to be used for moves *)
-  fun locFromExp (Tree.TEMP t) = Tree.TEMPLOC t
-    | locFromExp (Tree.MEM  e) = Tree.MEMLOC e
-    | locFromExp Tree.TODO     = (ErrorMsg.error 0 "TODO found"; Tree.TEMPLOC(Temp.newtemp()))
-    | locFromExp _             = (ErrorMsg.error 0 "Unable to perform conversion"; Tree.TEMPLOC(Temp.newtemp()))
+  fun locFromExp (Tree.TEMP t) = Tree.TEMP t
+    | locFromExp (Tree.MEM  e) = Tree.MEM e
+    | locFromExp Tree.TODO     = (ErrorMsg.error 0 "TODO found"; Tree.TEMP(Temp.newtemp()))
+    | locFromExp _             = (ErrorMsg.error 0 "Unable to perform conversion"; Tree.TEMP(Temp.newtemp()))
 
   fun translateInt(n) = Ex (Tree.CONST n)
 
@@ -234,10 +237,10 @@ struct
         buildSeq([
           unCx testExp (thenTmp, elseTmp),
           Tree.LABEL(thenTmp),
-          Tree.MOVE(Tree.TEMPLOC(resultTmp), unEx thenExp),
+          Tree.MOVE(Tree.TEMP(resultTmp), unEx thenExp),
           Tree.JUMP(Tree.NAME(joinTmp), [joinTmp]),
           Tree.LABEL(elseTmp),
-          Tree.MOVE(Tree.TEMPLOC(resultTmp), unEx elseExp),
+          Tree.MOVE(Tree.TEMP(resultTmp), unEx elseExp),
           Tree.JUMP(Tree.NAME(joinTmp), [joinTmp])]),
         Tree.TEMP(resultTmp)
       )
@@ -280,8 +283,16 @@ struct
     let val tmp = Temp.newtemp()
     in
       Ex(Tree.ESEQ(
-          Tree.MOVE(Tree.TEMPLOC(tmp), calculateAddress(unEx array, unEx index)),
+          Tree.MOVE(Tree.TEMP(tmp), calculateAddress(unEx array, unEx index)),
           Tree.MEM(Tree.TEMP(tmp))))
+    end
+
+  fun translateVarDec((level, access), valExp) = (Nx(Tree.MOVE(F.exp(access)(Tree.TEMP(F.FP)), unEx valExp)))
+
+  fun translateLet(assignments, body) =
+    let val assignments' = map unNx assignments
+    in
+      Ex (Tree.ESEQ(buildSeq(assignments'), unEx body))
     end
 
   fun todo() = Ex (Tree.TODO)
