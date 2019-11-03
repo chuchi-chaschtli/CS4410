@@ -15,7 +15,9 @@ sig
   val externalCall: string * Tree.exp list -> Tree.exp
   val exp: access -> Tree.exp -> Tree.exp
 
-  type frag
+  
+  datatype frag = PROC of {body: Tree.stm, frame: frame}
+                | STRING of Temp.label * string
   val procEntryExit1 : frame * Tree.stm -> Tree.stm
   val procEntryExit3 : frame * Tree.stm -> Tree.stm
 end
