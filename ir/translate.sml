@@ -19,6 +19,7 @@ sig
     val translateWhile  : exp * exp * Tree.label -> exp
     val translateIf     : exp * exp * exp        -> exp
     val translateAssign : exp * exp              -> exp
+    val translateCall   : level * level * Tree.label * exp list -> exp
 
     val unEx : exp -> Tree.exp
     val unNx : exp -> Tree.stm
@@ -140,7 +141,7 @@ struct
     done:
   *)
   (* TODO should this be returning Nx? "if" should return a value IIRC *)
-  fun translateIf(test, thenExp, elseExp) = 
+  fun translateIf(test, thenExp, elseExp) =
     let
       val thenTmp = Temp.newlabel()
       val elseTmp = Temp.newlabel()
@@ -170,4 +171,13 @@ struct
     end
 
   fun translateAssign(v, e) = Nx (Tree.MOVE (locFromExp (unEx v), unEx e))
+
+  fun translateCall(dec, call, label, args) =
+    case dec
+      of GLOBAL => Ex (Tree.TEMP(Temp.newtemp())) (* TODO use FP instead *)
+       | LEVEL {frame, parent} =>
+        let val link = traverseStaticLinks(parent, call)
+            val processedArgs = map unEx args
+        in Ex (Tree.CALL (Tree.NAME label, link::processedArgs))
+        end
 end
