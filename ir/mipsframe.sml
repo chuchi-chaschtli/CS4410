@@ -53,7 +53,7 @@ struct
   fun name (frame:frame) = (#name frame)
   fun formals (frame:frame) = (#formals frame)
 
-  fun externalCall (s, args) = Tr.CALL(Tr.NAME(Temp.namedlabel s), args)
+  fun externalCall (s, args) = Tree.CALL(Tree.NAME(Temp.namedlabel s), args)
 end
 
 structure Frame : FRAME = MipsFrame
