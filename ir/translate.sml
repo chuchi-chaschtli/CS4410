@@ -77,7 +77,7 @@ struct
   declaration level, or error otherwise *)
   fun traverseStaticLinks(dec, use) =
     if use = dec
-    then Tree.TEMP(Temp.newtemp()) (* TODO: replace with frame pointer *)
+    then Tree.TEMP(F.FP)
     else case use
       of LEVEL {frame, parent} => Tree.MEM (traverseStaticLinks(dec, parent))
        | GLOBAL => (ErrorMsg.error 0 "Cannot find any static links"; Tree.TODO)
@@ -101,14 +101,14 @@ struct
 			end
     | unEx (Nx s) = Tree.ESEQ(s, zero)
 
-  fun unCx (Cx c)    = c
-    | unCx (Ex e)    = (if e = zero
-                        then (fn(tlabel, flabel) => Tree.JUMP(Tree.NAME(flabel), [flabel]))
-                        else if e = one
-                             then fn(tlabel, flabel) => Tree.JUMP(Tree.NAME(tlabel), [tlabel])
-                             else fn(tlabel, flabel) => Tree.CJUMP(Tree.EQ, one, e, tlabel, flabel))
-    | unCx (Nx _)    = (ErrorMsg.error 0 "Cannot process no-result on conditional";
-                        fn (a, b) => Tree.LABEL(Temp.newlabel()))
+  fun unCx (Cx c) = c
+    | unCx (Ex e) = (if e = zero
+                     then (fn(tlabel, flabel) => Tree.JUMP(Tree.NAME(flabel), [flabel]))
+                     else if e = one
+                          then fn(tlabel, flabel) => Tree.JUMP(Tree.NAME(tlabel), [tlabel])
+                          else fn(tlabel, flabel) => Tree.CJUMP(Tree.EQ, one, e, tlabel, flabel))
+    | unCx (Nx _) = (ErrorMsg.error 0 "Cannot process no-result on conditional";
+                     fn (a, b) => Tree.LABEL(Temp.newlabel()))
 
   fun unNx (Ex e) = Tree.EXP(e)
     | unNx (Nx n) = n
@@ -201,12 +201,12 @@ struct
 
   fun translateCall(dec, call, label, args) =
     case dec
-      of GLOBAL => Ex (Tree.TEMP(Temp.newtemp())) (* TODO use FP instead *)
+      of GLOBAL => Ex (Tree.TEMP(F.FP))
        | LEVEL {frame, parent} =>
         let val link = traverseStaticLinks(parent, call)
             val processedArgs = map unEx args
         in Ex (Tree.CALL (Tree.NAME label, link::processedArgs))
         end
-        
+
   fun todo() = Ex (Tree.TODO)
 end
