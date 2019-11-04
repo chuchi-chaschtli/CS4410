@@ -36,7 +36,7 @@ struct
   val numDedicatedArgRegisters = 4
 
   fun procEntryExit1(frame, stmt) = stmt (* TODO stub for assignment 5 *)
-  fun procEntryExit3(frame, stmt) = stmt (* TODO *)
+  fun procEntryExit3(frame, stmt) = stmt (* TODO should not be stubbed *)
 
   fun newFrame {name, formals} =
     let

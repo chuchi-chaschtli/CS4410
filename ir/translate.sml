@@ -65,10 +65,7 @@ struct
   val one = Tree.CONST 1
   val word = Tree.CONST(F.wordSize)
 
-  val fragments = ref nil : F.frag list ref
-
-  fun procEntryExit({level: level, body: exp}) = () (* TODO call procEntryExit1 and procEntryExit3 *)
-  fun getResult() = !fragments
+  val fragList : F.frag list ref = ref nil
 
   fun newLevel {parent=parent, name=name, formals=formals} =
     LEVEL{frame=F.newFrame({name=name, formals=true::formals}), parent=parent}
@@ -277,11 +274,11 @@ struct
            | _ => false
 
       fun initLabel() =
-        case List.find isEqual (!fragments)
+        case List.find isEqual (!fragList)
           of SOME(F.STRING(tmp, literal)) => tmp
            | _ => let val tmp = Temp.newlabel()
-                      val updatedFragments = F.STRING(tmp, str)::(!fragments)
-                  in fragments := updatedFragments;
+                      val updatedFragments = F.STRING(tmp, str)::(!fragList)
+                  in fragList := updatedFragments;
                      updatedFragments;
                      tmp
                   end
@@ -337,4 +334,21 @@ struct
     end
 
   fun todo() = Ex (Tree.TODO)
+
+
+  (* TODO Properly send return value to F.RV *)
+  (* TODO does the order here matter? *)
+  fun procEntryExit({level: level, body: exp}) =
+    (case level
+      of LEVEL{frame, parent} => let val retExp = Tree.MOVE(Tree.TEMP(F.RV), unEx body)
+                                     val post1Body = F.procEntryExit1(frame, retExp)
+                                 in
+                                   let val post3Body = F.procEntryExit3(frame, post1Body)
+                                   in
+                                     fragList := F.PROC{body=post3Body, frame=frame} :: !fragList
+                                   end
+                                 end
+       | GLOBAL => ())
+
+  fun getResult() = !fragList (* TODO ref to frag list within Translate*)
 end
