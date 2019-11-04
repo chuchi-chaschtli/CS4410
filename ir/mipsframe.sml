@@ -15,7 +15,9 @@ sig
   val externalCall: string * Tree.exp list -> Tree.exp
   val exp: access -> Tree.exp -> Tree.exp
 
-  type frag
+  
+  datatype frag = PROC of {body: Tree.stm, frame: frame}
+                | STRING of Temp.label * string
   val procEntryExit1 : frame * Tree.stm -> Tree.stm
   val procEntryExit3 : frame * Tree.stm -> Tree.stm
 end
@@ -62,8 +64,8 @@ struct
   fun allocLocal {name, frameOffset, formals} escape =
       (frameOffset := !frameOffset - wordSize;
        if escape
-       then InReg   (Temp.newtemp())
-       else InFrame (!frameOffset))
+       then InFrame (!frameOffset)
+       else InReg   (Temp.newtemp()))
 
   fun name (frame:frame) = (#name frame)
   fun formals (frame:frame) = (#formals frame)

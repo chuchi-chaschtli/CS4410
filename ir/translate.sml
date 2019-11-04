@@ -146,12 +146,6 @@ struct
     | convertRelop A.NeqOp = Tree.NE
     | convertRelop _ = (ErrorMsg.error 0 "Unsupported relop conversion"; Tree.NE)
 
-  (* Converts a temp or memory expression to a location to be used for moves *)
-  fun locFromExp (Tree.TEMP t) = Tree.TEMP t
-    | locFromExp (Tree.MEM  e) = Tree.MEM e
-    | locFromExp Tree.TODO     = (ErrorMsg.error 0 "TODO found"; Tree.TEMP(Temp.newtemp()))
-    | locFromExp _             = (ErrorMsg.error 0 "Unable to perform conversion"; Tree.TEMP(Temp.newtemp()))
-
   fun translateInt(n) = Ex (Tree.CONST n)
 
   fun translateNil() = Ex zero
@@ -178,7 +172,7 @@ struct
       val bodyTmp = Temp.newlabel()
       val loopTmp = Temp.newlabel()
       val initialSeqs = [
-        Tree.MOVE(locFromExp var, unEx lo),
+        Tree.MOVE(var, unEx lo),
         Tree.CJUMP(Tree.LE, var, hi, bodyTmp, breakTmp)
       ]
       val bodySeqs = [
@@ -188,7 +182,7 @@ struct
       ]
       val loopSeqs = [
         Tree.LABEL(loopTmp),
-        Tree.MOVE(locFromExp var, Tree.BINOP(Tree.PLUS, var, one)),
+        Tree.MOVE(var, Tree.BINOP(Tree.PLUS, var, one)),
         Tree.JUMP(Tree.NAME(bodyTmp), bodyTmp::nil),
         Tree.LABEL(breakTmp)
       ]
@@ -249,7 +243,7 @@ struct
     )
     end
 
-  fun translateAssign(v, e) = Nx (Tree.MOVE (locFromExp (unEx v), unEx e))
+  fun translateAssign(v, e) = Nx (Tree.MOVE (unEx v, unEx e))
 
   fun translateCall(dec, call, label, args) =
     case dec
