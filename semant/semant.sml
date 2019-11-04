@@ -217,10 +217,16 @@ struct
                               else searchFields(rest)
                             end
                          | NONE => ErrorMsg.error pos "record field was undeclared")
-                   | searchFields(nil) = ()
+                    | searchFields(nil) = ()
+
+                  fun grabExps nil = nil
+                    | grabExps ((sym, exp, pos)::fields) =
+                      let val {exp = expField, ty = tyField} = trexp(exp)
+                      in expField::grabExps(fields)
+                      end
               in
                 (searchFields fields;
-                 {exp = IR.todo(), ty = T.RECORD(fieldList, unique)})
+                 {exp = IR.initRecord(grabExps fields), ty = T.RECORD(fieldList, unique)})
               end
             | _ => (ErrorMsg.error pos "record type was undeclared";
                        {exp=IR.todo(), ty=T.UNIT}))
