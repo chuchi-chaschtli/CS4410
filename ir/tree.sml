@@ -50,9 +50,6 @@ struct
             | CALL of exp * exp list
             | TODO
 
-    and loc = TEMPLOC of Temp.temp
-            | MEMLOC of exp
-
     and binop = PLUS | MINUS | MUL | DIV | AND
         | OR | LSHIFT | RSHIFT | ARSHIFT | XOR
 
