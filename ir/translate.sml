@@ -28,6 +28,7 @@ sig
     val translateAssign : exp * exp              -> exp
     val translateCall   : level * level * Tree.label * exp list -> exp
     val translateSeqExp : exp list -> exp
+    val translateString : string -> exp
 
     val translateSimpleVar    : access * level -> exp
     val translateFieldVar     : exp * int -> exp
@@ -64,8 +65,10 @@ struct
   val one = Tree.CONST 1
   val word = Tree.CONST(F.wordSize)
 
+  val fragments = ref nil : F.frag list ref
+
   fun procEntryExit({level: level, body: exp}) = () (* TODO call procEntryExit1 and procEntryExit3 *)
-  fun getResult() = nil (* TODO ref to frag list within Translate*)
+  fun getResult() = !fragments
 
   fun newLevel {parent=parent, name=name, formals=formals} =
     LEVEL{frame=F.newFrame({name=name, formals=true::formals}), parent=parent}
@@ -264,6 +267,25 @@ struct
           end
     in
       helper(exps, nil)
+    end
+
+  fun translateString(str) =
+    let
+      fun isEqual(fragment) =
+        case fragment
+          of F.STRING(tmp, literal) => String.compare(str, literal) = EQUAL
+           | _ => false
+
+      fun initLabel() =
+        case List.find isEqual (!fragments)
+          of SOME(F.STRING(tmp, literal)) => tmp
+           | _ => let val tmp = Temp.newlabel()
+                      val updatedFragments = F.STRING(tmp, str)::(!fragments)
+                  in fragments := updatedFragments;
+                     updatedFragments;
+                     tmp
+                  end
+    in Ex(Tree.NAME(initLabel()))
     end
 
   fun calculateAddress(ex, index) =
