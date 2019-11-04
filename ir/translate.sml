@@ -62,8 +62,7 @@ struct
   val one = Tree.CONST 1
   val word = Tree.CONST(F.wordSize)
 
-  fun procEntryExit({level: level, body: exp}) = () (* TODO call procEntryExit1 and procEntryExit3 *)
-  fun getResult() = nil (* TODO ref to frag list within Translate*)
+  val fragList : F.frag list ref = ref nil
 
   fun newLevel {parent=parent, name=name, formals=formals} =
     LEVEL{frame=F.newFrame({name=name, formals=true::formals}), parent=parent}
@@ -290,4 +289,22 @@ struct
     end
 
   fun todo() = Ex (Tree.TODO)
+
+  
+  (* TODO Properly send return value to F.RV *)
+  fun procEntryExit({level: level, body: exp}) =
+    (case level
+      of LEVEL{frame, parent} => let val post1Body = F.procEntryExit1(frame, unNx body)
+                                 in
+                                   let val retExp = Tree.MOVE(Tree.TEMP(F.RV), unEx (Nx post1Body))
+                                   in
+                                     let val post3Body = F.procEntryExit3(frame, retExp)
+                                     in
+                                       fragList := F.PROC{body=post3Body, frame=frame} :: !fragList
+                                     end
+                                   end
+                                 end
+       | GLOBAL => ())
+
+  fun getResult() = !fragList (* TODO ref to frag list within Translate*)
 end
