@@ -475,6 +475,7 @@ struct
           val {exp=funExp, ty=funTy} = transExp(returnVenv, tenv, newlevel, label) body
         in
           checkEqualOrThrow(funTy, resultTy(result), pos);
+          IR.procEntryExit({level=level, body=funExp});
           {venv=venvAndFunEntry, tenv=tenv}
         end
         val visitedList = foldl verifyUnique nil functionDecls;

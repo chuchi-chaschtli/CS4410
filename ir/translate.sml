@@ -317,16 +317,15 @@ struct
 
   
   (* TODO Properly send return value to F.RV *)
+  (* TODO does the order here matter? *)
   fun procEntryExit({level: level, body: exp}) =
     (case level
-      of LEVEL{frame, parent} => let val post1Body = F.procEntryExit1(frame, unNx body)
+      of LEVEL{frame, parent} => let val retExp = Tree.MOVE(Tree.TEMP(F.RV), unEx body)
+                                     val post1Body = F.procEntryExit1(frame, retExp)
                                  in
-                                   let val retExp = Tree.MOVE(Tree.TEMP(F.RV), unEx (Nx post1Body))
+                                   let val post3Body = F.procEntryExit3(frame, post1Body)
                                    in
-                                     let val post3Body = F.procEntryExit3(frame, retExp)
-                                     in
-                                       fragList := F.PROC{body=post3Body, frame=frame} :: !fragList
-                                     end
+                                     fragList := F.PROC{body=post3Body, frame=frame} :: !fragList
                                    end
                                  end
        | GLOBAL => ())
