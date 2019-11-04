@@ -32,6 +32,8 @@ sig
     val translateSimpleVar    : access * level -> exp
     val translateFieldVar     : exp * int -> exp
     val translateSubscriptVar : exp * exp -> exp
+    val initArray: exp * exp -> exp
+    val initRecord: exp list -> exp
 
     val translateVarDec : access   * exp -> exp
     val translateLet    : exp list * exp -> exp
@@ -278,6 +280,29 @@ struct
       Ex(Tree.ESEQ(
           Tree.MOVE(Tree.TEMP(tmp), calculateAddress(unEx array, unEx index)),
           Tree.MEM(Tree.TEMP(tmp))))
+    end
+
+  fun initArray(size, init) =
+    Ex(F.externalCall("initArray", [unEx size, unEx init]))
+
+  fun initRecord (exps) =
+    let
+      val exps' = map unEx exps
+      val r = Temp.newtemp()
+      fun initFields(exp::exps, value) =
+        let
+          val move = Tree.MOVE(Tree.MEM
+                                (Tree.BINOP(Tree.PLUS, Tree.TEMP r, Tree.CONST (value * F.wordSize))),
+                                exp)
+        in move::initFields(exps, value + 1)
+        end
+      val seqs = buildSeq(initFields(exps', 0))
+    in
+      Ex (Tree.ESEQ
+          (Tree.SEQ(Tree.MOVE (Tree.TEMP r,
+             F.externalCall("initRecord", [Tree.CONST (length(exps) * F.wordSize)])), (* TODO: replace with malloc? *)
+           seqs),
+           Tree.TEMP r))
     end
 
   fun translateVarDec((level, access), valExp) = (Nx(Tree.MOVE(F.exp(access)(Tree.TEMP(F.FP)), unEx valExp)))
