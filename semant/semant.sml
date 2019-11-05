@@ -417,7 +417,6 @@ struct
       {exps=nil, venv=venv', tenv=tenv'}
     end
 
-  (* TODO create procedure fragments for func declarations *)
   and transFuncDecls (venv, tenv, level, functionDecls, label) =
     let
       fun transparam{name, escape, typ, pos} =
@@ -490,12 +489,12 @@ struct
         | f({el=expList, ve=ve, te=te}, dec::nil) =
           let val {exps=exps', venv=venv', tenv=tenv'} = transDec(ve, te, level, dec, label)
           in
-            {exps=expList @ exps', venv=venv', tenv=tenv'}
+            {exps=exps' @ expList, venv=venv', tenv=tenv'}
           end
         | f({el=expList, ve=ve, te=te}, dec::decs) =
           let val {exps=exps', venv=venv', tenv=tenv'} = transDec(ve, te, level, dec, label)
           in
-            f({el=expList @ exps', ve=venv', te=tenv'}, decs)
+            f({el=exps' @ expList, ve=venv', te=tenv'}, decs)
           end
     in
       f ({el=nil, ve=venv, te=tenv}, decs)
