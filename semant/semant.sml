@@ -459,7 +459,7 @@ struct
           val newlevel =
             (case S.look(dummyVenv, name)
               of SOME (Env.FunEntry{level, label, formals, result}) => level
-                 | _ => (ErrorMsg.impossible pos "function not found")
+                 | _ => (ErrorMsg.impossible "function not found"))
           val paramsAndFormals = ListPair.zip(params, IR.formals newlevel)
           val params' = map (fn (param, access) =>
                               let
