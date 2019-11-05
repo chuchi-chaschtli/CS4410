@@ -56,7 +56,7 @@ sig
   val transDec  : venv * tenv * IR.level * A.dec      * Temp.label -> {exps : IR.exp list, venv : venv, tenv : tenv}
   val transDecs : venv * tenv * IR.level * A.dec list * Temp.label -> {exps : IR.exp list, venv : venv, tenv : tenv}
   val transExp  : venv * tenv * IR.level              * Temp.label -> A.exp -> expty
-  val transProg : A.exp -> IR.exp (* TODO should return frag list *)
+  val transProg : A.exp -> Frame.frag list (* TODO should return frag list *)
 end
 
 
@@ -507,7 +507,10 @@ struct
       val mainLevel = IR.newLevel{parent=IR.outermost, name=outerLabel, formals=[]}
       val _ = FindEscape.findEscape(absyn)
       val {exp, ty} = transExp(Env.base_venv, Env.base_tenv, mainLevel, outerLabel) absyn
+      val fragments = IR.getResult()
     in
-      exp
+      (* NOTE uncomment this to see the output of the IR *)
+      (* Printtree.printtree(TextIO.stdOut, Translate.unNx(exp)) *)
+      fragments
     end
 end
