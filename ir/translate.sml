@@ -28,6 +28,7 @@ sig
     val translateAssign : exp * exp              -> exp
     val translateCall   : level * level * Tree.label * exp list -> exp
     val translateSeqExp : exp list -> exp
+    val translateString : string -> exp
 
     val translateSimpleVar    : access * level -> exp
     val translateFieldVar     : exp * int -> exp
@@ -45,7 +46,8 @@ sig
     val unCx : exp -> Temp.label * Temp.label -> Tree.stm
 
     val procEntryExit : {level: level, body: exp} -> unit
-    val getResult : unit -> F.frag list
+    val getResult     : unit -> F.frag list
+    val resetFragList : unit -> unit
 end
 
 structure Translate : TRANSLATE =
@@ -97,7 +99,8 @@ struct
     end
 
   (* Builds a SEQ from a list of expressions as a convenience function *)
-  fun buildSeq(first::nil) = first
+  fun buildSeq nil = ErrorMsg.impossible "Cannot build sequence from nil"
+    | buildSeq(first::nil) = first
     | buildSeq(first::rest) = Tree.SEQ(first, buildSeq rest)
 
   (* chases static links by recursing up the usage level until we reach the
@@ -275,6 +278,16 @@ struct
       helper(exps, nil)
     end
 
+  fun resetFragList() = fragList := nil
+
+  fun getResult() = !fragList
+
+  fun translateString(str) =
+    let val tmp = Temp.newlabel()
+    in (fragList := F.STRING(tmp, str)::(!fragList);
+        Ex(Tree.NAME(tmp)))
+    end
+
   fun calculateAddress(ex, index) =
     Tree.BINOP(Tree.PLUS, ex, Tree.BINOP(Tree.MUL, index, word))
 
@@ -299,28 +312,32 @@ struct
     let
       val exps' = map unEx exps
       val r = Temp.newtemp()
-      fun initFields(exp::exps, value) =
-        let
-          val move = Tree.MOVE(Tree.MEM
-                                (Tree.BINOP(Tree.PLUS, Tree.TEMP r, Tree.CONST (value * F.wordSize))),
-                                exp)
-        in move::initFields(exps, value + 1)
-        end
-      val seqs = buildSeq(initFields(exps', 0))
+      fun initFields(nil, value) = nil
+        | initFields(exp::exps, value) =
+          let
+            val move = Tree.MOVE(Tree.MEM
+                                  (Tree.BINOP(Tree.PLUS, Tree.TEMP r, Tree.CONST (value * F.wordSize))),
+                                  exp)
+          in move::initFields(exps, value + 1)
+          end
     in
       Ex (Tree.ESEQ
           (Tree.SEQ(Tree.MOVE (Tree.TEMP r,
              F.externalCall("initRecord", [Tree.CONST (length(exps) * F.wordSize)])), (* TODO: replace with malloc? *)
-           seqs),
+           buildSeq(initFields(exps', 0))),
            Tree.TEMP r))
     end
 
   fun translateVarDec((level, access), valExp) = (Nx(Tree.MOVE(F.exp(access)(Tree.TEMP(F.FP)), unEx valExp)))
 
   fun translateLet(assignments, body) =
-    let val assignments' = map unNx assignments
+    let val body' = unEx body
+        val assignments' = map unNx assignments
+        val assignments'' = if List.length(assignments') = 0
+                            then Tree.EXP(zero)
+                            else buildSeq assignments'
     in
-      Ex (Tree.ESEQ(buildSeq(assignments'), unEx body))
+      Ex (Tree.ESEQ(assignments'', body'))
     end
 
   (* TODO Properly send return value to F.RV *)
@@ -336,6 +353,4 @@ struct
                                    end
                                  end
        | GLOBAL => ())
-
-  fun getResult() = !fragList (* TODO ref to frag list within Translate*)
 end
