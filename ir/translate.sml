@@ -38,7 +38,7 @@ sig
     val translateVarDec : access   * exp -> exp
     val translateLet    : exp list * exp -> exp
 
-    val todo: unit -> exp
+    val dummyOp: unit -> exp
 
     val unEx : exp -> Tree.exp
     val unNx : exp -> Tree.stm
@@ -78,13 +78,23 @@ struct
                                   end
        | GLOBAL => nil)
 
-  (* Alocate local access for a given level *)
+  (* Allocate local access for a given level *)
   fun allocLocal level escape =
     (case level
       of LEVEL {frame, parent} => let val f_access = F.allocLocal frame escape
                                   in
                                     (level, f_access)
                                   end)
+
+  (*
+    A no-op that can be optimized away as a register->register move during
+    register allocation
+  *)
+  fun dummyOp() =
+    let val tmp = Temp.newtemp()
+        val exp = Tree.TEMP(tmp)
+    in Nx (Tree.MOVE (exp, exp))
+    end
 
   (* Builds a SEQ from a list of expressions as a convenience function *)
   fun buildSeq(first::nil) = first
@@ -255,7 +265,7 @@ struct
 
   fun translateSeqExp(exps) =
     let
-      fun helper(nil, nil) = translateNil()
+      fun helper(nil, nil) = dummyOp()
         | helper(exp::exps, acc) = helper(exps, exp::acc)
         | helper(nil, acc::accs) =
           let val stms = map unNx (rev(accs))
@@ -313,9 +323,6 @@ struct
       Ex (Tree.ESEQ(buildSeq(assignments'), unEx body))
     end
 
-  fun todo() = Ex (Tree.TODO)
-
-  
   (* TODO Properly send return value to F.RV *)
   (* TODO does the order here matter? *)
   fun procEntryExit({level: level, body: exp}) =
