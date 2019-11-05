@@ -278,7 +278,7 @@ struct
           let
             val {exp=expTest, ty=tyTest} = trexp test
             val tenvUpdated = S.enter(tenv, breakable, T.UNIT)
-            val breakLabel = Temp.newlabel() (* TODO: Maybe a better way to do translation without adding label here?? *)
+            val breakLabel = Temp.newlabel()
             val {exp=expBody, ty=tyBody} = (transExp(venv, tenvUpdated, level, breakLabel) body)
           in
             checkInt(tyTest, pos);
@@ -292,7 +292,7 @@ struct
             val access = IR.allocLocal level (!escape)
             val venvUpdated = S.enter(venv, var, Env.ReadVarEntry{access=access, ty=T.INT})
             val tenvUpdated = S.enter(tenv, breakable, T.UNIT)
-            val breakLabel = Temp.newlabel() (* TODO: Maybe a better way to do translation without adding label here?? *)
+            val breakLabel = Temp.newlabel()
             val {exp=updatedExp, ty=updatedTy} = (transExp(venvUpdated, tenvUpdated, level, breakLabel) body)
           in
             checkInt(tyLo, pos);
@@ -397,7 +397,7 @@ struct
       fun rewriteRef(T.NAME(symbol, tyRef)) =
         case S.look(tenv', symbol)
           of SOME(ty) => (tyRef := SOME(ty); nil)
-           | NONE => (ErrorMsg.error 0 "referenced type not present in type environment"; nil) (* NOTE: should never occur *)
+           | NONE => (ErrorMsg.impossible "referenced type not present in type environment")
 
       fun verifyUnique({name, ty, pos}, visited) =
         if contains(visited, name)
@@ -459,7 +459,7 @@ struct
           val newlevel =
             (case S.look(dummyVenv, name)
               of SOME (Env.FunEntry{level, label, formals, result}) => level
-                 | _ => (ErrorMsg.error pos "function not found"; level)) (* Error should not occur! *)
+                 | _ => (ErrorMsg.impossible pos "function not found")
           val paramsAndFormals = ListPair.zip(params, IR.formals newlevel)
           val params' = map (fn (param, access) =>
                               let
@@ -486,9 +486,7 @@ struct
 
   and transDecs (venv, tenv, level, decs, label) =
     let
-      fun f({el=expList, ve=ve, te=te}, nil) =
-          (ErrorMsg.error 0 "empty declaration list";
-           {exps=expList, venv=venv, tenv=tenv}) (* NOTE should never occur *)
+      fun f({el=expList, ve=ve, te=te}, nil) = (ErrorMsg.impossible "empty declaration list")
         | f({el=expList, ve=ve, te=te}, dec::nil) =
           let val {exps=exps', venv=venv', tenv=tenv'} = transDec(ve, te, level, dec, label)
           in
