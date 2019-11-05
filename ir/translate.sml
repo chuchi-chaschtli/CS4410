@@ -232,7 +232,6 @@ struct
     else: ELSE
     done:
   *)
-  (* TODO should this be returning Nx? "if" should return a value IIRC *)
   fun translateIf(testExp, thenExp, elseExp) =
     let
       val thenTmp = Temp.newlabel()
