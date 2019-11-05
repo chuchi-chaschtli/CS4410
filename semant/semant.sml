@@ -197,9 +197,9 @@ struct
                    {exp = IR.translateCall(declevel, level, label, argList), ty = result}
                  end)
               | SOME _ => (ErrorMsg.error pos "environment entry is not a fun entry";
-                           {exp = IR.todo(), ty = T.UNIT})
+                           {exp = IR.dummyOp(), ty = T.UNIT})
               | NONE => (ErrorMsg.error pos ("undefined function " ^ S.name(func));
-                         {exp = IR.todo(), ty = T.UNIT}))
+                         {exp = IR.dummyOp(), ty = T.UNIT}))
         | trexp (A.RecordExp{fields, typ, pos}) =
           (case S.look(tenv, typ)
             of SOME (T.RECORD(fieldList, unique)) =>
@@ -229,12 +229,12 @@ struct
                  {exp = IR.initRecord(grabExps fields), ty = T.RECORD(fieldList, unique)})
               end
             | _ => (ErrorMsg.error pos "record type was undeclared";
-                       {exp=IR.todo(), ty=T.UNIT}))
-        | trexp (A.SeqExp(nil)) = {exp = IR.todo(), ty = T.UNIT}
+                       {exp=IR.dummyOp(), ty=T.UNIT}))
+        | trexp (A.SeqExp(nil)) = {exp = IR.dummyOp(), ty = T.UNIT}
         | trexp (A.SeqExp((expr,pos)::nil)) = trexp expr
         | trexp (A.SeqExp(exprs)) =
           let
-            fun verifyExprs(nil, acc) = {exp=IR.translateNil(), ty = T.UNIT}
+            fun verifyExprs(nil, acc) = {exp=IR.dummyOp(), ty = T.UNIT}
               | verifyExprs((expr, pos)::nil, acc) =
                 let val {exp=exprExp, ty=exprTy} = trexp expr
                 in {exp=IR.translateSeqExp(exprExp::acc), ty = exprTy}
@@ -256,7 +256,7 @@ struct
                 (checkEqualOrThrow(exprTy, varTy, pos);
                  {exp = IR.translateAssign(varExp, exprExp), ty = T.UNIT})
               end
-          else (ErrorMsg.error pos "cannot re-assign to var"; {exp = IR.todo(), ty = T.UNIT})
+          else (ErrorMsg.error pos "cannot re-assign to var"; {exp = IR.dummyOp(), ty = T.UNIT})
         | trexp (A.IfExp{test, then', else', pos}) =
           let
             val {exp=expTest, ty=tyTest} = trexp test
@@ -272,7 +272,7 @@ struct
                    {exp = IR.translateIf(expTest, expBody, expElse), ty = tyThen})
                 end
               | NONE => (checkUnit(tyThen, pos);
-                         {exp = IR.translateIf(expTest, expBody, IR.todo()), ty = T.UNIT}))
+                         {exp = IR.translateIf(expTest, expBody, IR.dummyOp()), ty = T.UNIT}))
           end
         | trexp (A.WhileExp{test, body, pos}) =
           let
@@ -315,9 +315,9 @@ struct
                       checkEqualOrThrow(actual_ty(ty), actual_ty(tyInit), pos);
                       {exp = IR.initArray(expSize, expInit), ty = T.ARRAY(ty, unique)})
                    | _ => (ErrorMsg.error pos ("type is not array " ^ S.name(typ));
-                          {exp = IR.todo(), ty = T.UNIT}))
+                          {exp = IR.dummyOp(), ty = T.UNIT}))
               | NONE => (ErrorMsg.error pos ("undefined array type " ^ S.name(typ));
-                         {exp = IR.todo(), ty = T.UNIT}))
+                         {exp = IR.dummyOp(), ty = T.UNIT}))
           end
 
       and trvar (A.SimpleVar(id, pos)) =
@@ -325,9 +325,9 @@ struct
                 of SOME(Env.VarEntry{access, ty} | Env.ReadVarEntry{access, ty}) =>
                    {exp = IR.translateSimpleVar(access, level), ty = actual_ty ty}
                  | SOME _ => (ErrorMsg.error pos "environment entry is not a var entry";
-                              {exp = IR.todo(), ty = T.UNIT})
+                              {exp = IR.dummyOp(), ty = T.UNIT})
                  | NONE => (ErrorMsg.error pos ("undefined variable " ^ S.name id);
-                            {exp = IR.todo(), ty = T.UNIT}))
+                            {exp = IR.dummyOp(), ty = T.UNIT}))
         | trvar (A.FieldVar(var, id, pos)) =
           let
             val {exp=expVar, ty=tyVar} = trvar(var)
@@ -345,7 +345,7 @@ struct
                 in {exp=IR.translateFieldVar(expVar, index), ty=ty}
                 end
               | _ => (ErrorMsg.error pos "tried to access record field of object that is not a record";
-                     {exp=IR.todo(), ty = T.UNIT}))
+                     {exp=IR.dummyOp(), ty = T.UNIT}))
           end
         | trvar (A.SubscriptVar(var, exp, pos)) =
           let
@@ -355,7 +355,7 @@ struct
             case tyVar
               of T.ARRAY (ty, unique) => {exp=IR.translateSubscriptVar(expVar, expSub), ty=ty}
                | _ => (ErrorMsg.error pos ("Attempted to access a non-array type: " ^ T.toString(tyVar));
-                      {exp=IR.todo(), ty=T.UNIT})
+                      {exp=IR.dummyOp(), ty=T.UNIT})
           end
     in
       trexp

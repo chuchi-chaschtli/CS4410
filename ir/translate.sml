@@ -39,7 +39,7 @@ sig
     val translateVarDec : access   * exp -> exp
     val translateLet    : exp list * exp -> exp
 
-    val todo: unit -> exp
+    val dummyOp: unit -> exp
 
     val unEx : exp -> Tree.exp
     val unNx : exp -> Tree.stm
@@ -80,13 +80,23 @@ struct
                                   end
        | GLOBAL => nil)
 
-  (* Alocate local access for a given level *)
+  (* Allocate local access for a given level *)
   fun allocLocal level escape =
     (case level
       of LEVEL {frame, parent} => let val f_access = F.allocLocal frame escape
                                   in
                                     (level, f_access)
                                   end)
+
+  (*
+    A no-op that can be optimized away as a register->register move during
+    register allocation
+  *)
+  fun dummyOp() =
+    let val tmp = Temp.newtemp()
+        val exp = Tree.TEMP(tmp)
+    in Nx (Tree.MOVE (exp, exp))
+    end
 
   (* Builds a SEQ from a list of expressions as a convenience function *)
   fun buildSeq nil = ErrorMsg.impossible "Cannot build sequence from nil"
@@ -100,7 +110,7 @@ struct
     then Tree.TEMP(F.FP)
     else case use
       of LEVEL {frame, parent} => Tree.MEM (traverseStaticLinks(dec, parent)) (* NOTE our static link offset is 0 *)
-       | GLOBAL => (ErrorMsg.error 0 "Cannot find any static links"; Tree.TODO)
+       | GLOBAL => ErrorMsg.impossible "Calling static link at outer level"
 
   fun unEx (Ex e) = e
     | unEx (Cx genstm) =
@@ -258,7 +268,7 @@ struct
 
   fun translateSeqExp(exps) =
     let
-      fun helper(nil, nil) = translateNil()
+      fun helper(nil, nil) = dummyOp()
         | helper(exp::exps, acc) = helper(exps, exp::acc)
         | helper(nil, acc::accs) =
           let val stms = map unNx (rev(accs))
@@ -329,8 +339,6 @@ struct
     in
       Ex (Tree.ESEQ(assignments'', body'))
     end
-
-  fun todo() = Ex (Tree.TODO)
 
   (* TODO Properly send return value to F.RV *)
   (* TODO does the order here matter? *)
