@@ -485,16 +485,16 @@ struct
 
   and transDecs (venv, tenv, level, decs, label) =
     let
-      fun f({el=expList, ve=ve, te=te}, nil) = (ErrorMsg.impossible "empty declaration list")
-        | f({el=expList, ve=ve, te=te}, dec::nil) =
+      fun f({el=prevDecs, ve=ve, te=te}, nil) = (ErrorMsg.impossible "empty declaration list")
+        | f({el=prevDecs, ve=ve, te=te}, dec::nil) =
           let val {exps=exps', venv=venv', tenv=tenv'} = transDec(ve, te, level, dec, label)
           in
-            {exps=exps' @ expList, venv=venv', tenv=tenv'}
+            {exps=prevDecs @ exps', venv=venv', tenv=tenv'}
           end
-        | f({el=expList, ve=ve, te=te}, dec::decs) =
+        | f({el=prevDecs, ve=ve, te=te}, dec::decs) =
           let val {exps=exps', venv=venv', tenv=tenv'} = transDec(ve, te, level, dec, label)
           in
-            f({el=exps' @ expList, ve=venv', te=tenv'}, decs)
+            f({el=prevDecs @ exps', ve=venv', te=tenv'}, decs)
           end
     in
       f ({el=nil, ve=venv, te=tenv}, decs)
