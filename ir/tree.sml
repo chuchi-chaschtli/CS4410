@@ -17,7 +17,6 @@ sig
             | NAME of label
             | CONST of int
             | CALL of exp * exp list
-            | TODO
 
     and binop = PLUS | MINUS | MUL | DIV | AND
               | OR | LSHIFT | RSHIFT | ARSHIFT | XOR
@@ -48,7 +47,6 @@ struct
             | NAME of label
             | CONST of int
             | CALL of exp * exp list
-            | TODO
 
     and binop = PLUS | MINUS | MUL | DIV | AND
         | OR | LSHIFT | RSHIFT | ARSHIFT | XOR

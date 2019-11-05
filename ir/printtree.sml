@@ -18,7 +18,7 @@ fun printtree (outstream, s0) =
 				exp(a,d+1); sayln ","; exp(b,d+1); sayln ",";
 				indent(d+1); say(Symbol.name t);
 				say ","; say (Symbol.name f); say ")")
-    | stm(Tree.MOVE(a,b),d) = (indent d; sayln "MOVE("; loc(a,d+1); sayln ",";
+    | stm(Tree.MOVE(a,b),d) = (indent d; sayln "MOVE("; exp(a,d+1); sayln ",";
 			    exp(b,d+1); say ")")
     | stm(Tree.EXP e, d) = (indent d; sayln "EXP("; exp(e,d+1); say ")")
 
@@ -33,10 +33,6 @@ fun printtree (outstream, s0) =
     | exp(Tree.CALL(e,el),d) = (indent d; sayln "CALL("; exp(e,d+1);
 			   app (fn a => (sayln ","; exp(a,d+2))) el;
 			   say ")")
-    | exp(Tree.TODO, d) = (indent d; say "TODO!")
-
-  and loc(Tree.TEMP(t), d) = (indent d; say "TEMP t"; say(Int.toString t))
-    | loc(Tree.MEM(e),d) = (indent d; sayln "MEM("; exp(e,d+1); say ")")
 
   and binop Tree.PLUS = say "PLUS"
     | binop Tree.MINUS = say "MINUS"

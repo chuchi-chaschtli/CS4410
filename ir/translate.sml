@@ -110,7 +110,7 @@ struct
     then Tree.TEMP(F.FP)
     else case use
       of LEVEL {frame, parent} => Tree.MEM (traverseStaticLinks(dec, parent)) (* NOTE our static link offset is 0 *)
-       | GLOBAL => (ErrorMsg.error 0 "Cannot find any static links"; Tree.TODO)
+       | GLOBAL => ErrorMsg.impossible "Calling static link at outer level"
 
   fun unEx (Ex e) = e
     | unEx (Cx genstm) =

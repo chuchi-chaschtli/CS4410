@@ -26,6 +26,14 @@ We found these documents helpful in our implementation
 ### unCx (Ex (CONST n))
 We can control jump to either t/f label depending on the 'truthiness' of n.
 
+### Adding a no-op
+To handle cases where the program doesn't typecheck (and some other minor edge cases),
+we added a no-op expression which is just a register->register move (of the same temp),
+which we can optimize away during register allocation at a later phase.
+
+We include this in the optimization section here because this is an example of an
+optimization that will be made at a later stage in the compiler.
+
 ## Implementation Decisions
 
 Listed below are the interesting cases for our IR translation.
