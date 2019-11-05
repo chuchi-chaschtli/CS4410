@@ -21,6 +21,11 @@ We found these documents helpful in our implementation
 
 # IR Translator
 
+## Optimizations
+
+### unCx (Ex (CONST n))
+We can control jump to either t/f label depending on the 'truthiness' of n.
+
 ## Implementation Decisions
 
 Listed below are the interesting cases for our IR translation.
@@ -47,6 +52,36 @@ body: BODY
       JMP test
 break:
 ```
+
+### For
+`for VAR <- LOW to HI do BODY`:
+
+```
+init: var <- lo
+      CJMP (<= var hi) body break
+body: BODY
+      CJMP (< var hi) loop break
+loop: var <- var + 1
+      JMP body
+break:
+```
+
+### Constructing SEQs
+Ideally, a SEQ should be a `stm list`, instead of a `stm * stm`. However, we cannot
+modify this because the canonicalizer is already going to be written for us. This is
+unfortunate. To accommodate, we wrote a helper to convert a list of stms into a binary
+tree `buildSeq`.
+
+## Modifications to `semant.sml`
+
+### Processing breaks
+To handle break statements, we need a label to break to, when exiting a for loop or while loop.
+We need to pass around the label, starting with an 'outermost label' for the GLOBAL level of the program
+in transExp, and update that to a break label to pass in the recursive calls.
+
+### Processing SeqExps
+Our logic to handle SeqExps is correct for semantic analysis, but it doesn't actually return the translated
+exp results needed by the IR, so we had to modify the case analysis for SeqExps to transform to IR properly.
 
 ---
 

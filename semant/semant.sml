@@ -179,7 +179,7 @@ struct
         | trexp (A.VarExp(var)) = trvar(var)
         | trexp (A.NilExp) = {exp = IR.translateNil(), ty = T.NIL}
         | trexp (A.IntExp(n)) = {exp = IR.translateInt(n), ty = T.INT}
-        | trexp (A.StringExp(str, posn)) = {exp = IR.todo(), ty = T.STRING}
+        | trexp (A.StringExp(str, posn)) = {exp = IR.translateString(str), ty = T.STRING}
         | trexp (A.CallExp{func, args, pos}) =
           (case S.look(venv, func)
               of SOME(Env.FunEntry{level=declevel, label, formals, result}) =>
@@ -313,7 +313,7 @@ struct
                   of (T.ARRAY(ty, unique)) =>
                      (checkInt(tySize, pos);
                       checkEqualOrThrow(actual_ty(ty), actual_ty(tyInit), pos);
-                      {exp = IR.todo(), ty = T.ARRAY(ty, unique)})
+                      {exp = IR.initArray(expSize, expInit), ty = T.ARRAY(ty, unique)})
                    | _ => (ErrorMsg.error pos ("type is not array " ^ S.name(typ));
                           {exp = IR.todo(), ty = T.UNIT}))
               | NONE => (ErrorMsg.error pos ("undefined array type " ^ S.name(typ));
@@ -505,6 +505,7 @@ struct
 
   fun transProg absyn =
     let
+      val _ = IR.resetFragList()
       val outerLabel = Temp.newlabel()
       val mainLevel = IR.newLevel{parent=IR.outermost, name=outerLabel, formals=[]}
       val _ = FindEscape.findEscape(absyn)
