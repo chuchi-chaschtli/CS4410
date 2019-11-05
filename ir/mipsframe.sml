@@ -36,7 +36,7 @@ struct
   val numDedicatedArgRegisters = 4
 
   fun procEntryExit1(frame, stmt) = stmt (* TODO stub for assignment 5 *)
-  fun procEntryExit3(frame, stmt) = stmt (* TODO should not be stubbed *)
+  fun procEntryExit3(frame, stmt) = stmt (* TODO should this be stubbed for assignment 5? *)
 
   fun newFrame {name, formals} =
     let
@@ -55,9 +55,7 @@ struct
           else InReg   (Temp.newtemp()))
       val formals' = map allocateFormal formals
     in
-       (* TODO I'm not sure if `ref 0` is what we need here,
-          however I'm not sure the alternative.
-          Global var for frame count? *)
+       (* TODO Validate that ref 0 is correct here *)
        {name=name, frameOffset=(ref 0), formals=formals'}
     end
 
