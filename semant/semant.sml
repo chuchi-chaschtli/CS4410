@@ -505,6 +505,7 @@ struct
 
   fun transProg absyn =
     let
+      val _ = IR.resetFragList()
       val outerLabel = Temp.newlabel()
       val mainLevel = IR.newLevel{parent=IR.outermost, name=outerLabel, formals=[]}
       val _ = FindEscape.findEscape(absyn)

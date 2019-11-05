@@ -46,7 +46,8 @@ sig
     val unCx : exp -> Temp.label * Temp.label -> Tree.stm
 
     val procEntryExit : {level: level, body: exp} -> unit
-    val getResult : unit -> F.frag list
+    val getResult     : unit -> F.frag list
+    val resetFragList : unit -> unit
 end
 
 structure Translate : TRANSLATE =
@@ -266,23 +267,12 @@ struct
       helper(exps, nil)
     end
 
-  fun translateString(str) =
-    let
-      fun isEqual(fragment) =
-        case fragment
-          of F.STRING(tmp, literal) => String.compare(str, literal) = EQUAL
-           | _ => false
+  fun resetFragList() = fragList := nil
 
-      fun initLabel() =
-        case List.find isEqual (!fragList)
-          of SOME(F.STRING(tmp, literal)) => tmp
-           | _ => let val tmp = Temp.newlabel()
-                      val updatedFragments = F.STRING(tmp, str)::(!fragList)
-                  in fragList := updatedFragments;
-                     updatedFragments;
-                     tmp
-                  end
-    in Ex(Tree.NAME(initLabel()))
+  fun translateString(str) =
+    let val tmp = Temp.newlabel()
+    in (fragList := F.STRING(tmp, str)::(!fragList);
+        Ex(Tree.NAME(tmp)))
     end
 
   fun calculateAddress(ex, index) =
