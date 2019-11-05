@@ -270,6 +270,8 @@ struct
 
   fun resetFragList() = fragList := nil
 
+  fun getResult() = !fragList
+
   fun translateString(str) =
     let val tmp = Temp.newlabel()
     in (fragList := F.STRING(tmp, str)::(!fragList);
@@ -330,7 +332,6 @@ struct
 
   fun todo() = Ex (Tree.TODO)
 
-
   (* TODO Properly send return value to F.RV *)
   (* TODO does the order here matter? *)
   fun procEntryExit({level: level, body: exp}) =
@@ -344,6 +345,4 @@ struct
                                    end
                                  end
        | GLOBAL => ())
-
-  fun getResult() = !fragList (* TODO ref to frag list within Translate*)
 end
