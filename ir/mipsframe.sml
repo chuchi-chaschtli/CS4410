@@ -62,10 +62,10 @@ struct
 
   fun procEntryExit2(frame, body) =
     body @
-    [A.OPER{assem="",
-            src=specialregs@calleesaves,
-            dst=[],
-            jump=SOME[]}]
+    [Assem.OPER{assem="",
+                src=specialregs@calleesaves,
+                dst=[],
+                jump=SOME[]}]
 
   fun procEntryExit3(frame, stmt) = stmt (* TODO should this be stubbed for assignment 5? *)
 
