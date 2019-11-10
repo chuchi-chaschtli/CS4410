@@ -1,5 +1,6 @@
 structure A = Absyn
 structure F = Frame
+structure G = MipsGen
 
 signature TRANSLATE =
 sig
@@ -347,8 +348,9 @@ struct
                                      (* TODO Correct return val? Correct register? *)
                                      val retExp = Tree.MOVE(Tree.TEMP(F.RV), unEx(Nx(post1Body)))
                                      (* TODO use procEntryExit2 and procEntryExit3 *)
-                                     (* val post2Body = G.codegen(frame, retExp) *)
-                                     (* val post3Body = F.procEntryExit3(frame, retExp) *)
+                                     val asInstrs = G.codegen(frame)(retExp)
+                                     val post2Body = F.procEntryExit2(frame, asInstrs)
+                                     val post3Body = F.procEntryExit3(frame, post2Body)
                                  in
                                    fragList := F.PROC{body=retExp, frame=frame} :: !fragList
                                  end
