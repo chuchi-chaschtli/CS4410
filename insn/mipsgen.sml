@@ -95,6 +95,11 @@ fun codegen frame stm =
                       jump=SOME [t,f]})
       | munchStm (T.LABEL label) =
         emit (A.LABEL {assem=Symbol.name(label) ^ ":\n", lab=label})
+      | munchStm (T.EXP(T.CALL(e, args))) =
+        emit (A.OPER{assem="jal `s0\n",
+                     src=munchExp(e)::munchArgs(0, args),
+                     dst=[Frame.RA, Frame.RV]@Frame.calleesaves,
+                     jump=NONE})
 
     and munchExp(T.MEM(T.BINOP(T.PLUS, T.CONST n, e))) =
         result(fn register =>
@@ -161,25 +166,23 @@ fun codegen frame stm =
                jump=NONE}))
       | munchExp(T.TEMP temp) = temp
       | munchExp(T.ESEQ(s, e)) = (munchStm s; munchExp e)
-      | munchExp(T.CALL(T.NAME l, args)) =
-        (emit(A.OPER {assem="jal " ^ Symbol.name l ^ "\n",
-                      src=munchArgs(0, args, Frame.numDedicatedArgRegisters * Frame.wordSize),
-                      dst=[Frame.RA, Frame.RV]@Frame.calleesaves,
-                      jump=NONE});
-         Frame.RV)
 
-    and munchArgs(i, nil, offset) = nil
-      | munchArgs(i, arg::args, offset) =
+    and munchArgs(i, nil) = nil
+      | munchArgs(i, arg::args) =
         let
           val onRegister = i < Frame.numDedicatedArgRegisters
           val temp = List.nth (Frame.argregs, i)
           fun tempFromArg arg = munchStm (T.MOVE(T.TEMP(temp), arg))
-          fun frameFromArg(arg, offset) =
-            munchStm(T.MOVE(T.BINOP(T.PLUS, T.TEMP(Frame.SP), T.CONST offset), arg))
+          fun frameFromArg arg =
+            let
+              val offset = ~(i - Frame.numDedicatedArgRegisters)*Frame.wordSize
+            in
+              munchStm(T.MOVE(T.BINOP(T.PLUS, T.TEMP(Frame.SP), T.CONST offset), arg))
+            end
         in
           if onRegister
-          then (tempFromArg arg; temp::munchArgs(i + 1, args, offset))
-          else (frameFromArg(arg, offset); munchArgs(i + 1, args, offset + Frame.wordSize))
+          then (tempFromArg arg; temp::munchArgs(i + 1, args))
+          else (frameFromArg arg; munchArgs(i + 1, args))
         end
   in
 	 (munchStm stm; rev(!ilist))
