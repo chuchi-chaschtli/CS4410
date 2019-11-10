@@ -1,0 +1,31 @@
+Group is
+
+../parser/absyn.sml
+../parser/errormsg.sml
+../parser/table.sig
+../parser/table.sml
+../parser/symbol.sml
+../parser/parse.sml
+../parser/tiger.lex
+../parser/tiger.grm
+../parser/prabsyn.sml
+
+../ir/tree.sml
+../ir/mipsframe.sml
+../ir/findescape.sml
+../ir/translate.sml
+../ir/temp.sml
+
+../semant/types.sml
+../semant/semant.sml
+
+../ir/printtree.sml
+(* ../ir/driver.sml *)
+
+canon.sml
+assem.sml
+codegen.sml
+
+$/smlnj-lib.cm
+$/ml-yacc-lib.cm
+$/basis.cm
