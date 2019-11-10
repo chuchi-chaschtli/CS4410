@@ -9,6 +9,10 @@ sig
   val RA: Temp.temp (* return address *)
   val ZERO: Temp.temp (* zero register *)
 
+  type register
+  val tempMap: register Temp.Table.table
+  val tempToString: Temp.temp -> string
+
   val specialregs: Temp.temp list
   val argregs: Temp.temp list
   val calleesaves: Temp.temp list
@@ -50,6 +54,26 @@ struct
   val SP = Temp.newtemp()
   val RA = Temp.newtemp()
   val ZERO = Temp.newtemp()
+
+  type register = string
+  fun createTempMap() =
+    let
+      val map : (register Temp.Table.table) = Temp.Table.empty
+      val map = Temp.Table.enter(map, FP, "fp")
+      (* TODO is the Return Value register correct? *)
+      (* https://course.ccs.neu.edu/csu4410/spim_documentation.pdf *)
+      val map = Temp.Table.enter(map, RV, "v0")
+      val map = Temp.Table.enter(map, SP, "sp")
+      val map = Temp.Table.enter(map, RA, "ra")
+      val map = Temp.Table.enter(map, ZERO, "zero")
+    in
+      map
+    end
+  val tempMap = createTempMap();
+  fun tempToString(temp) =
+    case Temp.Table.look(tempMap, temp)
+    of SOME(name) => name
+     | NONE       => Temp.makestring(temp)
 
   val specialregs = [FP,RV,SP,RA,ZERO]
   val argregs = getTemps(4)
