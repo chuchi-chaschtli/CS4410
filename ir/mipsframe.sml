@@ -3,8 +3,17 @@ sig
   type access
   type frame
 
-  val FP: Temp.temp
-  val RV: Temp.temp
+  val FP: Temp.temp (* frame pointer *)
+  val RV: Temp.temp (* return value *)
+  val SP: Temp.temp (* static pointer *)
+  val RA: Temp.temp (* return address *)
+  val ZERO: Temp.temp (* zero register *)
+
+  val specialregs: Temp.temp list
+  val argregs: Temp.temp list
+  val calleesaves: Temp.temp list
+  val callersaves: Temp.temp list
+
   val wordSize: int
 
   val newFrame : {name: Temp.label, formals: bool list} -> frame
@@ -15,10 +24,10 @@ sig
   val externalCall: string * Tree.exp list -> Tree.exp
   val exp: access -> Tree.exp -> Tree.exp
 
-  
   datatype frag = PROC of {body: Tree.stm, frame: frame}
                 | STRING of Temp.label * string
   val procEntryExit1 : frame * Tree.stm -> Tree.stm
+  val procEntryExit2 : frame * Assem.instr list -> Assem.instr list
   val procEntryExit3 : frame * Tree.stm -> Tree.stm
 end
 
@@ -30,12 +39,34 @@ struct
   datatype frag = PROC of {body: Tree.stm, frame: frame}
                 | STRING of Temp.label * string
 
+  fun getTempsHelper(0, acc) = acc
+    | getTempsHelper(n, acc) = Temp.newtemp()::acc
+
+  fun getTemps(n) = getTempsHelper(n, nil)
+
   val FP = Temp.newtemp()
   val RV = Temp.newtemp()
+  val SP = Temp.newtemp()
+  val RA = Temp.newtemp()
+  val ZERO = Temp.newtemp()
+
+  val specialregs = [FP,RV,SP,RA,ZERO]
+  val argregs = getTemps(4)
+  val calleesaves = getTemps(8)
+  val callersaves = getTemps(10)
+
   val wordSize = 4
   val numDedicatedArgRegisters = 4
 
   fun procEntryExit1(frame, stmt) = stmt (* TODO stub for assignment 5 *)
+
+  fun procEntryExit2(frame, body) =
+    body @
+    [A.OPER{assem="",
+            src=specialregs@calleesaves,
+            dst=[],
+            jump=SOME[]}]
+
   fun procEntryExit3(frame, stmt) = stmt (* TODO should this be stubbed for assignment 5? *)
 
   fun newFrame {name, formals} =
