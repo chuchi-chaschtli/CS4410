@@ -15,6 +15,7 @@ sig
   val callersaves: Temp.temp list
 
   val wordSize: int
+  val numDedicatedArgRegisters: int
 
   val newFrame : {name: Temp.label, formals: bool list} -> frame
   val name: frame -> Temp.label

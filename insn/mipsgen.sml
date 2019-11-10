@@ -25,13 +25,24 @@ fun codegen frame stm =
       | binop T.MUL   = "mul"
       | binop _       = ErrorMsg.impossible "invalid binop supplied"
 
-    fun relop T.EQ = "beq"
-      | relop T.NE = "bne"
-      | relop T.GE = "bge"
-      | relop T.GT = "bgt"
-      | relop T.LE = "ble"
-      | relop T.LT = "blt"
-      | relop _    = ErrorMsg.impossible "invalid relop supplied"
+    fun relop(oper, zero) =
+      let
+        val ending = if zero then "z" else ""
+        fun relop' T.EQ = "beq" ^ ending
+          | relop' T.NE = "bne" ^ ending
+          | relop' T.GE = "bge" ^ ending
+          | relop' T.GT = "bgt" ^ ending
+          | relop' T.LE = "ble" ^ ending
+          | relop' T.LT = "blt" ^ ending
+          | relop' T.ULT = "bltu"
+          | relop' T.UGT = "bgtu"
+          | relop' T.ULE = "bleu"
+          | relop' T.UGE = "bgeu"
+      in
+        if zero andalso (oper = T.ULT orelse oper = T.UGT orelse oper = T.ULE orelse oper = T.UGE)
+        then ErrorMsg.impossible "invalid binop comparison to 0 supplied"
+        else relop' oper
+      end
 
     fun munchStm (T.SEQ(x, y)) =
         (munchStm x;
@@ -72,13 +83,13 @@ fun codegen frame stm =
                       jump=SOME labels})
       | munchStm (T.CJUMP (oper, (T.CONST 0), e, t, f)) =
         munchStm (T.CJUMP (Tree.commute(oper), e, (T.CONST 0), t, f))
-      | munchStm (T.CJUMP (oper, e, (T.CONST 0), t, f)) = (* For comparisons where the content of a resource is zero *)
-        emit (A.OPER {assem=relop(oper) ^ "z `s0, `j0\n",
+      | munchStm (T.CJUMP (oper, e, (T.CONST 0), t, f)) = (* For comparisons where the content of a register is zero *)
+        emit (A.OPER {assem=relop(oper, true) ^ " `s0, `j0\n",
                       src=[munchExp e],
                       dst=nil,
                       jump=SOME [t,f]})
       | munchStm (T.CJUMP (oper, e1, e2, t, f)) =
-        emit (A.OPER {assem=relop(oper) ^ " `s0, `s1, `j0\n" ,
+        emit (A.OPER {assem=relop(oper, false) ^ " `s0, `s1, `j0\n" ,
                       src=[munchExp e1, munchExp e2],
                       dst=nil,
                       jump=SOME [t,f]})
@@ -150,6 +161,26 @@ fun codegen frame stm =
                jump=NONE}))
       | munchExp(T.TEMP temp) = temp
       | munchExp(T.ESEQ(s, e)) = (munchStm s; munchExp e)
+      | munchExp(T.CALL(T.NAME l, args)) =
+        (emit(A.OPER {assem="jal " ^ Symbol.name l ^ "\n",
+                      src=munchArgs(0, args, Frame.numDedicatedArgRegisters * Frame.wordSize),
+                      dst=[Frame.RA, Frame.RV]@Frame.calleesaves,
+                      jump=NONE});
+         Frame.RV)
+
+    and munchArgs(i, nil, offset) = nil
+      | munchArgs(i, arg::args, offset) =
+        let
+          val onRegister = i < Frame.numDedicatedArgRegisters
+          val temp = List.nth (Frame.argregs, i)
+          fun tempFromArg arg = munchStm (T.MOVE(T.TEMP(temp), arg))
+          fun frameFromArg(arg, offset) =
+            munchStm(T.MOVE(T.BINOP(T.PLUS, T.TEMP(Frame.SP), T.CONST offset), arg))
+        in
+          if onRegister
+          then (tempFromArg arg; temp::munchArgs(i + 1, args, offset))
+          else (frameFromArg(arg, offset); munchArgs(i + 1, args, offset + Frame.wordSize))
+        end
   in
 	 (munchStm stm; rev(!ilist))
   end
