@@ -22,7 +22,7 @@ Group is
 ../ir/printtree.sml
 (* ../ir/driver.sml *)
 
-canon.sml
+olincanon.sml
 assem.sml
 mipsgen.sml
 
