@@ -55,5 +55,15 @@ struct
               | ULT | ULE | UGT | UGE
 
     val notRel = fn relop => EQ (* TODO - implement ... I couldn't find any information in the book, maybe it's just the opposite of each case? EQ = NE, etc?*)
-    val commute = fn relop => EQ (* TODO - implement ... I couldn't find any information in the book, maybe it's just commutation? EQ => EQ, UGT => ULT, etc?*)
+
+    fun commute EQ  = EQ
+      | commute NE  = NE
+      | commute LE  = GE
+      | commute GT  = LT
+      | commute GE  = LE
+      | commute LT  = GT
+      | commute ULE = UGE
+      | commute UGT = ULT
+      | commute UGE = ULE
+      | commute ULT = UGT
 end

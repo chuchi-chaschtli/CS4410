@@ -25,6 +25,14 @@ fun codegen frame stm =
       | binop T.MUL   = "mul"
       | binop _       = ErrorMsg.impossible "invalid binop supplied"
 
+    fun relop T.EQ = "beq"
+      | relop T.NE = "bne"
+      | relop T.GE = "bge"
+      | relop T.GT = "bgt"
+      | relop T.LE = "ble"
+      | relop T.LT = "blt"
+      | relop _    = ErrorMsg.impossible "invalid relop supplied"
+
     fun munchStm (T.SEQ(x, y)) =
         (munchStm x;
          munchStm y)
@@ -57,11 +65,23 @@ fun codegen frame stm =
                       src=[munchExp e],
                       dst=[i],
                       jump=NONE})
-      | munchStm(T.JUMP(T.NAME l, labels)) =
+      | munchStm (T.JUMP(T.NAME l, labels)) =
         emit (A.OPER {assem="j 'j0\n",
                       src=nil,
                       dst=nil,
                       jump=SOME labels})
+      | munchStm (T.CJUMP (oper, (T.CONST 0), e, t, f)) =
+        munchStm (T.CJUMP (Tree.commute(oper), e, (T.CONST 0), t, f))
+      | munchStm (T.CJUMP (oper, e, (T.CONST 0), t, f)) = (* For comparisons where the content of a resource is zero *)
+        emit (A.OPER {assem=relop(oper) ^ "z `s0, `j0\n",
+                      src=[munchExp e],
+                      dst=nil,
+                      jump=SOME [t,f]})
+      | munchStm (T.CJUMP (oper, e1, e2, t, f)) =
+        emit (A.OPER {assem=relop(oper) ^ " `s0, `s1, `j0\n" ,
+                      src=[munchExp e1, munchExp e2],
+                      dst=nil,
+                      jump=SOME [t,f]})
       | munchStm (T.LABEL label) =
         emit (A.LABEL {assem=S.name(label) ^ ":\n", lab=label})
 
