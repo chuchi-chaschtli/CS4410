@@ -28,7 +28,7 @@ sig
                 | STRING of Temp.label * string
   val procEntryExit1 : frame * Tree.stm -> Tree.stm
   val procEntryExit2 : frame * Assem.instr list -> Assem.instr list
-  val procEntryExit3 : frame * Tree.stm -> Tree.stm
+  val procEntryExit3 : frame * Assem.instr list -> {prolog: string, body: Assem.instr list, epilog: string}
 end
 
 structure MipsFrame : FRAME =
@@ -57,21 +57,6 @@ struct
 
   val wordSize = 4
   val numDedicatedArgRegisters = 4
-
-  fun procEntryExit1(frame, stmt) = stmt (* TODO stub for assignment 5 *)
-
-  fun procEntryExit2(frame, body) =
-    body @
-    [Assem.OPER{assem="",
-                src=specialregs@calleesaves,
-                dst=[],
-                jump=SOME[]}]
-
-  fun procEntryExit3(frame, stmt) = stmt (* TODO should this be stubbed for assignment 5? *)
-    | procEntryExit3(FRAME{name, params, locals} body) =
-      { prolog = "PROCEDURE " ^ Symbol.name name ^ "\n",
-        body = body
-        epilog = "END " ^ Symbol.name name ^ "\n" }
 
   fun newFrame {name, formals} =
     let
@@ -109,6 +94,20 @@ struct
     case access
       of InFrame k => Tree.MEM(Tree.BINOP(Tree.PLUS, fp, Tree.CONST k))
        | InReg temp => Tree.TEMP temp
+
+  fun procEntryExit1(frame, stmt) = stmt (* TODO stub for assignment 5 *)
+
+  fun procEntryExit2(frame, body) =
+    body @
+      [Assem.OPER{assem="",
+                  src=specialregs@calleesaves,
+                  dst=[],
+                  jump=SOME[]}]
+
+  fun procEntryExit3(frame, body) =
+    {prolog = "PROCEDURE " ^ Symbol.name(name(frame)) ^ "\n",
+     body = body,
+     epilog = "END " ^ Symbol.name(name(frame)) ^ "\n"}
 end
 
 structure Frame : FRAME = MipsFrame

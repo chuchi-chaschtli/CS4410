@@ -344,10 +344,13 @@ struct
   fun procEntryExit({level: level, body: exp}) =
     (case level
       of LEVEL{frame, parent} => let val post1Body = F.procEntryExit1(frame, unNx body)
+                                     (* TODO Correct return val? Correct register? *)
                                      val retExp = Tree.MOVE(Tree.TEMP(F.RV), unEx(Nx(post1Body)))
-                                     val post3Body = F.procEntryExit3(frame, retExp)
+                                     (* TODO use procEntryExit2 and procEntryExit3 *)
+                                     (* val post2Body = G.codegen(frame, retExp) *)
+                                     (* val post3Body = F.procEntryExit3(frame, retExp) *)
                                  in
-                                   fragList := F.PROC{body=post3Body, frame=frame} :: !fragList
+                                   fragList := F.PROC{body=retExp, frame=frame} :: !fragList
                                  end
        | GLOBAL => ())
 end
