@@ -57,13 +57,13 @@ int ord(struct string *s)
 
 struct string *chr(int i)
 {
- if (i<0 || i>=256) 
+ if (i<0 || i>=256)
    {printf("chr(%d) out of range\n",i); exit(1);}
  return consts+i;
 }
 
 int size(struct string *s)
-{ 
+{
  return s->length;
 }
 
