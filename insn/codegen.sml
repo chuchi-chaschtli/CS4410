@@ -38,22 +38,22 @@ fun codegen frame stm =
                       src=[munchExp e1, munchExp e2],
                       dst=nil,
                       jump=NONE})
-	    | munchStm (T.MOVE(T.MEM(T.CONST n), e)) =
+      | munchStm (T.MOVE(T.MEM(T.CONST n), e)) =
         emit (A.OPER {assem="sw 's0, " ^ Int.toString n ^ "($r0)\n",
                       src=[munchExp e],
                       dst=nil,
                       jump=NONE})
-	    | munchStm (T.MOVE(T.MEM(e1), e2)) =
+      | munchStm (T.MOVE(T.MEM(e1), e2)) =
         emit (A.OPER {assem="sw 's1, 0('s0)\n",
                       src=[munchExp e1, munchExp e2],
                       dst=nil,
                       jump=NONE})
-	    | munchStm (T.MOVE(T.TEMP i, e)) =
+      | munchStm (T.MOVE(T.TEMP i, e)) =
         emit (A.OPER {assem="move 'd0, 's0\n",
                       src=[munchExp e],
                       dst=[i],
                       jump=NONE})
-	    | munchStm (T.LABEL label) =
+      | munchStm (T.LABEL label) =
         emit (A.LABEL {assem=Temp.toString(label) ^ ":\n", lab=label})
 
     and munchExp(T.MEM(T.BINOP(T.PLUS, T.CONST n, e))) =
@@ -66,8 +66,8 @@ fun codegen frame stm =
       | munchExp(T.MEM(T.BINOP(T.PLUS, e, T.CONST n))) =
 	      result(fn register =>
           emit(A.OPER
-				       {assem="lw 'd0, " ^ Int.toString n ^"('s0)\n",
-				        src=[munchExp e],
+               {assem="lw 'd0, " ^ Int.toString n ^"('s0)\n",
+                src=[munchExp e],
                 dst=[register],
                 jump=NONE}))
       | munchExp(T.BINOP(T.PLUS, e, T.CONST n)) =
@@ -85,42 +85,42 @@ fun codegen frame stm =
                 dst=[register],
                 jump=NONE}))
       | munchExp(T.BINOP(T.MINUS, e, T.CONST n)) =
-	      result(fn register =>
+        result(fn register =>
           emit(A.OPER
-				       {assem="addi 'd0, 's0, " ^ Int.toString (~n),
-				        src=[munchExp e],
+               {assem="addi 'd0, 's0, " ^ Int.toString (~n),
+                src=[munchExp e],
                 dst=[register],
                 jump=NONE}))
-	    | munchExp(T.BINOP(oper, e1, e2)) =
-	      result(fn register =>
+      | munchExp(T.BINOP(oper, e1, e2)) =
+        result(fn register =>
           emit(A.OPER
-				       {assem=binop(oper) ^ " 'd0, 's0, 's1",
-				        src=[munchExp e1, munchExp e2],
-				        dst=[register],
-				        jump=NONE}))
-	   | munchExp(T.MEM(T.CONST n)) =
-	     result(fn register =>
-         emit(A.OPER
-				      {assem="lw 'd0, " ^ Int.toString n ^ "($r0)\n",
-				       src=nil,
+               {assem=binop(oper) ^ " 'd0, 's0, 's1",
+                src=[munchExp e1, munchExp e2],
+                dst=[register],
+                jump=NONE}))
+      | munchExp(T.MEM(T.CONST n)) =
+        result(fn register =>
+          emit(A.OPER
+               {assem="lw 'd0, " ^ Int.toString n ^ "($r0)\n",
+                src=nil,
+                dst=[register],
+                jump=NONE}))
+      | munchExp(T.MEM(e)) =
+        result(fn register =>
+          emit(A.OPER
+               {assem="lw 'd0, 0('s0)",
+                src=[munchExp e],
+                dst=[register],
+                jump=NONE}))
+      | munchExp(T.CONST n) =
+        result(fn register =>
+          emit(A.OPER
+               {assem="li 'd0, " ^ Int.toString n,
+               src=nil,
                dst=[register],
                jump=NONE}))
-	   | munchExp(T.MEM(e)) =
-	     result(fn register =>
-         emit(A.OPER
-				      {assem="lw 'd0, 0('s0)",
-				       src=[munchExp e],
-               dst=[register],
-               jump=NONE}))
-	   | munchExp(T.CONST n) =
-	     result(fn register =>
-         emit(A.OPER
-				      {assem="li 'd0, " ^ Int.toString n,
-				       src=nil,
-               dst=[register],
-               jump=NONE}))
-	   | munchExp(T.TEMP temp) = temp
-     | munchExp(T.ESEQ(s, e)) = (munchStm s; munchExp e)
+      | munchExp(T.TEMP temp) = temp
+      | munchExp(T.ESEQ(s, e)) = (munchStm s; munchExp e)
   in
 	 (munchStm stm; rev(!ilist))
   end
