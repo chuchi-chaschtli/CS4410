@@ -48,11 +48,20 @@ fun codegen frame stm =
                       src=[munchExp e1, munchExp e2],
                       dst=nil,
                       jump=NONE})
+      | munchStm(T.MOVE(T.TEMP t1, T.TEMP t2)) =
+        emit (A.MOVE{assem="",
+                     src=t2,
+			               dst=t1})
       | munchStm (T.MOVE(T.TEMP i, e)) =
         emit (A.OPER {assem="move 'd0, 's0\n",
                       src=[munchExp e],
                       dst=[i],
                       jump=NONE})
+      | munchStm(T.JUMP(T.NAME l, labels)) =
+        emit (A.OPER {assem="j 'j0\n",
+                      src=nil,
+                      dst=nil,
+                      jump=SOME labels})
       | munchStm (T.LABEL label) =
         emit (A.LABEL {assem=S.name(label) ^ ":\n", lab=label})
 

@@ -13,22 +13,6 @@ structure Assem = struct
                              dst: temp,
                              src: temp}
 
-  fun getTempsHelper(0, acc) = acc
-    | getTempsHelper(n, acc) = Temp.newtemp()::acc
-
-  fun getTemps(n) = getTempsHelper(n, nil)
-
-  val FP = Temp.newtemp() (* frame pointer *)
-  val RV = Temp.newtemp() (* return value *)
-  val SP = Temp.newtemp() (* static pointer *)
-  val RA = Temp.newtemp() (* return address *)
-  val ZERO = Temp.newtemp() (* zero register *)
-
-  val specialregs = [FP,RV,SP,RA,ZERO]
-  val argregs = getTemps(4)
-  val calleesaves = getTemps(8)
-  val callersaves = getTemps(10)
-
   fun format saytemp =
     let
       fun speak(assem,dst,src,jump) =
