@@ -16,7 +16,7 @@ structure Assem = struct
   fun getTempsHelper(0, acc) = acc
     | getTempsHelper(n, acc) = Temp.newtemp()::acc
 
-  fun getTemps(n) = getTemps(n, nil)
+  fun getTemps(n) = getTempsHelper(n, nil)
 
   val FP = Temp.newtemp() (* frame pointer *)
   val RV = Temp.newtemp() (* return value *)
