@@ -83,7 +83,7 @@ fun codegen frame stm =
                       dst=nil,
                       jump=SOME [t,f]})
       | munchStm (T.LABEL label) =
-        emit (A.LABEL {assem=S.name(label) ^ ":\n", lab=label})
+        emit (A.LABEL {assem=Symbol.name(label) ^ ":\n", lab=label})
 
     and munchExp(T.MEM(T.BINOP(T.PLUS, T.CONST n, e))) =
         result(fn register =>
