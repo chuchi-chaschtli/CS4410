@@ -24,7 +24,7 @@ Group is
 
 canon.sml
 assem.sml
-codegen.sml
+mipsgen.sml
 
 $/smlnj-lib.cm
 $/ml-yacc-lib.cm
