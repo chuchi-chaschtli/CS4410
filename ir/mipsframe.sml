@@ -37,6 +37,10 @@ struct
 
   fun procEntryExit1(frame, stmt) = stmt (* TODO stub for assignment 5 *)
   fun procEntryExit3(frame, stmt) = stmt (* TODO should this be stubbed for assignment 5? *)
+    | procEntryExit3(FRAME{name, params, locals} body) =
+      { prolog = "PROCEDURE " ^ Symbol.name name ^ "\n",
+        body = body
+        epilog = "END " ^ Symbol.name name ^ "\n" }
 
   fun newFrame {name, formals} =
     let
