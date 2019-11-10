@@ -33,9 +33,7 @@ fun codegen frame stm =
       | relop T.LT = "blt"
       | relop _    = ErrorMsg.impossible "invalid relop supplied"
 
-    fun munchStm (T.SEQ(x, y)) =
-        (munchStm x;
-         munchStm y)
+    fun munchStm (T.SEQ(x, y)) = (munchStm x; munchStm y)
       | munchStm (T.MOVE(T.MEM(T.BINOP(T.PLUS, e1, T.CONST n)), e2)) =
         emit (A.OPER {assem="sw 's1, "^ Int.toString n ^ "('s0)\n",
                       src=[munchExp e1, munchExp e2],
