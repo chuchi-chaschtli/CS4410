@@ -26,6 +26,8 @@ olincanon.sml
 assem.sml
 mipsgen.sml
 
+main.sml
+
 $/smlnj-lib.cm
 $/ml-yacc-lib.cm
 $/basis.cm

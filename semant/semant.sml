@@ -507,10 +507,10 @@ struct
       val mainLevel = IR.newLevel{parent=IR.outermost, name=outerLabel, formals=[]}
       val _ = FindEscape.findEscape(absyn)
       val {exp, ty} = transExp(Env.base_venv, Env.base_tenv, mainLevel, outerLabel) absyn
-      val fragments = IR.getResult()
     in
       (* NOTE uncomment this to see the output of the IR *)
       (* Printtree.printtree(TextIO.stdOut, Translate.unNx(exp)) *)
-      fragments
+      IR.procEntryExit({level=mainLevel, body=exp});
+      IR.getResult()
     end
 end
