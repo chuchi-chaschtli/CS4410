@@ -1,132 +1,132 @@
-L144:
+L150:
 lw 'd0, 4('s0)
 lw 'd0, 0('s0)lw 'd0, ~4('s0)
-beq t831, t832, L140
-L141:
+beq t605, t606, L146
+L147:
 li 'd0, 0move 'd0, 's0
 lw 'd0, 0('s0)lw 'd0, ~4('s0)
-addi 'd0, 's0, ~1ble t708, t835, L138
-L104:
+addi 'd0, 's0, ~1ble t481, t609, L144
+L110:
 li 'd0, 0move 'd0, 's0
-j 'j0
-L140:
-la t839, L109
-lw 'd0, 0('s0)move 'd0, 's0
-jal t839
-move t725, t103
-j 'j0
-L138:
-lw 'd0, 0('s0)lw 'd0, ~8('s0)
-li 'd0, 4mul 'd0, 's0, 's1add 'd0, 's0, 's1move 'd0, 's0
-lw 'd0, 0('s0)beqz t846, L125
-L126:
-li 'd0, 0move 'd0, 's0
-j 'j0
-L125:
-li 'd0, 1move 'd0, 's0
-lw 'd0, 0('s0)lw 'd0, ~16('s0)
-lw 'd0, 4('s0)
-add 'd0, 's0, 's1li 'd0, 4mul 'd0, 's0, 's1add 'd0, 's0, 's1move 'd0, 's0
-lw 'd0, 0('s0)beqz t856, L128
-L129:
-li 'd0, 0move 'd0, 's0
-L128:
-j 'j0
-L145:
-li 'd0, 1beq t858, t711, L130
-L131:
-li 'd0, 0move 'd0, 's0
-j 'j0
-L130:
-li 'd0, 1move 'd0, 's0
-lw 'd0, 0('s0)lw 'd0, ~20('s0)
-addi 'd0, 's0, 7lw 'd0, 4('s0)
-sub 'd0, 's0, 's1li 'd0, 4mul 'd0, 's0, 's1add 'd0, 's0, 's1move 'd0, 's0
-lw 'd0, 0('s0)beqz t869, L133
-L134:
-li 'd0, 0move 'd0, 's0
-L133:
 j 'j0
 L146:
-li 'd0, 1beq t871, t714, L135
-L136:
+la t613, L115
+lw 'd0, 0('s0)move 'd0, 's0
+jal t613
+move t498, t103
+j 'j0
+L144:
+lw 'd0, 0('s0)lw 'd0, ~8('s0)
+li 'd0, 4mul 'd0, 's0, 's1add 'd0, 's0, 's1move 'd0, 's0
+lw 'd0, 0('s0)beqz t620, L131
+L132:
 li 'd0, 0move 'd0, 's0
 j 'j0
-L135:
-lw 'd0, 0('s0)lw 'd0, ~20('s0)
-addi 'd0, 's0, 7lw 'd0, 4('s0)
-sub 'd0, 's0, 's1li 'd0, 4mul 'd0, 's0, 's1add 'd0, 's0, 's1move 'd0, 's0
-li 'd0, 0sw t881, (t722)
+L131:
+li 'd0, 1move 'd0, 's0
 lw 'd0, 0('s0)lw 'd0, ~16('s0)
 lw 'd0, 4('s0)
 add 'd0, 's0, 's1li 'd0, 4mul 'd0, 's0, 's1add 'd0, 's0, 's1move 'd0, 's0
-li 'd0, 0sw t889, (t721)
+lw 'd0, 0('s0)beqz t630, L134
+L135:
+li 'd0, 0move 'd0, 's0
+L134:
+j 'j0
+L151:
+li 'd0, 1beq t632, t484, L136
+L137:
+li 'd0, 0move 'd0, 's0
+j 'j0
+L136:
+li 'd0, 1move 'd0, 's0
+lw 'd0, 0('s0)lw 'd0, ~20('s0)
+addi 'd0, 's0, 7lw 'd0, 4('s0)
+sub 'd0, 's0, 's1li 'd0, 4mul 'd0, 's0, 's1add 'd0, 's0, 's1move 'd0, 's0
+lw 'd0, 0('s0)beqz t643, L139
+L140:
+li 'd0, 0move 'd0, 's0
+L139:
+j 'j0
+L152:
+li 'd0, 1beq t645, t487, L141
+L142:
+li 'd0, 0move 'd0, 's0
+j 'j0
+L141:
+lw 'd0, 0('s0)lw 'd0, ~20('s0)
+addi 'd0, 's0, 7lw 'd0, 4('s0)
+sub 'd0, 's0, 's1li 'd0, 4mul 'd0, 's0, 's1add 'd0, 's0, 's1move 'd0, 's0
+li 'd0, 0sw t655, (t495)
+lw 'd0, 0('s0)lw 'd0, ~16('s0)
+lw 'd0, 4('s0)
+add 'd0, 's0, 's1li 'd0, 4mul 'd0, 's0, 's1add 'd0, 's0, 's1move 'd0, 's0
+li 'd0, 0sw t663, (t494)
 lw 'd0, 0('s0)lw 'd0, ~8('s0)
 li 'd0, 4mul 'd0, 's0, 's1add 'd0, 's0, 's1move 'd0, 's0
-li 'd0, 0sw t895, (t720)
-la t896, L123
+li 'd0, 0sw t669, (t493)
+la t670, L129
 lw 'd0, 0('s0)move 'd0, 's0
 lw 'd0, 4('s0)
 addi 'd0, 's0, 1move 'd0, 's0
-jal t896
-move t830, t103
+jal t670
+move t604, t103
 lw 'd0, 0('s0)lw 'd0, ~12('s0)
 lw 'd0, 4('s0)
 li 'd0, 4mul 'd0, 's0, 's1add 'd0, 's0, 's1move 'd0, 's0
-sw t708, (t719)
+sw t481, (t492)
 lw 'd0, 0('s0)lw 'd0, ~20('s0)
 addi 'd0, 's0, 7lw 'd0, 4('s0)
 sub 'd0, 's0, 's1li 'd0, 4mul 'd0, 's0, 's1add 'd0, 's0, 's1move 'd0, 's0
-li 'd0, 1sw t914, (t718)
+li 'd0, 1sw t688, (t491)
 lw 'd0, 0('s0)lw 'd0, ~16('s0)
 lw 'd0, 4('s0)
 add 'd0, 's0, 's1li 'd0, 4mul 'd0, 's0, 's1add 'd0, 's0, 's1move 'd0, 's0
-li 'd0, 1sw t922, (t717)
+li 'd0, 1sw t696, (t490)
 lw 'd0, 0('s0)lw 'd0, ~8('s0)
 li 'd0, 4mul 'd0, 's0, 's1add 'd0, 's0, 's1move 'd0, 's0
-li 'd0, 1sw t928, (t716)
+li 'd0, 1sw t702, (t489)
 li 'd0, 0move 'd0, 's0
 j 'j0
-L147:
+L153:
 lw 'd0, 0('s0)lw 'd0, ~4('s0)
-addi 'd0, 's0, ~1beq t708, t930, L104
-L139:
+addi 'd0, 's0, ~1beq t481, t704, L110
+L145:
 addi 'd0, 's0, 1move 'd0, 's0
 j 'j0
-L148:
+L154:
 li 'd0, 0move 'd0, 's0
 j 'j0
-L143:
-L150:
+L149:
+L156:
 li 'd0, 0sw 's1, ~4('s0)
 lw 'd0, ~4('s0)
 lw 'd0, 0('s0)lw 'd0, ~4('s0)
-addi 'd0, 's0, ~1ble t936, t937, L120
-L104:
+addi 'd0, 's0, ~1ble t710, t711, L126
+L110:
 li 'd0, 0move 'd0, 's0
 j 'j0
-L120:
+L126:
 li 'd0, 0sw 's1, ~8('s0)
 lw 'd0, ~8('s0)
 lw 'd0, 0('s0)lw 'd0, ~4('s0)
-addi 'd0, 's0, ~1ble t942, t943, L117
-L110:
+addi 'd0, 's0, ~1ble t716, t717, L123
+L116:
 lw 'd0, ~4('s0)
 lw 'd0, 0('s0)lw 'd0, ~4('s0)
-addi 'd0, 's0, ~1beq t946, t947, L104
-L121:
+addi 'd0, 's0, ~1beq t720, t721, L110
+L127:
 lw 'd0, ~4('s0)
 addi 'd0, 's0, 1sw 's1, ~4('s0)
 j 'j0
-L117:
+L123:
 lw 'd0, ~8('s0)
 lw 'd0, 0('s0)lw 'd0, ~4('s0)
-addi 'd0, 's0, ~1beq t952, t953, L110
-L118:
+addi 'd0, 's0, ~1beq t726, t727, L116
+L124:
 lw 'd0, ~8('s0)
 addi 'd0, 's0, 1sw 's1, ~8('s0)
 j 'j0
-L149:
+L155:
 
 
  . O

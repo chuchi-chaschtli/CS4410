@@ -109,11 +109,6 @@ fun codegen frame stm =
                       jump=SOME [t,f]})
       | munchStm (T.LABEL label) =
         emit (A.LABEL {assem=Symbol.name(label) ^ ":\n", lab=label})
-      | munchStm (T.EXP(T.CALL(e, args))) =
-        emit (A.OPER{assem="jal `s0\n",
-                     src=munchExp(e)::munchArgs(0, args),
-                     dst=[Frame.RA, Frame.RV]@Frame.calleesaves,
-                     jump=NONE})
       | munchStm(T.EXP e) = (munchExp e; ())
       | munchStm stm =
         (Printtree.printtree(TextIO.stdOut, stm);
@@ -191,9 +186,12 @@ fun codegen frame stm =
                 jump=NONE}))
       | munchExp(T.TEMP temp) = temp
       | munchExp(T.ESEQ(s, e)) = (munchStm s; munchExp e)
-      | munchExp exp =
-        (Printtree.printtree(TextIO.stdOut, Tree.EXP(exp));
-         ErrorMsg.impossible "Could not munch expression")
+      | munchExp(T.CALL(e, args)) =
+        result(fn register =>
+          emit(A.OPER{assem="jal `s0\n",
+                      src=munchExp(e)::munchArgs(0, args),
+                      dst=[Frame.RA, Frame.RV]@Frame.calleesaves,
+                      jump=NONE}))
 
     and munchArgs(i, nil) = nil
       | munchArgs(i, arg::args) =
