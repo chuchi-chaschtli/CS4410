@@ -20,6 +20,36 @@ We found these documents helpful in our implementation
 
 # Instruction Selection
 
+By and large, the special cases for instruction selection that we've distinguished
+have come from the book. 
+
+For all of our instructions, we're using a DSL to indicate source and destination
+registers as the targets for different commands: 'd0 and 's0 to indicate "the 
+first register in the destination list" and "the first register in the destination
+list", respectively.
+
+---
+
+# Changes from previous IR and Frame Analysis work
+
+## procEntryExit
+
+For this assignment we added a stub for `procEntryExit2` and a basic implementation
+for `procEntryExit3`. The important functionality of the latter is to add a prologue
+and epilogue to each procedure.
+
+As of now the resulting instruction lists are not yet being used as replacements
+for the fragment list that we were creating beforehand, however to get around
+this we're appending the procedures with existing IR tree segments to the fragment
+list, throwing away the instruction sets otherwise.
+
+## Adding the primary tree as a fragment
+
+The main body of the IR tree that has been parsed wasn't previously being
+attached to the fragment list being returned from `transProg`, so we have
+remedied this by attaching it to the `main`-level frame and appending it to
+the fragment list returned by `getResult`.
+
 ---
 
 ## Stylistic Choices
