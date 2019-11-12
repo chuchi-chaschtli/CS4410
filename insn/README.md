@@ -32,6 +32,18 @@ list", respectively.
 
 # Changes from previous IR and Frame Analysis work
 
+## Reserved registers
+
+For this assignment, we initialized five reserved registers (temps, for now) 
+to be referenced in the rest of the instruction selection. These five registered
+are stored in the FRAME signature:
+
+  - `FP` : The frame pointer
+  - `RV` : The return value
+  - `SP` : The top-of-stack pointer
+  - `RA` : The return address
+  - `ZERO` : The reserved zero register (used for no-ops, primarily)
+
 ## procEntryExit
 
 For this assignment we added a stub for `procEntryExit2` and a basic implementation
@@ -65,3 +77,9 @@ We tested our code against the test cases provided by Appel (`tests/`), alongsid
 our own tests for some special cases in isolation / not covered in the other test
 folder (`tests_semant`).  We also ran the tests we had written for our previous
 type-checker (`tests_type`), to validate that our functionality remains consistent.
+
+Running individual tests:
+
+```
+fun test(0) = (Main.compile "../tests/queens.tig"; Main.compile "../tests/merge.tig") | test(x) = let val _ = Main.compile("../tests/test" ^ Int.toString x ^ ".tig") in test(x - 1) end;
+```
