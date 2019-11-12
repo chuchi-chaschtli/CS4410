@@ -65,6 +65,17 @@ fun codegen frame stm =
                       src=[munchExp e1, munchExp e2],
                       dst=nil,
                       jump=NONE})
+      | munchStm(T.MOVE(T.ESEQ(s, T.MEM(e1)), e2)) =
+        (munchStm s;
+         emit (A.OPER {assem="sw `s0, (`d0)\n",
+                       src=[munchExp e2],
+                       dst=[munchExp e1],
+                       jump=NONE}))
+      | munchStm(T.MOVE(T.ESEQ(s, T.TEMP(t)), e)) =
+        (munchStm s;
+         emit (A.MOVE {assem="move `d0, `s0\n",
+                       src=munchExp e,
+                       dst=t}))
       | munchStm(T.MOVE(T.TEMP t1, T.TEMP t2)) =
         emit (A.MOVE{assem="",
                      src=t2,
@@ -103,6 +114,10 @@ fun codegen frame stm =
                      src=munchExp(e)::munchArgs(0, args),
                      dst=[Frame.RA, Frame.RV]@Frame.calleesaves,
                      jump=NONE})
+      | munchStm(T.EXP e) = (munchExp e; ())
+      | munchStm stm =
+        (Printtree.printtree(TextIO.stdOut, stm);
+         ErrorMsg.impossible "Could not munch statement")
 
     and munchExp(T.MEM(T.BINOP(T.PLUS, T.CONST n, e))) =
         result(fn register =>
@@ -167,8 +182,18 @@ fun codegen frame stm =
                src=nil,
                dst=[register],
                jump=NONE}))
+      | munchExp(T.NAME n) =
+        result(fn register =>
+          emit(A.OPER
+               {assem="la `d0, " ^ Symbol.name n ^ "\n",
+                src=nil,
+                dst=[register],
+                jump=NONE}))
       | munchExp(T.TEMP temp) = temp
       | munchExp(T.ESEQ(s, e)) = (munchStm s; munchExp e)
+      | munchExp exp =
+        (Printtree.printtree(TextIO.stdOut, Tree.EXP(exp));
+         ErrorMsg.impossible "Could not munch expression")
 
     and munchArgs(i, nil) = nil
       | munchArgs(i, arg::args) =
