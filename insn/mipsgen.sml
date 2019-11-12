@@ -85,10 +85,10 @@ fun codegen frame stm =
                      src=munchExp(e)::munchArgs(0, args),
                      dst=[Frame.RA, Frame.RV]@Frame.calleesaves,
                      jump=NONE})
-      | munchStm (T.MOVE(T.TEMP i, e)) =
+      | munchStm (T.MOVE(T.TEMP t, e)) =
         emit (A.OPER {assem="move 'd0, 's0\n",
                       src=[munchExp e],
-                      dst=[i],
+                      dst=[t],
                       jump=NONE})
       | munchStm (T.JUMP(T.NAME l, labels)) =
         emit (A.OPER {assem="j 'j0\n",
@@ -131,28 +131,28 @@ fun codegen frame stm =
       | munchExp(T.BINOP(T.PLUS, e, T.CONST n)) =
         result(fn register =>
           emit(A.OPER
-               {assem="addi 'd0, 's0, " ^ Int.toString n,
+               {assem="addi 'd0, 's0, " ^ Int.toString n ^ "\n",
                 src=[munchExp e],
                 dst=[register],
                 jump=NONE}))
       | munchExp(T.BINOP(T.PLUS, T.CONST n, e)) =
         result(fn register =>
           emit(A.OPER
-               {assem="addi 'd0, 's0, " ^ Int.toString n,
+               {assem="addi 'd0, 's0, " ^ Int.toString n ^ "\n",
                 src=[munchExp e],
                 dst=[register],
                 jump=NONE}))
       | munchExp(T.BINOP(T.MINUS, e, T.CONST n)) =
         result(fn register =>
           emit(A.OPER
-               {assem="addi 'd0, 's0, " ^ Int.toString (~n),
+               {assem="addi 'd0, 's0, " ^ Int.toString (~n) ^ "\n",
                 src=[munchExp e],
                 dst=[register],
                 jump=NONE}))
       | munchExp(T.BINOP(oper, e1, e2)) =
         result(fn register =>
           emit(A.OPER
-               {assem=binop(oper) ^ " 'd0, 's0, 's1",
+               {assem=binop(oper) ^ " 'd0, 's0, 's1\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[register],
                 jump=NONE}))
@@ -166,14 +166,14 @@ fun codegen frame stm =
       | munchExp(T.MEM(e)) =
         result(fn register =>
           emit(A.OPER
-               {assem="lw 'd0, 0('s0)",
+               {assem="lw 'd0, 0('s0)\n",
                 src=[munchExp e],
                 dst=[register],
                 jump=NONE}))
       | munchExp(T.CONST n) =
         result(fn register =>
           emit(A.OPER
-               {assem="li 'd0, " ^ Int.toString n,
+               {assem="li 'd0, " ^ Int.toString n ^ "\n",
                src=nil,
                dst=[register],
                jump=NONE}))
