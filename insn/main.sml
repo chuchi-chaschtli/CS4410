@@ -13,7 +13,7 @@ structure Main = struct
       app (fn i => TextIO.output(out, format0 i)) instrs
     end
     | emitproc out (F.STRING(lab,s)) = TextIO.output(out, s)
-    
+
   fun withOpenFile fname f =
     let val out = TextIO.openOut fname
     in (f out before TextIO.closeOut out)
@@ -22,7 +22,7 @@ structure Main = struct
 
   fun compile filename =
     let val absyn = Parse.parse filename
-        val frags = (Semant.transProg absyn)
+        val frags = (FindEscape.findEscape absyn; Semant.transProg absyn)
     in
       withOpenFile (filename ^ ".s")
       (fn out => (app (emitproc out) frags))

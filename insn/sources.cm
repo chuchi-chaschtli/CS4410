@@ -20,12 +20,10 @@ Group is
 ../semant/semant.sml
 
 ../ir/printtree.sml
-(* ../ir/driver.sml *)
 
 olincanon.sml
 assem.sml
 mipsgen.sml
-
 main.sml
 
 $/smlnj-lib.cm
