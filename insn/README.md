@@ -6,7 +6,7 @@ How to Run the Instruction Selection step:
 
 `sml -m sources.cm` **within** the `/insn` directory
 
-Once in the SML REPL, use `Main.compile "filename"` on any Tiger file.
+Once in the SML REPL, use `Main.compile "filename"` on any Tiger file. See testing section for details.
 
 ---
 
@@ -21,10 +21,10 @@ We found these documents helpful in our implementation
 # Instruction Selection
 
 By and large, the special cases for instruction selection that we've distinguished
-have come from the book. 
+have come from the book.
 
 For all of our instructions, we're using a DSL to indicate source and destination
-registers as the targets for different commands: 'd0 and 's0 to indicate "the 
+registers as the targets for different commands: 'd0 and 's0 to indicate "the
 first register in the destination list" and "the first register in the destination
 list", respectively.
 
@@ -34,7 +34,7 @@ list", respectively.
 
 ## Reserved registers
 
-For this assignment, we initialized five reserved registers (temps, for now) 
+For this assignment, we initialized five reserved registers (temps, for now)
 to be referenced in the rest of the instruction selection. These five registered
 are stored in the FRAME signature:
 
@@ -43,6 +43,13 @@ are stored in the FRAME signature:
   - `SP` : The top-of-stack pointer
   - `RA` : The return address
   - `ZERO` : The reserved zero register (used for no-ops, primarily)
+
+We created a helper function to assign a number of temps to specific functionality. Following the MIPS documentation, we have:
+
+  - 5 special regs (see above)
+  - 4 dedicated function argument regs (`$a0-$a3`)
+  - 8 calleesave regs (`$s0-$s7`)
+  - 10 callersave regs (`$t0-t9`)
 
 ## procEntryExit
 
@@ -69,7 +76,7 @@ the fragment list returned by `getResult`.
 ### Code for Impossible Errors
 
 We recently realized that `ErrorMsg.impossible` exists, so we've replaced our bogus error
-throwing with that.
+throwing with that. To handle match exceptions in non-exhaustive case matches, we throw a compiler error describing the tree that caused the failure.
 
 ## Testing
 
@@ -83,3 +90,5 @@ Running individual tests:
 ```
 fun test(0) = (Main.compile "../tests/queens.tig"; Main.compile "../tests/merge.tig") | test(x) = let val _ = Main.compile("../tests/test" ^ Int.toString x ^ ".tig") in test(x - 1) end;
 ```
+
+We also added the recursive definition for factorial in `tests_insn/factorial.tig`, and the corresponding assembler listing as a result of running `Main.compile "../tests_insn/factorial.tig" -> tests_insn/factorial.tig.s`
