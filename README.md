@@ -11,3 +11,5 @@ See `README.md` under child folders for more granular information:
 - `semant/` -- Initial semantic analysis (type-checking)
 
 - `ir/` -- Complete semantic analysis (type-checking and frame analysis)
+
+- `insn/` -- Instruction Selection

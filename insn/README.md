@@ -28,6 +28,11 @@ registers as the targets for different commands: 'd0 and 's0 to indicate "the
 first register in the destination list" and "the first register in the destination
 list", respectively.
 
+## Factorial
+
+For a factorial implementation in our translated assembly, see
+`tests_insn/factoral.tig.s`.
+
 ---
 
 # Changes from previous IR and Frame Analysis work
@@ -84,6 +89,9 @@ We tested our code against the test cases provided by Appel (`tests/`), alongsid
 our own tests for some special cases in isolation / not covered in the other test
 folder (`tests_semant`).  We also ran the tests we had written for our previous
 type-checker (`tests_type`), to validate that our functionality remains consistent.
+
+We've also included a basic factorial implementation (`tests_insn/factorial.tig`)
+with its translated assembly (`tests_insn/factorial.tig.s`).
 
 Running individual tests:
 

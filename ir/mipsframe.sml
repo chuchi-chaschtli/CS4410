@@ -45,7 +45,7 @@ struct
                 | STRING of Temp.label * string
 
   fun getTempsHelper(0, acc) = acc
-    | getTempsHelper(n, acc) = Temp.newtemp()::acc
+    | getTempsHelper(n, acc) = getTempsHelper(n - 1, Temp.newtemp()::acc)
 
   fun getTemps(n) = getTempsHelper(n, nil)
 
