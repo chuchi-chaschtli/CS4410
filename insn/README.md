@@ -37,6 +37,12 @@ For a factorial implementation in our translated assembly, see
 
 # Changes from previous IR and Frame Analysis work
 
+## Commuting
+
+Previously, we didn't implement `commute` or `notRel`, as we didn't see how they would be used in the IR. However, implementing `commute` made our lives easier when handling CJUMPs.
+
+Since `commute <` is equal to `>`, we can commute `CJUMP < e1 e2 t f` to be `CJUMP > e2 e1 t f`, without having to write both cases explicitly.
+
 ## Reserved registers
 
 For this assignment, we initialized five reserved registers (temps, for now)
@@ -77,6 +83,9 @@ the fragment list returned by `getResult`.
 ---
 
 ## Stylistic Choices
+
+### Binops and Relops
+We are trying to be clever to make the pattern matching easier to read. We can convert different binops and relops directly to their equivalent instructions and only have a few cases in our munchStm/munchExp to handle them. This includes handling relops where the second expression is the zero register (just by adding a "z" to the signed relop instruction equivalents).
 
 ### Code for Impossible Errors
 
