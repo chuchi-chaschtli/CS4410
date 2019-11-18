@@ -26,10 +26,10 @@ Group is
 ../insn/mipsgen.sml
 (* ../insn/main.sml *)
 
-flowgraph.sig
-flowgraph.sml
 graph.sig
 graph.sml
+flowgraph.sig
+flowgraph.sml
 makegraph.sig
 makegraph.sml
 

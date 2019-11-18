@@ -10,19 +10,19 @@ fun instrs2graph insns =
     val control = Graph.newGraph()
 
     fun mkVertices(insn::insns, table, labelVertices, defs, uses, moves, labels, stack) =
-        (case instr
+        (case insn
           of A.LABEL {assem, lab} =>
-              mkVertices(tail, table, labelVertices, defs, uses, moves, lab::labels, stack)
-           | (A.MOVE {assem, dst, src} | A.OPER {assem, src, dst, jump}) =>
+              mkVertices(insns, table, labelVertices, defs, uses, moves, lab::labels, stack)
+           | (A.MOVE {assem, dst, src} | A.OPER {assem, src, dst, ...}) =>
               let
                 val top = Graph.newNode(control)
                 fun updateTable (tbl, values) =
-                  Graph.Table.enter(tbl, node, values)
+                  Graph.Table.enter(tbl, top, values)
                 val newDefs = updateTable(defs, dst::nil)
                 val newUses = updateTable(uses, src::nil)
                 val newTable = updateTable(table, insn)
                 val newMoves = updateTable(moves, true)
-                (* TODO: update labelVertices with table and mapping over labels? *)
+                val newLabelVertices = labelVertices (* TODO: update labelVertices with table and mapping over labels? *)
               in mkVertices(insns, newTable, newLabelVertices, newDefs, newUses, newMoves, nil, top::stack)
               end
            | _ => ErrorMsg.impossible "Failed to create vertex")
