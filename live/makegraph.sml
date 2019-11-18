@@ -44,12 +44,12 @@ fun instrs2graph insns =
                 case insn
                   of A.OPER {assem, src, dst, jump = SOME labels} => labels
                    | _ => nil
-            in ()
-              (* TODO: traverse labelVertices to find jmpLabels *)
+            in
+              () (* TODO: traverse labelVertices to find jmpLabels *)
             end
         in
           (map (fn to => Graph.mk_edge {from=curr, to=to}) jmps(curr);
-           (if jmps(prev) = nil then Graph.mk_edge({from=prev, to=curr}) else ());
+           (if jmps(prev) = nil then Graph.mk_edge({from=prev, to=curr}) else ((* TODO *)));
            mkEdges(prev::prevs))
         end
   in
