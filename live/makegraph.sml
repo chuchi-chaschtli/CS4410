@@ -20,37 +20,33 @@ fun instrs2graph insns =
     val control = Graph.newGraph()
 
     fun mkVertices(insn::insns, table, labelVertices, defs, uses, moves, labels, stack) =
-        (case insn
-          of A.LABEL {assem, lab} =>
-              mkVertices(insns, table, labelVertices, defs, uses, moves, lab::labels, stack)
-           | A.MOVE {assem, dst, src} =>
-              let
-                val top = Graph.newNode(control)
-                fun updateTable (tbl, values) =
-                  Graph.Table.enter(tbl, top, values)
-                val newDefs = updateTable(defs, dst::nil)
-                val newUses = updateTable(uses, src::nil)
-                val newTable = updateTable(table, insn)
-                val newMoves = updateTable(moves, true)
-                fun populateLabelVertexGraph() =
-                  foldr (fn (vertex, label) => LabelVertexGraph.insert(label, vertex, top)) labelVertices labels
-                val newLabelVertices = populateLabelVertexGraph()
-              in mkVertices(insns, newTable, newLabelVertices, newDefs, newUses, newMoves, nil, top::stack)
-              end
-           | A.OPER {assem, src, dst, ... (* TODO Jump was unused otherwise *)} =>
-             let
-               val top = Graph.newNode(control)
-               fun updateTable (tbl, values) =
-                 Graph.Table.enter(tbl, top, values)
-               val newDefs = updateTable(defs, dst)
-               val newUses = updateTable(uses, src)
-               val newTable = updateTable(table, insn)
-               val newMoves = updateTable(moves, true)
-               fun populateLabelVertexGraph() =
-                 foldr (fn (vertex, label) => LabelVertexGraph.insert(label, vertex, top)) labelVertices labels
-               val newLabelVertices = populateLabelVertexGraph()
-             in mkVertices(insns, newTable, newLabelVertices, newDefs, newUses, newMoves, nil, top::stack)
-             end)
+        let
+          val top = Graph.newNode(control)
+          fun updateTable (tbl, values) =
+            Graph.Table.enter(tbl, top, values)
+          val newTable = updateTable(table, insn)
+          fun populateLabelVertexGraph() =
+            foldr (fn (vertex, label) => LabelVertexGraph.insert(label, vertex, top)) labelVertices labels
+          val newLabelVertices = populateLabelVertexGraph()
+        in
+          (case insn
+            of A.LABEL {assem, lab} =>
+                mkVertices(insns, table, labelVertices, defs, uses, moves, lab::labels, stack)
+             | A.MOVE {assem, dst, src} =>
+                let
+                  val newDefs = updateTable(defs, dst::nil)
+                  val newUses = updateTable(uses, src::nil)
+                  val newMoves = updateTable(moves, true)
+                in mkVertices(insns, newTable, newLabelVertices, newDefs, newUses, newMoves, nil, top::stack)
+                end
+             | A.OPER {assem, src, dst, ... (* TODO Jump was unused otherwise *)} =>
+               let
+                 val newDefs = updateTable(defs, dst)
+                 val newUses = updateTable(uses, src)
+                 val newMoves = updateTable(moves, false)
+               in mkVertices(insns, newTable, newLabelVertices, newDefs, newUses, newMoves, nil, top::stack)
+               end)
+        end
       | mkVertices(nil, table, labelVertices, defs, uses, moves, labels, stack) = (table, labelVertices, defs, uses, moves, stack)
 
     val empty = Graph.Table.empty
