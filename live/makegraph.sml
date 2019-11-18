@@ -10,7 +10,7 @@ fun instrs2graph insns =
     val control = Graph.newGraph()
 
     fun mkVertices(insn::insns, table, labelVertices, defs, uses, moves, labels, stack) =
-        case instr
+        (case instr
           of A.LABEL {assem, lab} =>
               mkVertices(tail, table, labelVertices, defs, uses, moves, lab::labels, stack)
            | (A.MOVE {assem, dst, src} | A.OPER {assem, src, dst, jump}) =>
@@ -25,8 +25,8 @@ fun instrs2graph insns =
                 (* TODO: update labelVertices with table and mapping over labels? *)
               in mkVertices(insns, newTable, newLabelVertices, newDefs, newUses, newMoves, nil, top::stack)
               end
-      | mkVertices(nil, table, labelVertices, defs, uses, moves, labels, stack) =
-        (table, labelVertices, defs, uses, moves, stack)
+           | _ => ErrorMsg.impossible "Failed to create vertex")
+      | mkVertices(nil, table, labelVertices, defs, uses, moves, labels, stack) = (table, labelVertices, defs, uses, moves, stack)
 
     val empty = Graph.Table.empty
     val (table, labelVertices, def, use, ismove, stack) =
@@ -44,12 +44,12 @@ fun instrs2graph insns =
                 case insn
                   of A.OPER {assem, src, dst, jump = SOME labels} => labels
                    | _ => nil
-            in
+            in ()
               (* TODO: traverse labelVertices to find jmpLabels *)
             end
         in
           (map (fn to => Graph.mk_edge {from=curr, to=to}) jmps(curr);
-           (if jmps(prev) = nil then Graph.mk_edge {from=prev, to=curr});
+           (if jmps(prev) = nil then Graph.mk_edge({from=prev, to=curr}) else ());
            mkEdges(prev::prevs))
         end
   in
