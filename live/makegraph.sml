@@ -13,7 +13,7 @@ fun instrs2graph insns =
         (case insn
           of A.LABEL {assem, lab} =>
               mkVertices(insns, table, labelVertices, defs, uses, moves, lab::labels, stack)
-           | (A.MOVE {assem, dst, src} | A.OPER {assem, src, dst, ...}) =>
+           | (A.MOVE {assem, dst, src} | A.OPER {assem, src, dst, ... (* TODO Jump was unused otherwise *)}) =>
               let
                 val top = Graph.newNode(control)
                 fun updateTable (tbl, values) =
