@@ -28,10 +28,13 @@ Group is
 
 graph.sig
 graph.sml
+datatypes.sml
 flowgraph.sig
 flowgraph.sml
 makegraph.sig
 makegraph.sml
+liveness.sig
+liveness.sml
 
 $/smlnj-lib.cm
 $/ml-yacc-lib.cm
