@@ -20,8 +20,6 @@ type liveMap = liveSet T.table
 fun mkLiveSets(vertices) =
   foldl (fn (vertex, table) => T.enter(table, vertex, TempListSet.empty)) T.empty vertices
 
-fun show (outstream, IGRAPH{graph, tnode, gtemp, moves}) = ()
-
 fun interferenceGraph (F.FGRAPH{control, def, use, ismove}) =
   let
     val vertices = rev (G.nodes control)
@@ -152,4 +150,27 @@ fun interferenceGraph (F.FGRAPH{control, def, use, ismove}) =
     (IGRAPH {graph=g, tnode=vertex, gtemp=tmp, moves=(!moves)},
      fn vertex => TempListSet.listItems (listFindFunctor(liveMap, vertex, TempListSet.empty)))
   end
+
+  fun show (outstream, IGRAPH{graph, tnode, gtemp, moves}) =
+    let
+      (* Copied from printtree.sml *)
+      fun say s =  TextIO.output(outstream, s)
+      fun sayln s = (say s; say "\n")
+
+      val vertices = IGraph.nodes graph
+
+      fun sayGraph nil = (map (fn v => sayln ("NODE - " ^ IGraph.nodename v)) vertices; ())
+        | sayGraph (vertex::vertices) =
+          let
+            val temp = Temp.makestring (gtemp vertex)
+            val name = IGraph.nodename vertex
+            val neighbors = IGraph.adj vertex
+            val neighborStr = "[" ^ (String.concat (map (fn v => Temp.makestring (gtemp v) ^ ", ") neighbors)) ^ "]"
+          in
+            (sayln ("TEMP = " ^ temp ^ " || NEIGHBORS = " ^ neighborStr);
+             sayGraph vertices)
+          end
+    in
+      sayGraph vertices
+    end
 end
