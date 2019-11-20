@@ -5,15 +5,7 @@ struct
 structure Flow = Flow
 structure A = Assem
 
-fun tempCompare (a, b) = String.compare(Symbol.name a, Symbol.name b)
-
-structure LabelVertexGraph =
-  BinaryMapFn(
-      struct
-        type ord_key = Temp.label
-        val compare = tempCompare
-      end
-    )
+structure LabelVertexGraph = BinaryMapFn(LabelOrdKey)
 
 fun instrs2graph insns =
   let

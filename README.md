@@ -13,3 +13,5 @@ See `README.md` under child folders for more granular information:
 - `ir/` -- Complete semantic analysis (type-checking and frame analysis)
 
 - `insn/` -- Instruction Selection
+
+- `live/` -- Liveness Analysis

@@ -24,14 +24,18 @@ Group is
 ../insn/olincanon.sml
 ../insn/assem.sml
 ../insn/mipsgen.sml
-(* ../insn/main.sml *)
 
 graph.sig
 graph.sml
+datatypes.sml
 flowgraph.sig
 flowgraph.sml
 makegraph.sig
 makegraph.sml
+liveness.sig
+liveness.sml
+
+main.sml
 
 $/smlnj-lib.cm
 $/ml-yacc-lib.cm
