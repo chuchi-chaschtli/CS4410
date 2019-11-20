@@ -46,7 +46,7 @@ fun interferenceGraph (F.FGRAPH{control, def, use, ismove}) =
                   (G.succ(vertex))
         in
           (isModified = isModified orelse
-                        TempListSet.equal(liveOut', liveOut'') andalso not(TempListSet.equal(liveIn', liveIn''));
+                        not(TempListSet.equal(liveOut', liveOut'')) orelse not(TempListSet.equal(liveIn', liveIn''));
            processVertices(vertices, T.enter(liveIns, vertex, liveIn''), T.enter(liveOuts, vertex, liveOut'')))
         end
 
