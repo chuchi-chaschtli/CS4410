@@ -24,7 +24,6 @@ Group is
 ../insn/olincanon.sml
 ../insn/assem.sml
 ../insn/mipsgen.sml
-(* ../insn/main.sml *)
 
 graph.sig
 graph.sml
