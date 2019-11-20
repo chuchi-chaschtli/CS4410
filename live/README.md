@@ -6,7 +6,9 @@ How to run the Liveness Analysis step:
 
 `sml -m sources.cm` **within** the `/live` directory
 
-We do not currently have a `main.sml` driver, however we do have a functional `show`.
+Once in the SML REPL, use `Main.compile "filename"` on any Tiger file.
+
+See testing section for details.
 
 ---
 
@@ -54,3 +56,7 @@ more in this assignment (see usage of `BinaryMapFn`, `ListSetFn`, and `ORD_KEY`)
 Due to time constraints we did not test this part of our compiler. Granted, this
 is likely some tech debt we will pay down going forward. As a consequence we did
 not write our own test files with "interesting" test cases for this assignment.
+
+We have a (seemingly) functional `show` but as of submission time we had some
+compilation bugs on early tests that we did not allocate time to solving more
+thoroughly.
