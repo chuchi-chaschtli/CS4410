@@ -87,6 +87,16 @@ fun interferenceGraph (F.FGRAPH{control, def, use, ismove}) =
 
     val (vertexGraph, tempGraph) = processIGraphVertices()
 
+    val moves = ref nil
+    fun inMoves(a, b) =
+      let
+        (* Check both sides to avoid adding duplicates *)
+        fun equal(a, b, m, n) = IGraph.eq(a, m) andalso IGraph.eq(b, n) orelse IGraph.eq(a, n) andalso IGraph.eq(b, m)
+        fun exists(a, b) = List.exists(fn (m, n) => equal(a, b, m, n)) (!moves)
+      in
+        exists(a, b)
+      end
+
     fun processIGraphEdges() =
       let
         fun mkEdges (v) =
@@ -104,9 +114,13 @@ fun interferenceGraph (F.FGRAPH{control, def, use, ismove}) =
                 val v = vertex(a)
                 val u = vertex(b)
                 val nothingToDo = a = b orelse areNeighbors(v, u)
+                fun mkMove() =
+                  if isUseMove b andalso isMove andalso not(inMoves(v, u))
+                  then moves := (v, u)::(!moves)
+                  else ()
               in
                 if nothingToDo then ()
-                else if isUseMove b andalso isMove then ((* TODO: handle move *))
+                else if isUseMove b andalso isMove then mkMove()
                 else IGraph.mk_edge{from=u, to=v}
               end
             fun build(nil, lives) = ()
@@ -135,7 +149,7 @@ fun interferenceGraph (F.FGRAPH{control, def, use, ismove}) =
 
     val _ = processIGraphEdges()
   in
-    (IGRAPH {graph=g, tnode=vertex, gtemp=tmp, moves=[(* TODO *)]},
+    (IGRAPH {graph=g, tnode=vertex, gtemp=tmp, moves=(!moves)},
      fn vertex => TempListSet.listItems (listFindFunctor(liveMap, vertex, TempListSet.empty)))
   end
 end
