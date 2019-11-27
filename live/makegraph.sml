@@ -63,7 +63,7 @@ fun instrs2graph insns =
                 | vertices (label::labels) =
                   case LabelVertexGraph.find(labelVertices, label)
                     of SOME vertex => vertex::vertices(labels)
-                     | _ => ErrorMsg.impossible "Jump Label could not be found in label vertex graph"
+                     | _           => vertices(labels) (* TODO ErrorMsg.impossible "Jump Label could not be found in label vertex graph" *)
             in
               vertices jmpLabels
             end
