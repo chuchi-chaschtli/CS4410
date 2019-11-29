@@ -6,8 +6,8 @@ struct
 
   datatype 'a LinkedList = Empty | Cons of 'a LinkedList * 'a * 'a LinkedList
   type NodeSet = Graph.node LinkedList
-  type NodeWorklist = Graph.node List
-  type NodeStack = Graph.node List (* TODO do we want a proper Stack? *)
+  type NodeWorklist = Graph.node list
+  type NodeStack = Graph.node list (* TODO do we want a proper Stack? *)
 
   (* NODE WORK-LISTS, SETS, AND STACKS *)
   val precolored : NodeSet = Empty (* machine registers, preassigned a color *)
