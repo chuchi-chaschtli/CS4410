@@ -1,4 +1,4 @@
-signature COLOR =
+signature REG_ALLOC =
 sig
   structure Frame : FRAME
 
