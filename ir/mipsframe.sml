@@ -55,18 +55,49 @@ struct
   val SP = Temp.newtemp()
   val RA = Temp.newtemp()
   val ZERO = Temp.newtemp()
+  val specialregs = [FP,RV,SP,RA,ZERO]
+  val argregs = getTemps(4)
+  val calleesaves = getTemps(8)
+  val callersaves = getTemps(10)
 
   type register = string
   fun createTempMap() =
     let
-      val map : (register Temp.Table.table) = Temp.Table.empty
-      val map = Temp.Table.enter(map, FP, "$fp")
-      (* TODO is the Return Value register correct? *)
       (* https://course.ccs.neu.edu/csu4410/spim_documentation.pdf *)
-      val map = Temp.Table.enter(map, RV, "$v0")
-      val map = Temp.Table.enter(map, SP, "$sp")
-      val map = Temp.Table.enter(map, RA, "$ra")
-      val map = Temp.Table.enter(map, ZERO, "$zero")
+      val registerNames = [(FP, "$fp"),
+                           (RV, "$v0"),
+                           (SP, "$sp"),
+                           (RA, "$ra"),
+                           (ZERO, "$zero"),
+                           (* ARG registers = a0 - a3 *)
+                           (List.nth(argregs, 0), "$a0"),
+                           (List.nth(argregs, 1), "$a1"),
+                           (List.nth(argregs, 2), "$a2"),
+                           (List.nth(argregs, 3), "$a3"),
+                           (* CALLEE saves = s0 - s7 *)
+                           (List.nth(calleesaves, 0), "$s0"),
+                           (List.nth(calleesaves, 1), "$s1"),
+                           (List.nth(calleesaves, 2), "$s2"),
+                           (List.nth(calleesaves, 3), "$s3"),
+                           (List.nth(calleesaves, 4), "$s4"),
+                           (List.nth(calleesaves, 5), "$s5"),
+                           (List.nth(calleesaves, 6), "$s6"),
+                           (List.nth(calleesaves, 7), "$s7"),
+                           (* CALLER saves = t0 - t9 *)
+                           (List.nth(callersaves, 0), "$t0"),
+                           (List.nth(callersaves, 1), "$t1"),
+                           (List.nth(callersaves, 2), "$t2"),
+                           (List.nth(callersaves, 3), "$t3"),
+                           (List.nth(callersaves, 4), "$t4"),
+                           (List.nth(callersaves, 5), "$t5"),
+                           (List.nth(callersaves, 6), "$t6"),
+                           (List.nth(callersaves, 7), "$t7"),
+                           (List.nth(callersaves, 8), "$t8"),
+                           (List.nth(callersaves, 9), "$t9")]
+                   
+      val map : (register Temp.Table.table) = foldl (fn (tbl, (reg, name)) => Temp.Table.enter(tbl, reg, name))
+                                                    Temp.Table.empty
+                                                    registerNames
     in
       map
     end
@@ -76,10 +107,7 @@ struct
     of SOME(name) => name
      | NONE       => Temp.makestring(temp)
 
-  val specialregs = [FP,RV,SP,RA,ZERO]
-  val argregs = getTemps(4)
-  val calleesaves = getTemps(8)
-  val callersaves = getTemps(10)
+
   val registerTemps = specialregs@argregs@calleesaves@callersaves
 
   val wordSize = 4
