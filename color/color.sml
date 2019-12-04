@@ -123,7 +123,7 @@ struct
           in
             processWl(wl', degrees', stack')
           end
-      val selectStack = processWl(nil, simplifyWorklist, degreeTable)
+      val selectStack = processWl(nil, degreeTable, simplifyWorklist)
 
       fun assignColors() =
         let
@@ -135,13 +135,13 @@ struct
           and process(color, nil) = color
             | process(color, vertex::rest) =
               let
-                val neighbors = look neighborsTable (gtemp vertex)
+                val neighbors = look neighborsTable vertex
                 val usedColors = getColors(neighbors, color)
-                val okColors = IGraphOps.diff(registers, usedColors)
+                val okColors = STOps.diff(registers, usedColors)
                 val nextColor = TT.enter (color, gtemp vertex, (hd okColors))
                                 handle Empty => ErrorMsg.impossible "Spill!!!!" (* TODO This is where we would spill *)
               in
-                process(rest, nextColor)
+                process(nextColor, rest)
               end
         in
           process(initial, selectStack)
