@@ -90,7 +90,7 @@ struct
               then process(vertex::wl, vertices)
               else process(wl, vertices)
         in
-          process(nil, uncolored)
+          process(nil, notColored)
         end
       fun decrDegree (v, degrees, wl) =
         let
