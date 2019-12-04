@@ -39,8 +39,8 @@ color/stringtableops.sml
 color/igraphops.sml
 color/color.sig
 color/color.sml
-(* color/regalloc.sig *)
-(* color/regalloc.sml *)
+color/regalloc.sig
+color/regalloc.sml
 
 $/smlnj-lib.cm
 $/ml-yacc-lib.cm
