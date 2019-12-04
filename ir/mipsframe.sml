@@ -17,6 +17,7 @@ sig
   val argregs: Temp.temp list
   val calleesaves: Temp.temp list
   val callersaves: Temp.temp list
+  val registerTemps: Temp.temp list
 
   val wordSize: int
   val numDedicatedArgRegisters: int
@@ -79,6 +80,7 @@ struct
   val argregs = getTemps(4)
   val calleesaves = getTemps(8)
   val callersaves = getTemps(10)
+  val registerTemps = specialregs@argregs@calleesaves@callersaves
 
   val wordSize = 4
   val numDedicatedArgRegisters = 4

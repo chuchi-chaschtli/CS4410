@@ -65,8 +65,12 @@ struct
           of SOME a => a
            | NONE _ => ErrorMsg.impossible "table does not contain given key"
       val vertices = IGraph.nodes graph
-      val alreadyColored =
-        foldl (fn (r, vs) => tnode(r)::vs handle TempNotFound => vs) nil Temp.Table.empty (* TODO: replace empty with frame registers*)
+      fun addColoredReg(r, acc) =
+          let val reg = tnode(r)
+          in reg::acc
+          end
+          handle TempNotFound => acc
+      val alreadyColored = foldl (fn (r, vs) => addColoredReg(r, vs)) nil Frame.registerTemps
       val notColored = IGraphOps.diff(vertices, alreadyColored)
       val neighborsTable = foldl (fn (v, table) => IT.enter(table, v, IGraph.adj v))
                                  IT.empty
@@ -119,6 +123,30 @@ struct
             processWl(wl', degrees', stack')
           end
       selectStack = processWl(nil, simplifyWorklist, degreeTable)
+
+      fun assignColors() =
+        let
+          fun getColors(nil, color) = nil
+            | getColors(neighbor::rest, color) =
+              case Temp.table.look(color, (gtemp neighbor))
+                of SOME x => x::getColors(rest, color)
+                 | NONE _ => getColors(rest, color)
+          and process(color, nil) = color
+            | process(color, vertex::rest) =
+              let
+                val neighbors = lookup neighborsTable (gtemp vertex)
+                val usedColors = getColors(neighbors, color)
+                val okColors = IGraphOps.difference(registers, usedColors)
+                val nextColor = Temp.table.enter (color, gtemp vertex, (hd okColors))
+                                handle Empty => () (* TODO This is where we would spill *)
+              in
+                process(rest, nextColor)
+              end
+        in
+          process(initial, selectStack)
+        end
+
+	    val coloring = assignColors()
 
       (* TODO * color assignment (pg 249) *)
 
