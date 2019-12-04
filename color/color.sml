@@ -148,8 +148,6 @@ struct
 
 	    val coloring = assignColors()
 
-      (* TODO * color assignment (pg 249) *)
-
       (* TODO * check invariants (pg 244) *)
     in
     end
