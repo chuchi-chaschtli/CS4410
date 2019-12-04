@@ -1,4 +1,4 @@
-structure RegAlloc :> REG_ALLOC =
+structure RegAlloc : REG_ALLOC =
 struct
   structure Frame = MipsFrame
   structure IGraph = Graph
