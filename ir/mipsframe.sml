@@ -94,10 +94,10 @@ struct
                            (List.nth(callersaves, 7), "$t7"),
                            (List.nth(callersaves, 8), "$t8"),
                            (List.nth(callersaves, 9), "$t9")]
-                   
-      val map : (register Temp.Table.table) = foldl (fn (tbl, (reg, name)) => Temp.Table.enter(tbl, reg, name))
-                                                    Temp.Table.empty
-                                                    registerNames
+      val initialMap : (register Temp.Table.table) = Temp.Table.empty
+      val map = foldl (fn (tbl, (reg, name)) => Temp.Table.enter(tbl, reg, name))
+                      initialMap
+                      registerNames
     in
       map
     end
