@@ -66,23 +66,29 @@ struct
           of SOME a => a
            | NONE   => ErrorMsg.impossible "table does not contain given key"
       val vertices = IGraph.nodes graph
+
       fun addColoredReg(r, acc) =
           let val reg = tnode(r)
           in reg::acc
           end
           handle TempNotFound => acc
+
       val alreadyColored = foldl (fn (r, vs) => addColoredReg(r, vs)) nil Frame.registerTemps
+
       val notColored = IGraphOps.diff(vertices, alreadyColored)
+
       val neighborsTable = foldl (fn (v, table) => IT.enter(table, v, IGraph.adj v))
                                  IT.empty
                                  vertices
 
       fun degree v = length (look neighborsTable v)
+
       val degreeTable = foldl (fn (v, table) => IT.enter(table, v, degree v))
                               IT.empty
                               vertices
 
       fun neighbors (v, stack) = IGraphOps.diff(look neighborsTable v, stack)
+
       val simplifyWorklist =
         let
           fun process(wl, nil) = wl
@@ -93,6 +99,7 @@ struct
         in
           process(nil, notColored)
         end
+
       fun decrDegree (v, degrees, wl) =
         let
           val deg = (look degrees v) - 1
@@ -103,6 +110,7 @@ struct
         in
           (degrees', wl')
         end
+
       fun simplify (wl, degrees, stack) =
         let
           val (v, wlTail) = pop wl
@@ -123,6 +131,7 @@ struct
           in
             processWl(wl', degrees', stack')
           end
+
       val selectStack = processWl(nil, degreeTable, simplifyWorklist)
 
       fun assignColors() =
