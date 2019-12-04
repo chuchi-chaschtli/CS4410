@@ -87,7 +87,8 @@ struct
       of LEVEL {frame, parent} => let val f_access = F.allocLocal frame escape
                                   in
                                     (level, f_access)
-                                  end)
+                                  end
+       | GLOBAL                => ErrorMsg.impossible "Cannot allocate local access from Global level")
 
   (*
     A no-op that can be optimized away as a register->register move during
