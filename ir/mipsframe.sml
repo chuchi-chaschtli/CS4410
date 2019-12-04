@@ -18,6 +18,7 @@ sig
   val calleesaves: Temp.temp list
   val callersaves: Temp.temp list
   val registerTemps: Temp.temp list
+  val registerTempNames: register list
 
   val wordSize: int
   val numDedicatedArgRegisters: int
@@ -95,7 +96,7 @@ struct
                            (List.nth(callersaves, 8), "$t8"),
                            (List.nth(callersaves, 9), "$t9")]
       val initialMap : (register Temp.Table.table) = Temp.Table.empty
-      val map = foldl (fn (tbl, (reg, name)) => Temp.Table.enter(tbl, reg, name))
+      val map = foldl (fn ((reg, name), tbl) => Temp.Table.enter(tbl, reg, name))
                       initialMap
                       registerNames
     in
@@ -108,7 +109,10 @@ struct
      | NONE       => Temp.makestring(temp)
 
 
-  val registerTemps = specialregs@argregs@calleesaves@callersaves
+  val registerTemps = calleesaves@callersaves
+  val registerTempNames = foldl (fn (reg, names) => tempToString(reg)::names)
+                                nil
+                                registerTemps
 
   val wordSize = 4
   val numDedicatedArgRegisters = 4

@@ -13,7 +13,7 @@ struct
         Color.color {interference = interference,
                      initial = Frame.tempMap,
                      spillCost = (fn n => 0) (* Unused currently *),
-                     registers = Frame.tempMapRegisterNames (* TODO get the names of each register, like $fp, $zero, $s0, $s1 *)}
+                     registers = Frame.registerTempNames}
     in
       (instrs, returnAllocation)
     end
