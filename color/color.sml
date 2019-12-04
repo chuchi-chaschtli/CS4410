@@ -150,5 +150,6 @@ struct
 
       (* TODO * check invariants (pg 244) *)
     in
+      (coloring, nil)
     end
 end
