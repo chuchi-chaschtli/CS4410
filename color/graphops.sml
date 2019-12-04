@@ -1,4 +1,4 @@
-struct IGraphOps =
+structure IGraphOps = struct
 
 structure IGraph = Liveness.IGraph
 structure IT = IGraph.Table

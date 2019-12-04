@@ -35,6 +35,7 @@ live/makegraph.sml
 live/liveness.sig
 live/liveness.sml
 
+color/graphops.sml
 color/color.sig
 color/color.sml
 (* color/regalloc.sig *)
