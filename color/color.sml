@@ -138,7 +138,7 @@ struct
                 val usedColors = getColors(neighbors, color)
                 val okColors = IGraphOps.difference(registers, usedColors)
                 val nextColor = Temp.table.enter (color, gtemp vertex, (hd okColors))
-                                handle Empty => () (* TODO This is where we would spill *)
+                                handle Empty => ErrorMsg.impossible "Spill!!!!" (* TODO This is where we would spill *)
               in
                 process(rest, nextColor)
               end
