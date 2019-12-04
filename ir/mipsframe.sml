@@ -102,7 +102,6 @@ struct
           else InReg   (Temp.newtemp()))
       val formals' = map allocateFormal formals
     in
-       (* TODO Validate that ref 0 is correct here *)
        {name=name, frameOffset=(ref 0), formals=formals'}
     end
 
