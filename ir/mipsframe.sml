@@ -60,13 +60,13 @@ struct
   fun createTempMap() =
     let
       val map : (register Temp.Table.table) = Temp.Table.empty
-      val map = Temp.Table.enter(map, FP, "fp")
+      val map = Temp.Table.enter(map, FP, "$fp")
       (* TODO is the Return Value register correct? *)
       (* https://course.ccs.neu.edu/csu4410/spim_documentation.pdf *)
-      val map = Temp.Table.enter(map, RV, "v0")
-      val map = Temp.Table.enter(map, SP, "sp")
-      val map = Temp.Table.enter(map, RA, "ra")
-      val map = Temp.Table.enter(map, ZERO, "zero")
+      val map = Temp.Table.enter(map, RV, "$v0")
+      val map = Temp.Table.enter(map, SP, "$sp")
+      val map = Temp.Table.enter(map, RA, "$ra")
+      val map = Temp.Table.enter(map, ZERO, "$zero")
     in
       map
     end
