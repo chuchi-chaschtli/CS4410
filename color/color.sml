@@ -48,7 +48,8 @@ struct
   structure Frame = MipsFrame
   structure IGraph = Liveness.IGraph
   structure IT = IGraph.Table
-  type allocation = Frame.register Temp.Table.table
+  structure TT = Temp.Table
+  type allocation = Frame.register TT.table
 
   val nregs = 30 (* TODO: don't hardcode this? *)
 
@@ -60,10 +61,10 @@ struct
 
   fun color {interference as Liveness.IGRAPH{graph, tnode, gtemp, moves}, initial, spillCost, registers} =
     let
-      look t k =
+      fun look t k =
         case IT.look(t, k)
           of SOME a => a
-           | NONE _ => ErrorMsg.impossible "table does not contain given key"
+           | NONE   => ErrorMsg.impossible "table does not contain given key"
       val vertices = IGraph.nodes graph
       fun addColoredReg(r, acc) =
           let val reg = tnode(r)
@@ -122,22 +123,22 @@ struct
           in
             processWl(wl', degrees', stack')
           end
-      selectStack = processWl(nil, simplifyWorklist, degreeTable)
+      val selectStack = processWl(nil, simplifyWorklist, degreeTable)
 
       fun assignColors() =
         let
           fun getColors(nil, color) = nil
             | getColors(neighbor::rest, color) =
-              case Temp.table.look(color, (gtemp neighbor))
+              case TT.look(color, (gtemp neighbor))
                 of SOME x => x::getColors(rest, color)
-                 | NONE _ => getColors(rest, color)
+                 | NONE   => getColors(rest, color)
           and process(color, nil) = color
             | process(color, vertex::rest) =
               let
-                val neighbors = lookup neighborsTable (gtemp vertex)
+                val neighbors = look neighborsTable (gtemp vertex)
                 val usedColors = getColors(neighbors, color)
-                val okColors = IGraphOps.difference(registers, usedColors)
-                val nextColor = Temp.table.enter (color, gtemp vertex, (hd okColors))
+                val okColors = IGraphOps.diff(registers, usedColors)
+                val nextColor = TT.enter (color, gtemp vertex, (hd okColors))
                                 handle Empty => ErrorMsg.impossible "Spill!!!!" (* TODO This is where we would spill *)
               in
                 process(rest, nextColor)
