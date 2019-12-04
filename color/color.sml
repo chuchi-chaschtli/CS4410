@@ -52,46 +52,11 @@ struct
 
   val nregs = 30 (* TODO: don't hardcode this? *)
 
-  fun populateTable(tbl) = foldl (fn (v, t) => IT.enter(t, v, ())) IT.empty tbl
-
-  fun intersect(a, b) =
-    let
-      val table = populateTable a
-      fun helper (v, acc) =
-        case IT.look(table, v)
-          of SOME _ => v::acc
-           | NONE => acc
-    in
-      foldl helper nil b
-    end
-
-  fun union(a, b) =
-    let
-      val table = populateTable a
-      fun helper (v, acc) =
-        case IT.look(table, v)
-          of SOME _ => v::acc
-           | NONE => acc
-    in
-      foldl helper a b
-    end
-
-  fun diff (a, b) =
-    let
-      val table = populateTable b
-      fun helper (v, acc) =
-        case IT.look(table, v)
-          of SOME _ => acc
-           | NONE => v::acc
-    in
-      foldl helper nil a
-    end
-
-    fun peek nil = nil
-      | peek(node::nodes) = node
-    fun push (nodes, node) = node::nodes
-    fun pop nil = ErrorMsg.impossible "Worklist is empty"
-      | pop (node::nodes) = (node, nodes)
+  fun peek nil = nil
+    | peek(node::nodes) = node
+  fun push (nodes, node) = node::nodes
+  fun pop nil = ErrorMsg.impossible "Worklist is empty"
+    | pop (node::nodes) = (node, nodes)
 
   fun color {interference as Liveness.IGRAPH{graph, tnode, gtemp, moves}, initial, spillCost, registers} =
     let
@@ -102,7 +67,7 @@ struct
       val vertices = IGraph.nodes graph
       val alreadyColored =
         foldl (fn (r, vs) => tnode(r)::vs handle TempNotFound => vs) nil Temp.Table.empty (* TODO: replace empty with frame registers*)
-      val notColored = diff(vertices, alreadyColored)
+      val notColored = IGraphOps.diff(vertices, alreadyColored)
       val neighborsTable = foldl (fn (v, table) => IT.enter(table, v, IGraph.adj v))
                                  IT.empty
                                  vertices
@@ -112,7 +77,7 @@ struct
                               IT.empty
                               vertices
 
-      fun neighbors (v, stack) = diff(look neighborsTable v, stack)
+      fun neighbors (v, stack) = IGraphOps.diff(look neighborsTable v, stack)
       val simplifyWorklist =
         let
           fun process(wl, nil) = wl
@@ -128,7 +93,7 @@ struct
           val deg = (look degrees v) - 1
           val degrees' = IT.enter(degrees, v, deg)
           val wl' = if deg = nregs - 1
-                    then union(wl, v::nil)
+                    then IGraphOps.union(wl, v::nil)
                     else wl
         in
           (degrees', wl')
