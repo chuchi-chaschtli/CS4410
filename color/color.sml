@@ -99,7 +99,8 @@ struct
 
       fun assignColors() =
         let
-          (* Gets the colors of already colored neighbors *)
+          (* Gets the colors of already colored neighbors to determine what
+          colors are usable for the currently processed vertex *)
           fun getColors(nil, color) = nil
             | getColors(neighbor::rest, color) =
               case TT.look(color, gtemp neighbor)
