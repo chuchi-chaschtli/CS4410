@@ -113,7 +113,7 @@ fun interferenceGraph (F.FGRAPH{control, def, use, ismove}) =
                 val u = vertex(b)
                 val nothingToDo = a = b orelse areNeighbors(v, u)
                 fun mkMove() =
-                  if isUseMove b andalso isMove andalso not(inMoves(v, u))
+                  if not(inMoves(v, u))
                   then moves := (v, u)::(!moves)
                   else ()
               in
