@@ -35,15 +35,15 @@ struct
 
       val notColored = IGraphOps.diff(vertices, alreadyColored)
 
-      val neighborsTable = foldl (fn (v, table) => IT.enter(table, v, IGraph.adj v))
-                                 IT.empty
-                                 vertices
+      fun buildTable func =
+        foldl (fn (v, table) => IT.enter(table, v, func v)) IT.empty vertices
 
-      fun degree v = length (look neighborsTable v)
+      val neighborsTable = buildTable IGraph.adj
 
-      val degreeTable = foldl (fn (v, table) => IT.enter(table, v, degree v))
-                              IT.empty
-                              vertices
+      val degreeTable =
+        let fun degree v = length (look neighborsTable v)
+        in buildTable degree
+        end
 
       fun neighbors (v, stack) = IGraphOps.diff(look neighborsTable v, stack)
 
@@ -120,9 +120,7 @@ struct
         in
           process(initial, selectStack)
         end
-
-	    val coloring = assignColors()
     in
-      (coloring, nil)
+      (assignColors(), nil)
     end
 end
