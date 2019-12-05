@@ -6,7 +6,7 @@ struct
   structure TT = Temp.Table
   type allocation = Frame.register TT.table
 
-  val nregs = 30 (* TODO: don't hardcode this? *)
+  val nregs = List.length(Frame.registerTemps)
 
   fun peek nil = nil
     | peek(node::nodes) = node
