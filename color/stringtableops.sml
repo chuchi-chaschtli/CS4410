@@ -8,8 +8,11 @@ structure StringOrdKey =
 
 structure ST = BinaryMapFn(StringOrdKey)
 
+(* abstraction over entering elements into string table *)
 fun populateTable(tbl) = foldl (fn (v, t) => ST.insert(t, v, ())) ST.empty tbl
 
+(* Set difference of two string sets by populating table of vertices in b, then
+folding over elements in a to filter out elements *)
 fun diff (a, b) =
   let
     val table = populateTable b

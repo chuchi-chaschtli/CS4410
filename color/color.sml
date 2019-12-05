@@ -6,8 +6,9 @@ struct
   structure TT = Temp.Table
   type allocation = Frame.register TT.table
 
-  val nregs = List.length(Frame.registerTemps)
+  val nregs = length Frame.registerTemps
 
+  (* stack operations *)
   fun peek nil = nil
     | peek(node::nodes) = node
   fun push (nodes, node) = node::nodes
@@ -16,12 +17,14 @@ struct
 
   fun color {interference as Liveness.IGRAPH{graph, tnode, gtemp, moves}, initial, spillCost, registers} =
     let
+      (* Abstraction of Table.look to print error if key not found *)
       fun look t k =
         case IT.look(t, k)
-          of SOME a => a
+          of SOME v => v
            | NONE   => ErrorMsg.impossible "table does not contain given key"
       val vertices = IGraph.nodes graph
 
+      (* Helper to add registers that are precolored using tnode *)
       fun addColoredReg(r, acc) =
           let val reg = tnode(r)
           in reg::acc
@@ -44,6 +47,8 @@ struct
 
       fun neighbors (v, stack) = IGraphOps.diff(look neighborsTable v, stack)
 
+      (* Builds the simplifyWorklist by looking at degree of each vertex in the
+      notColored set *)
       val simplifyWorklist =
         let
           fun process(wl, nil) = wl
@@ -55,6 +60,7 @@ struct
           process(nil, notColored)
         end
 
+      (* Helper to reduce degree of nodes during simplify step *)
       fun decrDegree (v, degrees, wl) =
         let
           val deg = (look degrees v) - 1
@@ -66,6 +72,8 @@ struct
           (degrees', wl')
         end
 
+      (* pops the simplifyWL and pushs that element onto the accumulating
+      selectStack, then decrements degree of all neighbors *)
       fun simplify (wl, degrees, stack) =
         let
           val (v, wlTail) = pop wl
@@ -91,6 +99,7 @@ struct
 
       fun assignColors() =
         let
+          (* Gets the colors of already colored neighbors *)
           fun getColors(nil, color) = nil
             | getColors(neighbor::rest, color) =
               case TT.look(color, gtemp neighbor)
