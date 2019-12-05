@@ -4,7 +4,7 @@
 ---
 How to Run the Instruction Selection step:
 
-`sml -m sources.cm` **within** the `/insn` directory
+`sml -m sources.cm` from the top level directory
 
 Once in the SML REPL, use `Main.compile "filename"` on any Tiger file. See testing section for details.
 
@@ -105,7 +105,7 @@ with its translated assembly (`tests_insn/factorial.tig.s`).
 Running individual tests:
 
 ```
-fun test(0) = (Main.compile "../tests/queens.tig"; Main.compile "../tests/merge.tig") | test(x) = let val _ = Main.compile("../tests/test" ^ Int.toString x ^ ".tig") in test(x - 1) end;
+fun test(0) = (Main.compile "tests/queens.tig"; Main.compile "tests/merge.tig") | test(x) = let val _ = Main.compile("tests/test" ^ Int.toString x ^ ".tig") in test(x - 1) end;
 ```
 
 We also added the recursive definition for factorial in `tests_insn/factorial.tig`, and the corresponding assembler listing as a result of running `Main.compile "../tests_insn/factorial.tig" -> tests_insn/factorial.tig.s`
