@@ -71,7 +71,7 @@ struct
           let val reg = tnode(r)
           in reg::acc
           end
-          handle TempNotFound => acc
+          handle ErrorMsg.Error => acc
 
       val alreadyColored = foldl (fn (r, vs) => addColoredReg(r, vs)) nil Frame.registerTemps
 
@@ -138,7 +138,7 @@ struct
         let
           fun getColors(nil, color) = nil
             | getColors(neighbor::rest, color) =
-              case TT.look(color, (gtemp neighbor))
+              case TT.look(color, gtemp neighbor)
                 of SOME x => x::getColors(rest, color)
                  | NONE   => getColors(rest, color)
           and process(color, nil) = color
@@ -147,7 +147,7 @@ struct
                 val neighbors = look neighborsTable vertex
                 val usedColors = getColors(neighbors, color)
                 val okColors = STOps.diff(registers, usedColors)
-                val nextColor = TT.enter (color, gtemp vertex, (hd okColors))
+                val nextColor = TT.enter (color, gtemp vertex, hd okColors)
                                 handle Empty => ErrorMsg.impossible "Spill!!!!" (* TODO This is where we would spill *)
               in
                 process(nextColor, rest)

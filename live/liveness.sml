@@ -142,7 +142,7 @@ fun interferenceGraph (F.FGRAPH{control, def, use, ismove}) =
     and vertex tmp =
       case Temp.Table.look(tempGraph, tmp)
         of SOME v => v
-         | _ => ErrorMsg.impossible "Temp not found in vertices"
+         | _ => raise ErrorMsg.Error
 
 
     val _ = processIGraphEdges()
