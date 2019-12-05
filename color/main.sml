@@ -21,6 +21,5 @@ structure Main = struct
         val allocated = map getinstrs frags
     in
       app (fn insnList => app printInsn insnList) allocated
-      
     end
 end
