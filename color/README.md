@@ -57,6 +57,9 @@ We continued to leverage SML functionality like creating a BinaryMapFn to operat
 
 The factorial assembler listing from assignment 6 can be found at `tests_insn/factorial.tig.s`
 
+### Known Bugs
+The allocator does not adequately raise an error when spilling should occur.
+
 ---
 
 ## Testing
