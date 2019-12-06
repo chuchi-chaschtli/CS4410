@@ -55,7 +55,7 @@ struct
             | process(wl, vertex::vertices) =
               if look degreeTable vertex < nregs
               then process(vertex::wl, vertices)
-              else process(wl, vertices)
+              else ErrorMsg.impossible "spill!!!" (* TODO spilling *)
         in
           process(nil, notColored)
         end
