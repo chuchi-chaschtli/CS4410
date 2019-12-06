@@ -95,7 +95,7 @@ struct
             processWl(wl', degrees', stack')
           end
 
-      val selectStack = processWl(nil, degreeTable, simplifyWorklist)
+      val selectStack = processWl(simplifyWorklist, degreeTable, nil)
 
       fun assignColors() =
         let
