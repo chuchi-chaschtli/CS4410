@@ -58,8 +58,8 @@ struct
   val ZERO = Temp.newtemp()
   val specialregs = [FP,RV,SP,RA,ZERO]
   val argregs = getTemps(4)
-  val calleesaves = getTemps(8)
-  val callersaves = getTemps(10)
+  val calleesaves = getTemps(1)
+  val callersaves = getTemps(1)
 
   type register = string
   fun createTempMap() =
@@ -77,16 +77,16 @@ struct
                            (List.nth(argregs, 3), "$a3"),
                            (* CALLEE saves = s0 - s7 *)
                            (List.nth(calleesaves, 0), "$s0"),
-                           (List.nth(calleesaves, 1), "$s1"),
+                           (* (List.nth(calleesaves, 1), "$s1"),
                            (List.nth(calleesaves, 2), "$s2"),
                            (List.nth(calleesaves, 3), "$s3"),
                            (List.nth(calleesaves, 4), "$s4"),
                            (List.nth(calleesaves, 5), "$s5"),
                            (List.nth(calleesaves, 6), "$s6"),
-                           (List.nth(calleesaves, 7), "$s7"),
+                           (List.nth(calleesaves, 7), "$s7"), *)
                            (* CALLER saves = t0 - t9 *)
-                           (List.nth(callersaves, 0), "$t0"),
-                           (List.nth(callersaves, 1), "$t1"),
+                           (List.nth(callersaves, 0), "$t0")]
+                           (* (List.nth(callersaves, 1), "$t1"),
                            (List.nth(callersaves, 2), "$t2"),
                            (List.nth(callersaves, 3), "$t3"),
                            (List.nth(callersaves, 4), "$t4"),
@@ -94,7 +94,7 @@ struct
                            (List.nth(callersaves, 6), "$t6"),
                            (List.nth(callersaves, 7), "$t7"),
                            (List.nth(callersaves, 8), "$t8"),
-                           (List.nth(callersaves, 9), "$t9")]
+                           (List.nth(callersaves, 9), "$t9")] *)
       val initialMap : (register Temp.Table.table) = Temp.Table.empty
       val map = foldl (fn ((reg, name), tbl) => Temp.Table.enter(tbl, reg, name))
                       initialMap
