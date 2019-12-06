@@ -47,18 +47,7 @@ struct
 
       fun neighbors (v, stack) = IGraphOps.diff(look neighborsTable v, stack)
 
-      (* Builds the simplifyWorklist by looking at degree of each vertex in the
-      notColored set *)
-      val simplifyWorklist =
-        let
-          fun process(wl, nil) = wl
-            | process(wl, vertex::vertices) =
-              if look degreeTable vertex < nregs
-              then process(vertex::wl, vertices)
-              else process(wl, vertices)
-        in
-          process(nil, notColored)
-        end
+      val simplifyWorklist = List.filter (fn v => look degreeTable v < nregs) notColored
 
       (* Helper to reduce degree of nodes during simplify step *)
       fun decrDegree (v, degrees, wl) =
