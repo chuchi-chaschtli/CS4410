@@ -1,0 +1,14 @@
+/* Tiger program with variable usage after function call */
+let
+  var n := 7
+  function doNothing(x: int) : int = x
+  function addOne(x: int) : int = 
+    let
+      var q := x + 1
+      var y := doNothing(q)
+    in
+      (doNothing(q); q)
+    end
+in
+  addOne(n)
+end
