@@ -24,6 +24,7 @@ structure Main = struct
     let val absyn = Parse.parse filename
         val frags = (FindEscape.findEscape absyn; Semant.transProg absyn)
         val allocated = map getinstrs frags
+        val format0 = Assem.format(Temp.makestring)
     in
       app (fn insnList => printInsnList insnList) allocated
     end
