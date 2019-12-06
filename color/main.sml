@@ -11,15 +11,20 @@ structure Main = struct
     end
     | getinstrs (F.STRING(lab,s)) = nil
 
-  fun printInsn insn =
-    case insn
-     of (Assem.OPER{assem, ...} | Assem.LABEL{assem, ...} | Assem.MOVE{assem, ...}) => print(assem)
+  fun printInsnList insnList =
+    let
+      val format0 = Assem.format(Temp.makestring)
+      val printOut = fn i => print (format0 i)
+    in
+      app printOut insnList
+    end
+    
 
   fun compile filename =
     let val absyn = Parse.parse filename
         val frags = (FindEscape.findEscape absyn; Semant.transProg absyn)
         val allocated = map getinstrs frags
     in
-      app (fn insnList => app printInsn insnList) allocated
+      app (fn insnList => printInsnList insnList) allocated
     end
 end
