@@ -86,7 +86,6 @@ struct
           (wl', degrees', stack')
         end
 
-      (* TODO * transofrm this into a fold, I couldn't figure it out *)
       fun processWl (nil, _, stack) = stack
         | processWl (wl, degrees, stack) =
           let
