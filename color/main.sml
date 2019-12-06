@@ -4,7 +4,7 @@ structure Main = struct
   fun printInsnList(insnList, coloring) =
     let
       val getRegister = fn temp => getsome(Temp.Table.look(coloring, temp))
-      val format0 = Assem.format(fn temp => getRegister(temp))
+      val format0 = Assem.format(getRegister)
       val printOut = fn i => print (format0 i)
     in
       app printOut insnList
