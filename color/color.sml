@@ -74,27 +74,20 @@ struct
 
       (* pops the simplifyWL and pushs that element onto the accumulating
       selectStack, then decrements degree of all neighbors *)
-      fun simplify (wl, degrees, stack) =
-        let
-          val (v, wlTail) = pop wl
-          val stack' = push(stack, v)
-          val neighboring = neighbors(v, stack')
-          val (degrees', wl') = foldl (fn (v, (deg, stack)) => decrDegree(v, deg, stack))
-                                      (degrees, wlTail)
-                                      neighboring
-        in
-          (wl', degrees', stack')
-        end
-
-      fun processWl (nil, _, stack) = stack
-        | processWl (wl, degrees, stack) =
+      fun simplify (nil, _, stack) = stack
+        | simplify (wl, degrees, stack) =
           let
-            val (wl', degrees', stack') = simplify(wl, degrees, stack)
+            val (v, wlTail) = pop wl
+            val stack' = push(stack, v)
+            val neighboring = neighbors(v, stack')
+            val (degrees', wl') = foldl (fn (v, (deg, stack)) => decrDegree(v, deg, stack))
+                                        (degrees, wlTail)
+                                        neighboring
           in
-            processWl(wl', degrees', stack')
+            simplify(wl', degrees', stack')
           end
 
-      val selectStack = processWl(simplifyWorklist, degreeTable, nil)
+      val selectStack = simplify(simplifyWorklist, degreeTable, nil)
 
       fun assignColors() =
         let
