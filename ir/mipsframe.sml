@@ -12,6 +12,7 @@ sig
   type register
   val tempMap: register Temp.Table.table
   val tempToString: Temp.temp -> string
+  val string: Temp.label * string -> string
 
   val specialregs: Temp.temp list
   val argregs: Temp.temp list
@@ -108,6 +109,16 @@ struct
     of SOME(name) => name
      | NONE       => Temp.makestring(temp)
 
+  fun string(l, s) =
+    let
+      fun escape #"\t" = "\\t"
+        | escape #"\n" = "\\n"
+        | escape c = Char.toString c
+      val translated = String.translate escape s
+      val name = Symbol.name l
+    in
+      name ^ ":\n .ascii \"" ^ translated ^ "\"\n"
+    end
 
   val registerTemps = calleesaves@callersaves
   val registerTempNames = foldl (fn (reg, names) => tempToString(reg)::names)
@@ -153,24 +164,30 @@ struct
       of InFrame k => Tree.MEM(Tree.BINOP(Tree.PLUS, fp, Tree.CONST k))
        | InReg temp => Tree.TEMP temp
 
+   (* TODO - leverage buildSeq in translate / remove duplicate there *)
+   (* Builds a SEQ from a list of expressions as a convenience function *)
+   fun buildSeq nil = ErrorMsg.impossible "Cannot build sequence from nil"
+     | buildSeq(first::nil) = first
+     | buildSeq(first::rest) = Tree.SEQ(first, buildSeq rest)
+
   fun procEntryExit1(frame, stmt) =
     let
-      fun moveArgs(nil, index, seqs) = seqs
-        | moveArgs(access::rest, index, seqs) =
+      fun buildMoves(nil, index) = stmt::nil
+        | buildMoves(access::formals, index) =
           let
-            fun buildMove(treeTemp) =
-              Tree.MOVE(exp(access, Tree.TEMP FP), Tree.TEMP(treeTemp)::moveArgs(rest, index + 1, seqs))
+            fun build(treeTemp) =
+              Tree.MOVE(exp access (Tree.TEMP FP), Tree.TEMP(treeTemp))::buildMoves(formals, index + 1)
           in
             if index >= numDedicatedArgRegisters
             then
               case access
-                of InFrame _ => moveArgs(rest, index + 1, seqs) (* We are already in the frame *)
-                 | InReg tmp => buildMove(tmp) (* Take the temp register, and load it into the frame *)
+                of InFrame _ => buildMoves(formals, index + 1) (* We are already in the frame *)
+                 | InReg tmp => build(tmp) (* Take the temp register, and load it into the frame *)
             else
-              buildMove(List.nth(argregs, offset))
+              build(List.nth(argregs, index))
           end
     in
-      Tree.SEQ (moveArgs(formals frame, 0, nil), stmt) (* TODO - leverage buildSeq in translate? *)
+      buildSeq(buildMoves(formals frame, 0))
     end
 
   fun procEntryExit2(frame, body) =
