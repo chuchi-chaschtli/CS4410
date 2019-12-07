@@ -198,9 +198,57 @@ struct
                   jump=SOME[]}]
 
   fun procEntryExit3(frame, body) =
-    {prolog = "PROCEDURE " ^ Symbol.name(name(frame)) ^ "\n",
-     body = body,
-     epilog = "END " ^ Symbol.name(name(frame)) ^ "\n"}
+    let
+      val lab = name frame
+      val offset = #frameOffset frame
+      val labInstr = Assem.LABEL {assem = (Symbol.name lab) ^ ":\n", lab=lab}
+
+      fun formatInt i = if i >= 0 then Int.toString(i) else ("-" ^ Int.toString(i * ~1))
+
+      val saveFPThenCopySP = [
+        Assem.OPER {assem = "sw `d0, -4(`s0)\n", src = SP::nil, dst = FP::nil, jump = NONE},
+        Assem.OPER {assem = "move `d0, `s0\n", src = SP::nil, dst = FP::nil, jump = NONE}
+      ]
+
+      val newSPOffset = !offset - (numDedicatedArgRegisters * wordSize)
+      val moveSP = Assem.OPER {assem = "addi `d0, `s0, " ^ (formatInt newSPOffset) ^ "\n",
+                               src = FP::nil,
+                               dst = SP::nil,
+                               jump = NONE}
+      fun sw(nil, index) = nil
+        | sw(temp::temps, index) =
+          Assem.OPER {assem = "sw `s0, " ^ (formatInt index) ^ "(`s1`)\n",
+                      src = [temp, FP],
+                      dst = nil,
+                      jump = NONE}::sw(temps, index - 4)
+      val saveRegisters = sw(calleesaves, ~8)
+
+      fun lw(nil, index) = nil
+        | lw(temp::temps, index) =
+          Assem.OPER {assem = "lw `0, " ^ (formatInt index) ^ "(`s1`)\n",
+                      src = [temp, FP],
+                      dst = nil,
+                      jump = NONE}::sw(temps, index - 4)
+      val loadRegisters = lw(calleesaves, ~8)
+
+      val moveThenResetFPThenReturn = [
+        Assem.OPER {assem = "move `d0, `s0\n", src = FP::nil, dst = SP::nil, jump = NONE},
+        Assem.OPER {assem = "lw `d0, -4(`s0)\n", src = FP::nil, dst = FP::nil, jump = NONE},
+        Assem.OPER {assem = "jr `d0\n", src = nil, dst = RA::nil, jump = NONE}
+      ]
+
+      val paddedBody =  labInstr
+                     :: saveFPThenCopySP (* Save FP to stack -> copy current FP to SP *)
+                     @  moveSP (* Adjust SP by offset *)
+                     :: saveRegisters (* Save registers, then call original body, then reload regs *)
+                     @  body
+                     @  loadRegisters
+                     @  moveThenResetFPThenReturn (* delete frame, move fp to sp, then use link to reset fp and return *)
+    in
+      {prolog = "PROCEDURE " ^ Symbol.name(name(frame)) ^ "\n",
+      body = paddedBody,
+      epilog = "END " ^ Symbol.name(name(frame)) ^ "\n"}
+    end
 end
 
 structure Frame : FRAME = MipsFrame
