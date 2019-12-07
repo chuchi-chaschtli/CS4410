@@ -153,7 +153,25 @@ struct
       of InFrame k => Tree.MEM(Tree.BINOP(Tree.PLUS, fp, Tree.CONST k))
        | InReg temp => Tree.TEMP temp
 
-  fun procEntryExit1(frame, stmt) = stmt (* TODO stub for assignment 5 *)
+  fun procEntryExit1(frame, stmt) =
+    let
+      fun moveArgs(nil, index, seqs) = seqs
+        | moveArgs(access::rest, index, seqs) =
+          let
+            fun buildMove(treeTemp) =
+              Tree.MOVE(exp(access, Tree.TEMP FP), Tree.TEMP(treeTemp)::moveArgs(rest, index + 1, seqs))
+          in
+            if index >= numDedicatedArgRegisters
+            then
+              case access
+                of InFrame _ => moveArgs(rest, index + 1, seqs) (* We are already in the frame *)
+                 | InReg tmp => buildMove(tmp) (* Take the temp register, and load it into the frame *)
+            else
+              buildMove(List.nth(argregs, offset))
+          end
+    in
+      Tree.SEQ (moveArgs(formals frame, 0, nil), stmt) (* TODO - leverage buildSeq in translate? *)
+    end
 
   fun procEntryExit2(frame, body) =
     body @
