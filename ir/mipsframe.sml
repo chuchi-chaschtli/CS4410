@@ -170,7 +170,7 @@ struct
      | buildSeq(first::nil) = first
      | buildSeq(first::rest) = Tree.SEQ(first, buildSeq rest)
 
-  fun procEntryExit1(frame, stmt) =
+  fun procEntryExit1(frame, stmt) = (* TODO: Book says to use allocLocal pg 260 ? *)
     let
       fun buildMoves(nil, index) = stmt::nil
         | buildMoves(access::formals, index) =
