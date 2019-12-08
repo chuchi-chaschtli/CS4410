@@ -170,24 +170,24 @@ struct
      | buildSeq(first::nil) = first
      | buildSeq(first::rest) = Tree.SEQ(first, buildSeq rest)
 
-  fun procEntryExit1(frame, stmt) = (* TODO: Book says to use allocLocal pg 260 ? *)
+  fun procEntryExit1(frame, stmt) =
     let
-      fun buildMoves(nil, index) = stmt::nil
-        | buildMoves(access::formals, index) =
-          let
-            fun build(treeTemp) =
-              Tree.MOVE(exp access (Tree.TEMP FP), Tree.TEMP(treeTemp))::buildMoves(formals, index + 1)
-          in
-            if index >= numDedicatedArgRegisters
-            then
-              case access
-                of InFrame _ => buildMoves(formals, index + 1) (* We are already in the frame *)
-                 | InReg tmp => build(tmp) (* Take the temp register, and load it into the frame *)
-            else
-              build(List.nth(argregs, index))
-          end
+      val formals = formals frame
+      val fpTemp = Tree.TEMP FP
+      val args = foldl (fn (f, rest) => (exp f fpTemp)::rest) nil formals
+
+      val moveArgs = buildSeq (ListPair.map (fn(r, a) => Tree.MOVE(Tree.TEMP r, a)) (argregs, args))
+
+      val regs = RV::calleesaves
+      fun allocRegs nil = nil
+        | allocRegs (reg::regs) =
+          (allocLocal(frame) true)::allocRegs(regs)
+      val savedRegs = allocRegs regs
+
+      val saveRegs = buildSeq (ListPair.map (fn(r, a) => Tree.MOVE(exp a fpTemp, Tree.TEMP r)) (regs, savedRegs))
+      val loadRegs = buildSeq (ListPair.map (fn(r, a) => Tree.MOVE(Tree.TEMP r, exp a fpTemp)) (regs, savedRegs))
     in
-      buildSeq(buildMoves(formals frame, 0))
+      buildSeq([moveArgs, saveRegs, stmt, loadRegs])
     end
 
   fun procEntryExit2(frame, body) =
