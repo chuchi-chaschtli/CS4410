@@ -224,7 +224,7 @@ struct
 
       fun lw(nil, index) = nil
         | lw(temp::temps, index) =
-          Assem.OPER {assem = "lw `0, " ^ formatInt index ^ "(`s1`)\n",
+          Assem.OPER {assem = "lw `d0, " ^ formatInt index ^ "(`s1`)\n",
                       src = [temp, FP],
                       dst = nil,
                       jump = NONE}::sw(temps, index - 4)
