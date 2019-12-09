@@ -174,9 +174,8 @@ struct
     let
       val formals = formals frame
       val fpTemp = Tree.TEMP FP
-      val args = foldl (fn (f, rest) => (exp f fpTemp)::rest) nil formals
 
-      val moveArgs = buildSeq (ListPair.map (fn(r, a) => Tree.MOVE(Tree.TEMP r, a)) (argregs, args))
+      val moveArgs = buildSeq (ListPair.map (fn(r, a) => Tree.MOVE(Tree.TEMP r, exp a fpTemp)) (argregs, formals))
 
       val regs = RV::calleesaves
       fun allocRegs nil = nil
