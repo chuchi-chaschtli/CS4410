@@ -216,7 +216,7 @@ struct
                                jump = NONE}
       fun sw(nil, index) = nil
         | sw(temp::temps, index) =
-          Assem.OPER {assem = "sw `s0, " ^ formatInt index ^ "(`s1`)\n",
+          Assem.OPER {assem = "sw `s0, " ^ formatInt index ^ "(`s1)\n",
                       src = [temp, FP],
                       dst = nil,
                       jump = NONE}::sw(temps, index - 4)
@@ -224,7 +224,7 @@ struct
 
       fun lw(nil, index) = nil
         | lw(temp::temps, index) =
-          Assem.OPER {assem = "lw `d0, " ^ formatInt index ^ "(`s1`)\n",
+          Assem.OPER {assem = "lw `d0, " ^ formatInt index ^ "(`s1)\n",
                       src = [temp, FP],
                       dst = nil,
                       jump = NONE}::sw(temps, index - 4)
