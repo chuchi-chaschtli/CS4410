@@ -17,11 +17,11 @@ fun instrs2graph insns =
     val vertices = map (fn (v, _) => v) labelVertices
 
     fun getVertexWithLabel (label, nil) = ErrorMsg.impossible "Label not found"
+      | getVertexWithLabel (label, (v, NONE)::vs) = getVertexWithLabel(label, vs)
       | getVertexWithLabel (label, (v, SOME l)::vertices) =
         if l = label
         then v
         else getVertexWithLabel(label, vertices)
-      | getVertexWithLabel(label, v::vs) = getVertexWithLabel(label, vs)
 
     (*
     For each jmp, find corresponding vertex that has label -> construct edge
@@ -68,7 +68,7 @@ fun instrs2graph insns =
     val (def, use, ismove) = foldl (fn e => mkGraph e) (Graph.Table.empty, Graph.Table.empty, Graph.Table.empty) vertexInsns
   in
     (Flow.FGRAPH{control=control,def=def,use=use,ismove=ismove}, vertices)
-  en
+  end
 
 (* fun instrs2graph insns =
   let
