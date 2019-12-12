@@ -28,7 +28,14 @@ structure Assem = struct
               | f(c :: rest) = (c :: f rest)
               | f nil = nil
         in
-          implode(f(explode assem))
+          (* TODO remove *)
+          (print ("Assem: " ^ assem);
+           print "Dest Temps:\n";
+           map (fn d => print ((Temp.makestring d) ^ "\t")) dst;
+           print "\nSource Temps:\n";
+           map (fn d => print ((Temp.makestring d) ^ "\t")) src;
+           print "\n\n";
+           implode(f(explode assem)))
         end
     in fn OPER{assem,dst,src,jump=NONE} => speak(assem,dst,src,nil)
         | OPER{assem,dst,src,jump=SOME j} => speak(assem,dst,src,j)
