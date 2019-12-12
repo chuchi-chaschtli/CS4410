@@ -42,7 +42,7 @@ end
 structure MipsFrame : FRAME =
 struct
   datatype access = InFrame of int | InReg of Temp.temp
-  type frame = {name: Temp.label, frameOffset: int ref, formals: access list}
+  type frame = {name: Temp.label, frameOffset: int ref, formals: access list, instrs: Tree.stm list}
 
   datatype frag = PROC of {body: Tree.stm, frame: frame}
                 | STRING of Temp.label * string
@@ -130,6 +130,11 @@ struct
   val wordSize = 4
   val numDedicatedArgRegisters = 4
 
+  fun exp (access) fp =
+    case access
+      of InFrame k => Tree.MEM(Tree.BINOP(Tree.PLUS, fp, Tree.CONST k))
+       | InReg temp => Tree.TEMP temp
+
   fun newFrame {name, formals} =
     let
       val registersTaken = ref 0
@@ -146,11 +151,13 @@ struct
           then InFrame (getParamOffset())
           else InReg   (Temp.newtemp()))
       val formals' = map allocateFormal formals
+      fun viewShift(access, reg) = Tree.MOVE(exp access (Tree.TEMP FP), Tree.TEMP reg)
+      val shiftInstrs = ListPair.map viewShift (formals', argregs)
     in
-       {name=name, frameOffset=(ref 0), formals=formals'}
+       {name=name, frameOffset=(ref 0), formals=formals', instrs=shiftInstrs}
     end
 
-  fun allocLocal {name, frameOffset, formals} escape =
+  fun allocLocal {name, frameOffset, formals, instrs} escape =
       (frameOffset := !frameOffset - wordSize;
        if escape
        then InFrame (!frameOffset)
@@ -158,13 +165,9 @@ struct
 
   fun name (frame:frame) = (#name frame)
   fun formals (frame:frame) = (#formals frame)
+  fun instrs (frame:frame) = (#instrs frame)
 
   fun externalCall (s, args) = Tree.CALL(Tree.NAME(Temp.namedlabel s), args)
-
-  fun exp (access) fp =
-    case access
-      of InFrame k => Tree.MEM(Tree.BINOP(Tree.PLUS, fp, Tree.CONST k))
-       | InReg temp => Tree.TEMP temp
 
    (* TODO - leverage buildSeq in translate / remove duplicate there *)
    (* Builds a SEQ from a list of expressions as a convenience function *)
@@ -174,10 +177,10 @@ struct
 
   fun procEntryExit1(frame, stmtBody) =
     let
+      val instrs = instrs frame
       val formals = formals frame
-      val fpTemp = Tree.TEMP FP
 
-      val moveArgs = ListPair.map (fn(r, a) => Tree.MOVE(Tree.TEMP r, exp a fpTemp)) (argregs, formals)
+      val fpTemp = Tree.TEMP FP
 
       val registerPairs =  map (fn r => (allocLocal frame false,r)) (RV::calleesaves)
 
@@ -187,7 +190,7 @@ struct
       val makeLoad = fn (arg, reg) => Tree.MOVE(Tree.TEMP reg, exp arg (Tree.TEMP FP))
       val loadRegisters = map makeLoad (List.rev registerPairs)
     in
-      buildSeq(moveArgs @ saveRegisters @ [stmtBody] @ loadRegisters)
+      buildSeq(instrs @ saveRegisters @ [stmtBody] @ loadRegisters)
     end
 
   fun procEntryExit2(frame, body) =
@@ -197,9 +200,9 @@ struct
                   dst=[],
                   jump=SOME[]}]
 
-  fun procEntryExit3({name, frameOffset, formals}, body) =
+  fun procEntryExit3({name, frameOffset, formals, instrs}, body) =
     let
-      val stackOffset = !frameOffset + ((List.length argregs) * wordSize)
+      val stackOffset = !frameOffset - ((List.length argregs) * wordSize)
     in
       {prolog=Symbol.name name ^ ":\n" ^
               "sw $fp 0($sp)\n" ^
