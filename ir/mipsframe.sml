@@ -62,6 +62,8 @@ struct
   val calleesaves = getTemps(8)
   val callersaves = getTemps(10)
 
+  fun formatInt i = if i >= 0 then Int.toString i else "-" ^ Int.toString(i * ~1)
+
   type register = string
   fun createTempMap() =
     let
@@ -202,7 +204,7 @@ struct
       {prolog=Symbol.name name ^ ":\n" ^
               "sw $fp 0($sp)\n" ^
               "move $fp $sp\n" ^
-              "addi $sp $sp " ^ Int.toString(stackOffset) ^ "\n",
+              "addi $sp $sp " ^ formatInt stackOffset ^ "\n",
        body=body,
        epilog="move $sp $fp\n" ^
               "lw $fp 0($sp)\n" ^

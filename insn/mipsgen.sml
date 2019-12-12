@@ -19,6 +19,8 @@ fun codegen frame stm =
                       in (gen tmp; tmp)
                       end
 
+    fun formatInt i = if i >= 0 then Int.toString i else "-" ^ Int.toString(i * ~1)
+
     fun binop T.PLUS  = "add"
       | binop T.MINUS = "sub"
       | binop T.DIV   = "div"
@@ -46,17 +48,17 @@ fun codegen frame stm =
 
     fun munchStm (T.SEQ(x, y)) = (munchStm x; munchStm y)
       | munchStm (T.MOVE(T.MEM(T.BINOP(T.PLUS, e1, T.CONST n)), e2)) =
-        emit (A.OPER {assem="sw `s1, "^ Int.toString n ^ "(`s0)\n",
+        emit (A.OPER {assem="sw `s1, "^ formatInt n ^ "(`s0)\n",
                       src=[munchExp e1, munchExp e2],
                       dst=nil,
                       jump=NONE})
       | munchStm (T.MOVE(T.MEM(T.BINOP(T.PLUS, T.CONST n, e1)), e2)) =
-        emit (A.OPER {assem="sw `s1, " ^ Int.toString n ^ "(`s0)\n",
+        emit (A.OPER {assem="sw `s1, " ^ formatInt n ^ "(`s0)\n",
                       src=[munchExp e1, munchExp e2],
                       dst=nil,
                       jump=NONE})
       | munchStm (T.MOVE(T.MEM(T.CONST n), e)) =
-        emit (A.OPER {assem="sw `s0, " ^ Int.toString n ^ "($r0)\n",
+        emit (A.OPER {assem="sw `s0, " ^ formatInt n ^ "($r0)\n",
                       src=[munchExp e],
                       dst=nil,
                       jump=NONE})
@@ -112,35 +114,35 @@ fun codegen frame stm =
     and munchExp(T.MEM(T.BINOP(T.PLUS, T.CONST n, e))) =
         result(fn register =>
           emit(A.OPER
-               {assem="lw `d0, " ^ Int.toString n ^ "(`s0)\n",
+               {assem="lw `d0, " ^ formatInt n ^ "(`s0)\n",
                 src=[munchExp e],
                 dst=[register],
                 jump=NONE}))
       | munchExp(T.MEM(T.BINOP(T.PLUS, e, T.CONST n))) =
 	      result(fn register =>
           emit(A.OPER
-               {assem="lw `d0, " ^ Int.toString n ^"(`s0)\n",
+               {assem="lw `d0, " ^ formatInt n ^"(`s0)\n",
                 src=[munchExp e],
                 dst=[register],
                 jump=NONE}))
       | munchExp(T.BINOP(T.PLUS, e, T.CONST n)) =
         result(fn register =>
           emit(A.OPER
-               {assem="addi `d0, `s0, " ^ Int.toString n ^ "\n",
+               {assem="addi `d0, `s0, " ^ formatInt n ^ "\n",
                 src=[munchExp e],
                 dst=[register],
                 jump=NONE}))
       | munchExp(T.BINOP(T.PLUS, T.CONST n, e)) =
         result(fn register =>
           emit(A.OPER
-               {assem="addi `d0, `s0, " ^ Int.toString n ^ "\n",
+               {assem="addi `d0, `s0, " ^ formatInt n ^ "\n",
                 src=[munchExp e],
                 dst=[register],
                 jump=NONE}))
       | munchExp(T.BINOP(T.MINUS, e, T.CONST n)) =
         result(fn register =>
           emit(A.OPER
-               {assem="addi `d0, `s0, " ^ Int.toString (~n) ^ "\n",
+               {assem="addi `d0, `s0, " ^ formatInt (~n) ^ "\n",
                 src=[munchExp e],
                 dst=[register],
                 jump=NONE}))
@@ -154,7 +156,7 @@ fun codegen frame stm =
       | munchExp(T.MEM(T.CONST n)) =
         result(fn register =>
           emit(A.OPER
-               {assem="lw `d0, " ^ Int.toString n ^ "($r0)\n",
+               {assem="lw `d0, " ^ formatInt n ^ "($r0)\n",
                 src=nil,
                 dst=[register],
                 jump=NONE}))
@@ -168,7 +170,7 @@ fun codegen frame stm =
       | munchExp(T.CONST n) =
         result(fn register =>
           emit(A.OPER
-               {assem="li `d0, " ^ Int.toString n ^ "\n",
+               {assem="li `d0, " ^ formatInt n ^ "\n",
                src=nil,
                dst=[register],
                jump=NONE}))

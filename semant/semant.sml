@@ -503,10 +503,10 @@ struct
   fun transProg absyn =
     let
       val _ = IR.resetFragList()
-      val outerLabel = Temp.newlabel()
-      val mainLevel = IR.newLevel{parent=IR.outermost, name=outerLabel, formals=[]}
+      val mainLabel = Temp.namedlabel "main"
+      val mainLevel = IR.newLevel{parent=IR.outermost, name=mainLabel, formals=[]}
       val _ = FindEscape.findEscape(absyn)
-      val {exp, ty} = transExp(Env.base_venv, Env.base_tenv, mainLevel, outerLabel) absyn
+      val {exp, ty} = transExp(Env.base_venv, Env.base_tenv, mainLevel, mainLabel) absyn
     in
       (* NOTE uncomment this to see the output of the IR *)
       (* Printtree.printtree(TextIO.stdOut, Translate.unNx(exp)) *)
