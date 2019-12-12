@@ -7,17 +7,6 @@ structure A = Assem
 
 fun getsome (SOME x) = x
 
-(* Annotate instructions with tabs for cleaner formatting *)
-fun padWithTab instrs =
-    map (fn (i) =>
-            case i of
-              l as A.LABEL _ => l
-            | A.OPER{assem, src, dst, jump} =>
-              A.OPER{assem="\t" ^ assem, src=src, dst=dst, jump=jump}
-            | A.MOVE{assem, dst, src} =>
-              A.MOVE{assem="\t" ^ assem, src=src, dst=dst}
-        ) instrs
-
 (* Get the allocated register for a given temp *)
 fun allocatedReg alloc temp =
     case Temp.Table.look(alloc,temp) of
@@ -35,11 +24,10 @@ fun emitproc out (F.PROC{body,frame}) =
         val instrs2 = Frame.procEntryExit2 (frame,instrs)
         val (instrs2',alloc) = RegAlloc.alloc(instrs2,frame)
         val {prolog,body,epilog} = Frame.procEntryExit3(frame,instrs2')
-        val instrs'' = padWithTab body
         val format0 = Assem.format(allocatedReg alloc)
     in
       TextIO.output(out,prolog);
-      app (fn i => TextIO.output(out,(format0 i) ^ "\n")) instrs'';
+      app (fn i => TextIO.output(out,(format0 i))) body;
       TextIO.output(out,epilog)
     end
 
