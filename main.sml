@@ -31,8 +31,6 @@ fun emitproc out (F.PROC{body,frame}) =
 
   | emitproc out (F.STRING(lab,s)) = TextIO.output(out,F.string(lab,s))
 
-fun emitstr out (F.STRING(lab,str)) = TextIO.output(out,Frame.string(lab,str))
-
 fun withOpenFile fname f =
     let val out = TextIO.openOut fname
     in (f out before TextIO.closeOut out)
@@ -55,7 +53,7 @@ fun compile filename =
                        let in
                          TextIO.output(out, "\t.globl main\n");
                          TextIO.output(out, "\t.data\n"); (* Data section *)
-                         app (emitstr out) strs; (* String Data *)
+                         app (emitproc out) strs; (* String Data *)
                          TextIO.output(out, "\n\t.text\n"); (* Text section *)
                          app (emitproc out) progs (* Program Data *)
                        end)
