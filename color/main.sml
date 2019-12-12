@@ -1,8 +1,7 @@
 structure Main = struct
-  fun getsome (SOME x) = x
-
   fun printInsnList(insnList, coloring) =
     let
+      fun getsome (SOME x) = x
       val getRegister = fn temp => getsome(Temp.Table.look(coloring, temp))
       val format0 = Assem.format(getRegister)
       val printOut = fn i => print (format0 i)

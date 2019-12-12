@@ -1,6 +1,4 @@
 structure Main = struct
-  fun getsome (SOME x) = x
-
   fun emitproc out (Frame.PROC{body,frame}) =
     let val _ = print ("emit " ^ Symbol.name(Frame.name(frame)) ^ "\n")
         (*         val _ = Printtree.printtree(out,body); *)

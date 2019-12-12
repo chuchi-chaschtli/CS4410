@@ -5,8 +5,6 @@ structure Frame : FRAME = MipsFrame
 structure F = Frame
 structure A = Assem
 
-fun getsome (SOME x) = x
-
 (* Get the allocated register for a given temp *)
 fun allocatedReg alloc temp =
     case Temp.Table.look(alloc,temp) of

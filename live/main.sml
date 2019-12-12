@@ -1,6 +1,4 @@
 structure Main = struct
-  fun getsome (SOME x) = x
-
   fun getinstrs (Frame.PROC{body,frame}) =
     let val stms = Canon.linearize body
         val stms' = Canon.traceSchedule(Canon.basicBlocks stms)
