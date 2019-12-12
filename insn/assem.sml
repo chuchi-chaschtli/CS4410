@@ -28,7 +28,7 @@ structure Assem = struct
               | f(c :: rest) = (c :: f rest)
               | f nil = nil
         in
-          implode(f(explode assem)))
+          implode(f(explode assem))
         end
     in fn OPER{assem,dst,src,jump=NONE} => speak(assem,dst,src,nil)
         | OPER{assem,dst,src,jump=SOME j} => speak(assem,dst,src,j)
