@@ -200,13 +200,13 @@ struct
       val stackOffset = (!frameOffset + (List.length argregs)) * wordSize
     in
       {prolog=Symbol.name name ^ ":\n" ^
-              "sw $fp 0($sp)\n" ^ (* save old FP *)
-              "move $fp $sp\n" ^ (* make SP to be new FP *)
-              "addiu $sp $sp -" ^ Int.toString(stackOffset) ^ "\n" (* make new SP *),
+              "sw $fp 0($sp)\n" ^
+              "move $fp $sp\n" ^
+              "addi $sp $sp " ^ Int.toString(stackOffset) ^ "\n",
        body=body,
-       epilog="move $sp $fp\n" ^ (* restore old SP *)
-              "lw $fp 0($sp)\n" ^ (* restore old FP *)
-              "jr $ra\n\n" (* jump to return address *)
+       epilog="move $sp $fp\n" ^
+              "lw $fp 0($sp)\n" ^
+              "jr $ra\n\n"
       }
     end
 end
