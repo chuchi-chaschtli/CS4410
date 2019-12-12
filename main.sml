@@ -27,9 +27,8 @@ fun allocatedReg alloc temp =
 (* Built on from insn *)
 fun emitproc out (F.PROC{body,frame}) =
     let val _ = print ("emit " ^ Symbol.name(Frame.name(frame)) ^ "\n")
-        val linearized = Canon.linearize body
         (* val _ = Printtree.printtree(out, body) *)
-        val stms = Canon.linearize body
+        val linearized = Canon.linearize body
         (* val _ = app (fn s => Printtree.printtree(out,s)) stms *)
         val canonized = Canon.traceSchedule(Canon.basicBlocks linearized)
 	      val instrs = List.concat(map (MipsGen.codegen frame) canonized)
