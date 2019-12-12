@@ -7,7 +7,7 @@ L10:
 main:
 sw $fp 0($sp)
 move $fp $sp
-addi $sp $sp -144
+addi $sp $sp -24
 L12:
 lw $s0, 4($s0)
 move $s1, $s0

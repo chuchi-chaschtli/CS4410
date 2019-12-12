@@ -199,7 +199,7 @@ struct
 
   fun procEntryExit3({name, frameOffset, formals}, body) =
     let
-      val stackOffset = (!frameOffset + (List.length argregs)) * wordSize
+      val stackOffset = !frameOffset + ((List.length argregs) * wordSize)
     in
       {prolog=Symbol.name name ^ ":\n" ^
               "sw $fp 0($sp)\n" ^
