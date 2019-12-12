@@ -341,19 +341,11 @@ struct
       Ex (Tree.ESEQ(assignments'', body'))
     end
 
-  (* TODO Properly send return value to F.RV *)
-  (* TODO does the order here matter? *)
   fun procEntryExit({level: level, body: exp}) =
     (case level
-      of LEVEL{frame, parent} => let val post1Body = F.procEntryExit1(frame, unNx body)
-                                     (* TODO Correct return val? Correct register? *)
-                                     val retExp = Tree.MOVE(Tree.TEMP(F.RV), unEx(Nx(post1Body)))
-                                     (* TODO use procEntryExit2 and procEntryExit3 *)
-                                     val asInstrs = G.codegen(frame)(retExp)
-                                     val post2Body = F.procEntryExit2(frame, asInstrs)
-                                     val post3Body = F.procEntryExit3(frame, post2Body)
+      of LEVEL{frame, parent} => let val post1Body = F.procEntryExit1(frame,Tree.MOVE(Tree.TEMP Frame.RV,unEx(body)))
                                  in
-                                   fragList := F.PROC{body=retExp, frame=frame} :: !fragList
+                                   fragList := F.PROC{body=post1Body, frame=frame} :: !fragList
                                  end
        | GLOBAL => ())
 end

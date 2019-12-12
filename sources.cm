@@ -42,7 +42,7 @@ color/color.sml
 color/regalloc.sig
 color/regalloc.sml
 
-color/main.sml
+main.sml
 
 $/smlnj-lib.cm
 $/ml-yacc-lib.cm
