@@ -16,7 +16,7 @@ fun instrs2graph insns =
     val labelVertices = map mkLabelVertex insns
     val vertices = map (fn (v, _) => v) labelVertices
 
-    fun getVertexWithLabel (label, nil) = ErrorMsg.impossible "Label not found"
+    fun getVertexWithLabel (label, nil) = ErrorMsg.impossible ("Label not found: " ^ Symbol.name label)
       | getVertexWithLabel (label, (v, NONE)::vertices) = getVertexWithLabel(label, vertices)
       | getVertexWithLabel (label, (v, SOME l)::vertices) =
         if l = label
