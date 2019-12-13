@@ -17,11 +17,12 @@ fun instrs2graph insns =
     val vertices = map (fn (v, _) => v) labelVertices
 
     fun getVertexWithLabel (label, nil) = ErrorMsg.impossible ("Label not found: " ^ Symbol.name label)
-      | getVertexWithLabel (label, (v, NONE)::vertices) = getVertexWithLabel(label, vertices)
-      | getVertexWithLabel (label, (v, SOME l)::vertices) =
-        if l = label
-        then v
-        else getVertexWithLabel(label, vertices)
+      | getVertexWithLabel (label, (v, lab)::vertices) =
+        case lab
+          of SOME l => if l = label
+                       then v
+                       else getVertexWithLabel(label, vertices)
+           | NONE => getVertexWithLabel(label, vertices)
 
     (*
     For each jmp, find corresponding vertex that has label -> construct edge
@@ -31,8 +32,8 @@ fun instrs2graph insns =
       case insn
         of A.OPER {assem, dst, src, jump} =>
           (case jump
-            of SOME(jumps) =>
-              app (fn l => Graph.mk_edge {from = vertex, to = getVertexWithLabel(l, labelVertices)}) jumps
+            of SOME(labels) =>
+              app (fn l => Graph.mk_edge {from = vertex, to = getVertexWithLabel(l, labelVertices)}) labels
              | _ => ())
          | _ => ()
 
@@ -57,7 +58,7 @@ fun instrs2graph insns =
             Graph.Table.enter(use, vertex, src::nil),
             Graph.Table.enter(ismove, vertex, true)
           )
-         | _ => (
+         | A.LABEL {assem, lab} => (
              Graph.Table.enter(def, vertex, nil),
              Graph.Table.enter(use, vertex, nil),
              Graph.Table.enter(ismove, vertex, false)
