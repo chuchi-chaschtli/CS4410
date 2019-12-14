@@ -160,16 +160,15 @@ concat:
 
 
 
-.globl main
 .data
 
 .text
-  main:
+main:
   sw $fp 0($sp)
   move $fp $sp
   addi $sp $sp -52
 L19:
-  sw $s0, 4($s0)
+  sw $s0, 4($sp)
   li $s0, 8
   move $s1, $s0
   jal L12
@@ -180,16 +179,16 @@ L18:
   lw $fp 0($sp)
   jr $ra
 
-L10:
+L12:
   sw $fp 0($sp)
   move $fp $sp
   addi $sp $sp -52
 L21:
-  sw $s1, 4($s0)
-  sw $s0, 8($s0)
+  sw $s1, 4($sp)
+  sw $s0, 8($sp)
   li $s0, 1
   move $s1, $s0
-  lw $s0, 4($s0)
+  lw $s0, 4($sp)
   li $s1, 1
   ble $s0, $s1, L16
 L17:
@@ -199,11 +198,11 @@ L16:
   li $s0, 1
   beq $s1, $s0, L13
 L14:
-  lw $s0, 4($s0)
+  lw $s0, 4($sp)
   move $s1, $s0
-  lw $s0, 0($s0)
+  lw $s0, 0($sp)
   move $s1, $s0
-  lw $s0, 4($s0)
+  lw $s0, 4($sp)
   addi $s0, $s0, -1
   move $s0, $s0
   jal L12
