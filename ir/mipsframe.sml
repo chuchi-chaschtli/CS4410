@@ -184,10 +184,10 @@ struct
 
       val registerPairs =  map (fn reg => (allocLocal frame false, reg)) (RA::calleesaves)
 
-      val makeSave = fn (arg, reg) => Tree.MOVE(exp arg (Tree.TEMP FP), Tree.TEMP reg)
+      val makeSave = fn (arg, reg) => Tree.MOVE(exp arg fpTemp, Tree.TEMP reg)
       val saveRegisters = map makeSave registerPairs
 
-      val makeLoad = fn (arg, reg) => Tree.MOVE(Tree.TEMP reg, exp arg (Tree.TEMP FP))
+      val makeLoad = fn (arg, reg) => Tree.MOVE(Tree.TEMP reg, exp arg fpTemp)
       val loadRegisters = map makeLoad (List.rev registerPairs)
     in
       buildSeq(instrs @ saveRegisters @ [stmtBody] @ loadRegisters)
