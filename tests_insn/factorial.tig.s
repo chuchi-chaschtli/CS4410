@@ -24,7 +24,7 @@ sw $fp 0($sp)
 move $fp $sp
 addi $sp $sp -52
 L19:
-sw $s2, 4($s0)
+sw $s0, 4($s2)
 sw $s0, 8($s0)
 li $s0, 1
 move $s1, $s0
