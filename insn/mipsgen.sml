@@ -14,7 +14,7 @@ structure Frame = MipsFrame
 fun codegen frame stm =
   let
     val ilist = ref nil
-    fun emit x = ilist := x :: !ilist
+    fun emit(x : A.instr) = ilist := x :: !ilist
 	  fun result(gen) = let val tmp = Temp.newtemp()
                       in (gen tmp; tmp)
                       end
