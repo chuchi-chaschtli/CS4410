@@ -244,13 +244,13 @@ struct
     Ex(
       Tree.ESEQ(
         buildSeq([
-          unCx testExp (thenTmp, elseTmp),
+          Tree.CJUMP(Tree.EQ, unEx testExp, Tree.CONST(1), thenTmp, elseTmp),
           Tree.LABEL(thenTmp),
           Tree.MOVE(Tree.TEMP(resultTmp), unEx thenExp),
           Tree.JUMP(Tree.NAME(joinTmp), [joinTmp]),
           Tree.LABEL(elseTmp),
           Tree.MOVE(Tree.TEMP(resultTmp), unEx elseExp),
-          Tree.JUMP(Tree.NAME(joinTmp), [joinTmp])]),
+          Tree.LABEL(joinTmp)]),
         Tree.TEMP(resultTmp)
       )
     )

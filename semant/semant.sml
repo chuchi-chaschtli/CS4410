@@ -442,10 +442,11 @@ struct
 
       fun buildBaseVenv ({name, params, body, pos, result}, venv) =
         let
+          val funLabel = Temp.newlabel()
           val escapeList = map (fn {name, escape, typ, pos} => !escape) params
-          val newlevel = IR.newLevel{parent=level, name=Temp.newlabel(), formals=escapeList}
+          val newlevel = IR.newLevel{parent=level, name=funLabel, formals=escapeList}
           val funEntry = Env.FunEntry{level = newlevel,
-                                      label = Temp.newlabel(),
+                                      label = funLabel,
                                       formals= map #ty (map transparam params),
                                       result=resultTy result}
         in
@@ -455,9 +456,9 @@ struct
 
       fun verifyReturnType({name, params, body, pos, result}, {venv, tenv}) =
         let
-          val newlevel =
+          val (newlevel, newlabel) =
             (case S.look(dummyVenv, name)
-              of SOME (Env.FunEntry{level, label, formals, result}) => level
+              of SOME (Env.FunEntry{level, label, formals, result}) => (level, label)
                  | _ => (ErrorMsg.impossible "function not found"))
           val paramsAndFormals = ListPair.zip(params, IR.formals newlevel)
           val params' = map (fn (param, access) =>
@@ -469,7 +470,10 @@ struct
                             paramsAndFormals
           fun enterparam ({name, ty, access}, venv) =
             S.enter(venv, name, Env.VarEntry{access=access, ty=ty})
-          val venvAndFunEntry = S.enter(venv, name, Env.FunEntry{formals = map #ty params', result = resultTy(result), level = newlevel, label = Temp.newlabel()})
+          val venvAndFunEntry = S.enter(venv, name, Env.FunEntry{formals = map #ty params',
+                                                                 result = resultTy(result),
+                                                                 level = newlevel,
+                                                                 label = newlabel})
           val returnVenv = foldl enterparam venvAndFunEntry params'
           val {exp=funExp, ty=funTy} = transExp(returnVenv, tenv, newlevel, label) body
         in
