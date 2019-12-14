@@ -111,8 +111,9 @@ fun codegen frame stm =
       | munchStm (T.EXP(T.CALL(expr, args))) =
         (let
           val pairs = map (fn reg => (Temp.newtemp(), reg)) Frame.callersaves
+          (* NOTE Save and restore caller-saves registers *)
           fun save addr reg = T.MOVE(T.TEMP addr, T.TEMP reg)
-          fun load addr reg = T.MOVE(T.TEMP reg, T.TEMP addr)
+          fun restore addr reg = T.MOVE(T.TEMP reg, T.TEMP addr)
         in
           map (fn (addr, reg) => munchStm(save addr reg)) pairs;
           emit(A.OPER{
@@ -120,7 +121,7 @@ fun codegen frame stm =
                   src=munchExp(expr) :: munchArgs(0, args),
                   dst=callRegisters,
                   jump=NONE});
-          map (fn (addr, reg) => munchStm(load addr reg)) (List.rev pairs);
+          map (fn (addr, reg) => munchStm(restore addr reg)) (List.rev pairs);
           () (* NOTE no return value *)
         end)
       | munchStm(T.EXP e) = (munchExp e; ())
@@ -203,8 +204,9 @@ fun codegen frame stm =
       | munchExp(T.CALL(expr, args)) =
         (let
             val pairs = map (fn reg => (Temp.newtemp (), reg)) Frame.callersaves
-            fun restore addr reg = T.MOVE(T.TEMP reg, T.TEMP addr)
+            (* NOTE Save and restore caller-saves registers *)
             fun save addr reg = T.MOVE(T.TEMP addr, T.TEMP reg)
+            fun restore addr reg = T.MOVE(T.TEMP reg, T.TEMP addr)
           in
             map (fn (addr, reg) => munchStm(save addr reg)) pairs;
             result(fn r => emit(A.OPER{
