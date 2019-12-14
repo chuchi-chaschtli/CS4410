@@ -27,6 +27,8 @@ fun codegen frame stm =
       | binop T.MUL   = "mul"
       | binop _       = ErrorMsg.impossible "invalid binop supplied"
 
+    val callRegisters = [Frame.RV, Frame.RA]@Frame.argregs
+
     fun relop(oper, zero) =
       let
         val ending = if zero then "z" else ""
@@ -106,6 +108,21 @@ fun codegen frame stm =
                       jump=SOME [t,f]})
       | munchStm (T.LABEL label) =
         emit (A.LABEL {assem=Symbol.name(label) ^ ":\n", lab=label})
+      | munchStm (T.EXP(T.CALL(expr, args))) =
+        (let
+          val pairs = map (fn reg => (Temp.newtemp(), reg)) Frame.callersaves
+          fun save addr reg = T.MOVE(T.TEMP addr, T.TEMP reg)
+          fun load addr reg = T.MOVE(T.TEMP reg, T.TEMP addr)
+        in
+          map (fn (addr, reg) => munchStm(save addr reg)) pairs;
+          emit(A.OPER{
+                  assem="jalr `s0" ^ "\n",
+                  src=munchExp(expr) :: munchArgs(0, args),
+                  dst=callRegisters,
+                  jump=NONE});
+          map (fn (addr, reg) => munchStm(load addr reg)) (List.rev pairs);
+          () (* NOTE no return value *)
+        end)
       | munchStm(T.EXP e) = (munchExp e; ())
       | munchStm stm =
         (Printtree.printtree(TextIO.stdOut, stm);
@@ -183,13 +200,21 @@ fun codegen frame stm =
                 jump=NONE}))
       | munchExp(T.TEMP temp) = temp
       | munchExp(T.ESEQ(s, e)) = (munchStm s; munchExp e)
-      | munchExp(T.CALL(T.NAME l, args)) =
-        result(fn register =>
-          emit(A.OPER{assem="jal " ^ Symbol.name l ^ "\n",
-                      src=munchArgs(0, args),
-                      dst=[Frame.RA, Frame.RV]@Frame.calleesaves,
-                      jump=NONE}))
-      | munchExp(T.CALL(_, args)) = ErrorMsg.impossible "CALL expected NAME expression"
+      | munchExp(T.CALL(expr, args)) =
+        (let
+            val pairs = map (fn reg => (Temp.newtemp (), reg)) Frame.callersaves
+            fun restore addr reg = T.MOVE(T.TEMP reg, T.TEMP addr)
+            fun save addr reg = T.MOVE(T.TEMP addr, T.TEMP reg)
+          in
+            map (fn (addr, reg) => munchStm(save addr reg)) pairs;
+            result(fn r => emit(A.OPER{
+                                assem="jalr `s0" ^ "\n",
+                                src=munchExp(expr) :: munchArgs(0, args),
+                                dst=callRegisters,
+                                jump=NONE}));
+            map (fn (addr, reg) => munchStm(restore addr reg)) (List.rev pairs);
+            Frame.RV
+          end)
 
     and munchArgs(i, nil) = nil
       | munchArgs(i, arg::args) =
