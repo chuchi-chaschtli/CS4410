@@ -170,7 +170,7 @@ sw $fp 0($sp)
 move $fp $sp
 addi $sp $sp -52
 L17:
-sw $s0, 4($s0)
+sw $s0, 4($sp)
 la $s1, L10
 li $s0, 8
 move $s2, $s0
@@ -187,11 +187,11 @@ sw $fp 0($sp)
 move $fp $sp
 addi $sp $sp -52
 L19:
-sw $s2, 4($s0)
-sw $s0, 8($s0)
+sw $s2, 4($sp)
+sw $s0, 8($sp)
 li $s0, 1
 move $s1, $s0
-lw $s0, 4($s0)
+lw $s0, 4($sp)
 li $s1, 1
 ble $s0, $s1, L14
 L15:
@@ -201,12 +201,12 @@ L14:
 li $s0, 1
 beq $s1, $s0, L11
 L12:
-lw $s0, 4($s0)
+lw $s0, 4($sp)
 move $s0, $s0
 la $s1, L10
-lw $s0, 0($s0)
+lw $s0, 0($sp)
 move $s2, $s0
-lw $s0, 4($s0)
+lw $s0, 4($sp)
 addi $s0, $s0, -1
 move $s0, $s0
 jalr $s1
