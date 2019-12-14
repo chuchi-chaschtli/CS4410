@@ -7,7 +7,7 @@ sw $fp 0($sp)
 move $fp $sp
 addi $sp $sp -52
 L17:
-sw $s0, $ra
+sw $s0, 4($s0)
 la $s1, L10
 li $s0, 8
 move $s2, $s0
