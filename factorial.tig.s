@@ -1,0 +1,225 @@
+.text
+initArray:
+	li $a2, 4
+	mul $a0, $a0, $a2
+	li $v0, 9
+	syscall
+	move $v1, $v0
+	add $a0, $a0, $v0
+	_initArray_0:
+	sw $a1, ($v1)
+	add $v1, $v1, 4
+	bne $v1, $a0, _initArray_0
+	jr $ra
+
+allocRecord:
+  li $a2, 4
+  mul $a0, $a0, $a2
+  li $v0, 9
+  syscall
+  jr $ra
+
+printi:
+  li $v0, 1
+  syscall
+  jr $ra
+
+print:
+  li $v0, 4
+  syscall
+  jr $ra
+
+flush:
+  jr $ra
+
+strcmp:
+  strcmptest:
+  lb $a2 ($a0)
+  lb $a3 ($a1)
+  beq $a2, $zero, strcmpend
+  beq $a3, $zero, strcmpend
+  bgt $a2, $a3  strcmpgreat
+  blt $a2, $a3  strcmpless
+  add $a0, $a0, 1
+  add $a1, $a1, 1
+  j strcmptest
+  strcmpgreat:
+  li $v0, 1
+  jr $ra
+  strcmpless:
+  li $v0, -1
+  jr $ra
+  strcmpend:
+  bne $a2 $zero strcmpgreat
+  bne $a3 $zero strcmpless
+  li $v0, 0
+  jr $ra
+
+size:
+  move $v0, $zero
+  sizeloop:
+  lb $a1 ($a0)
+  beq $a1, $zero sizeexit
+  add $v0, $v0, 1
+  add $a0, $a0, 1
+  j sizeloop
+  sizeexit:
+  jr $ra
+
+ord:
+  lb $a1,($a0)
+  li $v0,-1
+  beqz $a1,Lrunt5
+  lb $v0,($a0)
+  Lrunt5:
+  jr $ra
+
+getchar:
+  li $v0, 9
+  li $a0, 2
+  syscall
+  move $a0, $v0
+  li $a1, 2
+  li $v0, 8
+  syscall
+  move $v0, $a0
+  jr $ra
+
+chr:
+  move $a1, $a0
+  li $v0, 9
+  li $a0, 2
+  syscall
+  sb $a1 ($v0)
+  sb $zero 1($v0)
+  jr $ra
+
+exit:
+  li $v0, 10
+  syscall
+
+substring:
+  add $a1, $a0, $a1
+  move $a3, $a1
+  li $v0, 9
+  add $a2, $a2, 1
+  move $a0, $a2
+  add $a0, $a0, 1
+  syscall
+  # got a new string in $v0
+  add $a2,$a2,$a3
+  add $a2,$a2,-1
+  move $a0, $v0
+  substringcopy:
+  beq $a1 $a2 substringexit
+  lb $a3 ($a1)
+  sb $a3 ($a0)
+  add $a1, $a1, 1
+  add $a0, $a0, 1
+  j substringcopy
+  substringexit:
+  sb $zero, ($a0)
+  jr $ra
+
+copy:
+  copyloop:
+  lb $a2, ($a1)
+  beq $zero, $a2 copyexit
+  sb $a2, ($a0)
+  add $a0,$a0,1
+  add $a1,$a1,1
+  j copyloop
+  copyexit:
+  sb $zero, ($a0)
+  move $v0, $a0
+  jr $ra
+
+concat:
+  sw $a0, -4($sp)
+  sw $a1, -8($sp)
+  sw $ra, -12($sp)
+  jal size
+  li $a3, 1
+  add $a3,$a3,$v0
+  lw $a0, -8($sp)
+  jal size
+  add $a3, $a3, $v0
+  move $a0, $a3
+  li $v0, 9
+  syscall
+  move $a3, $v0
+  move $a0, $v0
+  lw   $a1, -4($sp)
+  jal copy
+  move $a0, $v0
+  lw $a1, -8($sp)
+  jal copy
+  move $v0, $a3
+  lw $ra, -12($sp)
+  jr $ra
+
+
+
+
+  .globl main
+	.data
+
+	.text
+L10:
+sw $fp 0($sp)
+move $fp $sp
+addi $sp $sp -52
+L18:
+sw $s0, 4($s0)
+la $s1, L11
+li $s0, 8
+move $s2, $s0
+jalr $s1
+move $s0, $s0
+j L17
+L17:
+move $sp $fp
+lw $fp 0($sp)
+jr $ra
+
+L11:
+sw $fp 0($sp)
+move $fp $sp
+addi $sp $sp -52
+L20:
+sw $s2, 4($s0)
+sw $s0, 8($s0)
+li $s0, 1
+move $s1, $s0
+lw $s0, 4($s0)
+li $s1, 1
+ble $s0, $s1, L15
+L16:
+li $s0, 0
+move $s1, $s0
+L15:
+li $s0, 1
+beq $s1, $s0, L12
+L13:
+lw $s0, 4($s0)
+move $s0, $s0
+la $s1, L11
+lw $s0, 0($s0)
+move $s2, $s0
+lw $s0, 4($s0)
+addi $s0, $s0, -1
+move $s0, $s0
+jalr $s1
+move $s1, $s0
+mul $s0, $s0, $s1
+move $s0, $s0
+L14:
+j L19
+L12:
+li $s0, 1
+move $s0, $s0
+j L14
+L19:
+move $sp $fp
+lw $fp 0($sp)
+jr $ra
