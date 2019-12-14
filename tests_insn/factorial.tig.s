@@ -8,10 +8,9 @@ move $fp $sp
 addi $sp $sp -52
 L19:
 sw $s0, 4($s0)
-la $s1, L12
 li $s0, 8
-move $s2, $s0
-jal $s1
+move $s1, $s0
+jal L12
 move $s0, $t0
 j L18
 L18:
@@ -39,16 +38,15 @@ li $s0, 1
 beq $s1, $s0, L13
 L14:
 lw $s0, 4($s0)
-move $s0, $s0
-la $s1, L12
+move $s1, $s0
 lw $s0, 0($s0)
 move $s1, $s0
 lw $s0, 4($s0)
 addi $s0, $s0, -1
 move $s0, $s0
-jal $s1
-move $s1, $t0
-mul $s0, $s0, $s1
+jal L12
+move $s0, $t0
+mul $s0, $s1, $s0
 move $s0, $s0
 L15:
 j L20

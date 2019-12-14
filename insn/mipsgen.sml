@@ -183,12 +183,13 @@ fun codegen frame stm =
                 jump=NONE}))
       | munchExp(T.TEMP temp) = temp
       | munchExp(T.ESEQ(s, e)) = (munchStm s; munchExp e)
-      | munchExp(T.CALL(e, args)) =
+      | munchExp(T.CALL(T.NAME l, args)) =
         result(fn register =>
-          emit(A.OPER{assem="jal `s0\n",
-                      src=munchExp(e)::munchArgs(0, args),
+          emit(A.OPER{assem="jal " ^ Symbol.name l ^ "\n",
+                      src=munchArgs(0, args),
                       dst=[Frame.RA, Frame.RV]@Frame.calleesaves,
                       jump=NONE}))
+      | munchExp(T.CALL(_, args)) = ErrorMsg.impossible "CALL expected NAME expression"
 
     and munchArgs(i, nil) = nil
       | munchArgs(i, arg::args) =
