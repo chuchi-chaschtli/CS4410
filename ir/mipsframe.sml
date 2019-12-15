@@ -42,7 +42,7 @@ end
 structure MipsFrame : FRAME =
 struct
   datatype access = InFrame of int | InReg of Temp.temp
-  type frame = {name: Temp.label, frameOffset: int ref, formals: access list, instrs: Tree.stm list}
+  type frame = {name: Temp.label, localCount: int ref, formals: access list, instrs: Tree.stm list}
 
   datatype frag = PROC of {body: Tree.stm, frame: frame}
                 | STRING of Temp.label * string
@@ -57,7 +57,7 @@ struct
   val SP = Temp.newtemp()
   val RA = Temp.newtemp()
   val ZERO = Temp.newtemp()
-  val specialregs = [FP,RV,SP,RA,ZERO]
+  val specialregs = [FP,RV,SP,RA]
   val argregs = getTemps(4)
   val calleesaves = getTemps(8)
   val callersaves = getTemps(10)
@@ -122,7 +122,7 @@ struct
       name ^ ":\n .ascii \"" ^ translated ^ "\"\n"
     end
 
-  val registerTemps = calleesaves@callersaves
+  val registerTemps = argregs @ calleesaves @ callersaves @ specialregs
   val registerTempNames = foldl (fn (reg, names) => tempToString(reg)::names)
                                 nil
                                 registerTemps
@@ -137,31 +137,25 @@ struct
 
   fun newFrame {name, formals} =
     let
-      val registersTaken = ref 0
-      val paramIndex = ref 1
-      fun getParamOffset() =
-        let val tmp = !paramIndex
-        in
-          paramIndex := tmp+1;
-          tmp * wordSize
-        end
-      fun allocateFormal escape =
-        (registersTaken := Int.min(!registersTaken + 1, numDedicatedArgRegisters + 1);
-          if escape orelse !registersTaken > numDedicatedArgRegisters
-          then InFrame (getParamOffset())
-          else InReg   (Temp.newtemp()))
-      val formals' = map allocateFormal formals
+      val len = List.length formals
+      fun getAccess(nil,_) = nil
+        | getAccess(formal::rest, offset) =
+           if formal then InFrame(offset)       :: getAccess(rest, offset + wordSize)
+           else           InReg(Temp.newtemp()) :: getAccess(rest, offset)
+      val formalAccess : access list = getAccess(formals, wordSize)
       fun viewShift(access, reg) = Tree.MOVE(exp access (Tree.TEMP FP), Tree.TEMP reg)
-      val shiftInstrs = ListPair.map viewShift (formals', argregs)
+      val shiftInstrs = ListPair.map viewShift (formalAccess, argregs)
     in
-       {name=name, frameOffset=(ref 0), formals=formals', instrs=shiftInstrs}
+       {name=name, localCount=(ref 0), formals=formalAccess, instrs=shiftInstrs}
     end
 
-  fun allocLocal {name, frameOffset, formals, instrs} escape =
-      (frameOffset := !frameOffset - wordSize;
-       if escape
-       then InFrame (!frameOffset)
-       else InReg   (Temp.newtemp()))
+ fun allocLocal ({localCount,...}: frame) escape =
+     if (escape) then
+       let val retAccess = InFrame((!localCount+1) * ~wordSize)
+       in localCount := !localCount + 1;
+          retAccess
+       end
+     else InReg(Temp.newtemp())
 
   fun name (frame:frame) = (#name frame)
   fun formals (frame:frame) = (#formals frame)
@@ -196,22 +190,23 @@ struct
   fun procEntryExit2(frame, body) =
     body @
       [Assem.OPER{assem="",
-                  src=specialregs@calleesaves,
+                  src=[ZERO,RA,SP]@calleesaves,
                   dst=[],
                   jump=SOME[]}]
 
-  fun procEntryExit3({name, frameOffset, formals, instrs}, body) =
+  fun procEntryExit3({name, localCount, formals, instrs}, body) =
     let
-      val stackOffset = !frameOffset - ((List.length argregs) * wordSize)
+      val stackOffset = (!localCount + (List.length argregs)) * ~wordSize
     in
+      (* Indented for visibility in output assembly *)
       {prolog=Symbol.name name ^ ":\n" ^
-              "sw $fp 0($sp)\n" ^
-              "move $fp $sp\n" ^
-              "addi $sp $sp " ^ formatInt stackOffset ^ "\n",
+              "    sw     $fp   0($sp)\n" ^
+              "    move   $fp     $sp\n" ^
+              "    addi   $sp     $sp     " ^ formatInt stackOffset ^ "\n",
        body=body,
-       epilog="move $sp $fp\n" ^
-              "lw $fp 0($sp)\n" ^
-              "jr $ra\n\n"
+       epilog="    move   $sp     $fp\n" ^
+              "    lw     $fp   0($sp)\n" ^
+              "    jr     $ra\n\n"
       }
     end
 end
