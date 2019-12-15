@@ -28,7 +28,7 @@ When logging errors, they are output in the format:
 
 We tested our generated lexer directly against the sample test files provided
 (see `tests` directory) using `driver.sml`, as well as wrote some of our own
-test cases in the `sample_tests` directory for some of the more interesting
+test cases in the `tests_custom` directory for some of the more interesting
 edge-cases relating to ASCII, string literals, and comments.
 
 Likewise we discovered a feature in our Lexer wherein `123abc` gets lexed as

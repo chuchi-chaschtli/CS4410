@@ -96,11 +96,11 @@ throwing with that. To handle match exceptions in non-exhaustive case matches, w
 
 We tested our code against the test cases provided by Appel (`tests/`), alongside
 our own tests for some special cases in isolation / not covered in the other test
-folder (`tests_semant`).  We also ran the tests we had written for our previous
-type-checker (`tests_type`), to validate that our functionality remains consistent.
+folder.  We also ran the tests we had written for our previous
+type-checker, to validate that our functionality remains consistent.
 
-We've also included a basic factorial implementation (`tests_insn/factorial.tig`)
-with its translated assembly (`tests_insn/factorial.tig.s`).
+We've also included a basic factorial implementation (`tests_custom/factorial.tig`)
+with its translated assembly (`tests_custom/factorial.tig.s`).
 
 Running individual tests:
 
@@ -108,4 +108,4 @@ Running individual tests:
 fun test(0) = (Main.compile "tests/queens.tig"; Main.compile "tests/merge.tig") | test(x) = let val _ = Main.compile("tests/test" ^ Int.toString x ^ ".tig") in test(x - 1) end;
 ```
 
-We also added the recursive definition for factorial in `tests_insn/factorial.tig`, and the corresponding assembler listing as a result of running `Main.compile "../tests_insn/factorial.tig" -> tests_insn/factorial.tig.s`
+We also added the recursive definition for factorial in `tests_custom/factorial.tig`, and the corresponding assembler listing as a result of running `Main.compile "../tests_custom/factorial.tig" -> tests_custom/factorial.tig.s`
