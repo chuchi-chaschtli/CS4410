@@ -137,24 +137,16 @@ struct
 
   fun newFrame {name, formals} =
     let
-      val registersTaken = ref 0
-      val paramIndex = ref 1
-      fun getParamOffset() =
-        let val tmp = !paramIndex
-        in
-          paramIndex := tmp+1;
-          tmp * wordSize
-        end
-      fun allocateFormal escape =
-        (registersTaken := Int.min(!registersTaken + 1, numDedicatedArgRegisters + 1);
-          if escape orelse !registersTaken > numDedicatedArgRegisters
-          then InFrame (getParamOffset())
-          else InReg   (Temp.newtemp()))
-      val formals' = map allocateFormal formals
+      val len = List.length formals
+      fun getAccess(nil,_) = nil
+        | getAccess(formal::rest, offset) =
+           if formal then InFrame(offset)       :: getAccess(rest, offset + wordSize)
+           else           InReg(Temp.newtemp()) :: getAccess(rest, offset)
+      val formalAccess : access list = getAccess(formals, wordSize)
       fun viewShift(access, reg) = Tree.MOVE(exp access (Tree.TEMP FP), Tree.TEMP reg)
-      val shiftInstrs = ListPair.map viewShift (formals', argregs)
+      val shiftInstrs = ListPair.map viewShift (formalAccess, argregs)
     in
-       {name=name, localCount=(ref 0), formals=formals', instrs=shiftInstrs}
+       {name=name, localCount=(ref 0), formals=formalAccess, instrs=shiftInstrs}
     end
 
  fun allocLocal ({localCount,...}: frame) escape =
@@ -167,7 +159,6 @@ struct
 
   fun name (frame:frame) = (#name frame)
   fun formals (frame:frame) = (#formals frame)
-  (* fun localCount (frame:frame) = (#localCount frame) *)
   fun instrs (frame:frame) = (#instrs frame)
 
   fun externalCall (s, args) = Tree.CALL(Tree.NAME(Temp.namedlabel s), args)
@@ -207,14 +198,15 @@ struct
     let
       val stackOffset = (!localCount + (List.length argregs)) * ~wordSize
     in
+      (* Indented for visibility in output assembly *)
       {prolog=Symbol.name name ^ ":\n" ^
-              "sw     $fp   0($sp)\n" ^
-              "move   $fp     $sp\n" ^
-              "addi   $sp     $sp     " ^ formatInt stackOffset ^ "\n",
+              "    sw     $fp   0($sp)\n" ^
+              "    move   $fp     $sp\n" ^
+              "    addi   $sp     $sp     " ^ formatInt stackOffset ^ "\n",
        body=body,
-       epilog="move   $sp     $fp\n" ^
-              "lw     $fp   0($sp)\n" ^
-              "jr     $ra\n\n"
+       epilog="    move   $sp     $fp\n" ^
+              "    lw     $fp   0($sp)\n" ^
+              "    jr     $ra\n\n"
       }
     end
 end
