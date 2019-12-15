@@ -35,5 +35,16 @@ copy current FP to SP to get a new frame, then set new SP offset/allocate the fr
 ### Testing
 We tested by generating the assembly for the test files we have (in various `test` directories) using `Main.compile "path/to/test.tig"`. Then, using QtSpim or command-line (`brew install spim`) we would test the compiled .s file.
 
+#### Creating a runnable file
+
+Once you have `factorial.tig.s`, simply concat the included `runtime.s` to the beginning:
+
+```
+cat runtime.s >> factorial.tig.s
+```
+
+See top-level `factorial.tig.s` to see the output.
+
 ### Superceding Previous Assignments
+
 Our assignment 7 submission was late, and we expect a 10% penalty on the original grade. Additionally, we didn't compute liveness correctly. We fixed this by rewriting our logic to build the CFG in order to compute liveness.
